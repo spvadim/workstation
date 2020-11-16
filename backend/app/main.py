@@ -1,17 +1,10 @@
 from fastapi import FastAPI
-from odmantic import AIOEngine
-import uvicorn
+from fastapi_versioning import VersionedFastAPI
+from .routers import production_batches
+
+app = FastAPI(docs_url="/docs", redoc_url=None, openapi_url="/openapi.json")
+
+app.include_router(production_batches.router)
 
 
-app = FastAPI(docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
-
-engine = AIOEngine()
-
-
-@app.get('/api/ping')
-async def read_ping():
-    return {'ping': 'pong'}
-
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", port=8000, reload=True)
+app = VersionedFastAPI(app, prefix_format='api/v{major}_{minor}')
