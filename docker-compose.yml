@@ -1,12 +1,23 @@
 version: '3.7'
 services: 
-    db:
+    mongo:
       image: mongo
+      env_file:
+        - .env
+      volumes:
+        - db:/data/db
+        - ./init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh
+      ports:
+      - 27017:27017
     docker-fastapi:
         container_name: docker-fastapi
+        env_file:
+        - .env
         build: 
             context: ./backend/
             dockerfile: Dockerfile
+        depends_on:
+            - mongo    
         restart: always
     nginx:
         depends_on: 
@@ -18,3 +29,6 @@ services:
         ports: 
             - "80:80"
         restart: always
+
+volumes:
+  db:
