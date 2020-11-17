@@ -13,6 +13,9 @@ WORKDIR /app
 # copy everything to /app directory
 # as opposed to on dev, in prod everything is copied to docker
 COPY . /app
+RUN npm install
+CMD ["npm", "start"]
+
 # add the node_modules folder to $PATH
 # ENV PATH /app/node_modules/.bin:$PATH
 # install and cache dependencies
@@ -34,5 +37,6 @@ COPY nginx/nginx.conf /etc/nginx/conf.d
 # --------- /only for those using react router ----------
 # expose port 80 to the outer world
 EXPOSE 80
+
 # start nginx 
 CMD ["nginx", "-g", "daemon off;"]
