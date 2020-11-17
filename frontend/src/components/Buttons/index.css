@@ -1,0 +1,21 @@
+.icon {
+    width: 1rem;
+    height: 1rem;
+
+}
+
+.icon-container {
+    display: flex;
+    cursor: pointer;
+}
+
+.button-wrapper {
+    width: max-content;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.button-wrapper button {
+    cursor: pointer;
+    padding: .3rem .5rem;
+}
