@@ -29,4 +29,5 @@ async def create_batch(batch: ProductionBatchInput):
     if params is None:
         raise HTTPException(404)
     batch = ProductionBatch(number=batch.number, params=params)
+    await engine.save(batch)
     return batch

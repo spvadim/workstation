@@ -1,5 +1,4 @@
-from bson import ObjectId
-from odmantic import Model, Reference
+from odmantic import Model, Reference, ObjectId
 
 
 class ProductionBatchParams(Model):
@@ -15,3 +14,4 @@ class ProductionBatchInput(Model):
 class ProductionBatch(Model):
     number: int
     params: ProductionBatchParams = Reference()
+
