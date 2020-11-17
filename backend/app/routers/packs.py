@@ -43,3 +43,14 @@ async def create_pack(pack: PackInput):
         pack = Pack(qr=pack.qr, batch=batch)
     await engine.save(pack)
     return pack
+
+
+@router.delete('/packs/{id}', response_model=Pack)
+@version(1, 0)
+async def delete_pack_by_id(id: ObjectId):
+    pack = await engine.find_one(Pack, Pack.id == id)
+    if pack is None:
+        raise HTTPException(404)
+    await engine.delete(pack)
+    return pack
+
