@@ -3,13 +3,12 @@ import './index.css';
 
 import Table from "../../components/Table/index.js";
 
-function Edit(props) {
-    console.log(props);
+function Edit({ type, QR, ID, Время }) {
 
     return (
         <div className="container-edit">
             <div className="column">
-                <Table  title={props.type}
+                <Table  title={type}
                         columns={[
                             "Время",
                             "ID",
@@ -17,12 +16,12 @@ function Edit(props) {
                         ]}
                         data={
                             {
-                                "type": props.type,
+                                "type": type,
                                 "rows": [
                                     {
-                                        "Время": props["Время"],
-                                        "QR": props.QR,
-                                        "ID": props.ID,
+                                        "Время": Время,
+                                        "QR": QR,
+                                        "ID": ID,
                                     },
                                 ]
                             }                           

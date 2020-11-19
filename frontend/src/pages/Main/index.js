@@ -22,17 +22,28 @@ function Main({ partyNumber, settings }) {
     return(
         <div className="container">
             <div className="header">
-                <p className="party-info">
-                    Партия №: <u><b>{partyNumber}</b></u>,
-                    куб: <u><b>{settings.multipack}</b></u> мультипаков, 
-                    мультипак: <u><b>{settings.pack}</b></u> пачек.
-                </p>
+                <div className="header-line">
+                    <p>
+                        Партия №: <u><b>{partyNumber}</b></u>,
+                        куб: <u><b>{settings.multipack}</b></u> мультипаков, 
+                        мультипак: <u><b>{settings.pack}</b></u> пачек.
+                    </p>
+
+                    <div style={{display: "flex", width: "max-content", padding: "0 1rem", gap: "1rem"}}> 
+                        <Button text="Новый куб"
+                                callback={() => console.log("Новый куб")} />
+
+                        <Button text="Новый мультипак"
+                                callback={() => console.log("Новый мультипак")}/>
+                     </div>
+
+                </div>
+
+                
 
                 <div className="switch-container">
                     <span>Автоматический</span>
-                    <SwitchSlider callback={() => {
-                        setMode(!mode);
-                    }} />
+                    <SwitchSlider callback={() => setMode(!mode) } />
                     <span>Ручной</span>
                 </div>
 
@@ -43,9 +54,7 @@ function Main({ partyNumber, settings }) {
                     <ErrorBox text={error} />
                     
                     <Button text="Сбросить ошибку"
-                            callback={() => {
-                                setError('')
-                            }} />
+                            callback={() => setError('')} />
                 </div>
 
             </div>

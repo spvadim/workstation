@@ -16,6 +16,7 @@
 }
 
 .button-wrapper button {
+    height: max-content;
     cursor: pointer;
     padding: .3rem .5rem;
 }
