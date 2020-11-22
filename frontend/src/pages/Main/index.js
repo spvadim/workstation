@@ -8,7 +8,7 @@ import Button from "../../components/Buttons/Button.js";
 
 import { Redirect } from "react-router-dom";
 
-function Main({ partyNumber, settings }) {
+function Main({ partyNumber, multipacks, packs }) {
     let [error, setError] = useState('Ошибка');
     let [mode, setMode] = useState(false); // false = auto; true = manual
     let [page, setPage] = useState('');
@@ -25,8 +25,8 @@ function Main({ partyNumber, settings }) {
                 <div className="header-line">
                     <p>
                         Партия №: <u><b>{partyNumber}</b></u>,
-                        куб: <u><b>{settings.multipacks}</b></u> мультипаков, 
-                        мультипак: <u><b>{settings.packs}</b></u> пачек.
+                        куб: <u><b>{multipacks}</b></u> мультипаков, 
+                        мультипак: <u><b>{packs}</b></u> пачек.
                     </p>
 
                     <div style={{display: "flex", width: "max-content", padding: "0 1rem", gap: "1rem"}}> 

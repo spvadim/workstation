@@ -7,11 +7,7 @@ import InputRadio from "../InputRadio/index.js";
 function InputRadioContainer({ data, getParamSettings }) {
 
     return (
-        <div className="params" style={{margin: "10px 0"}}
-             onBlur={() => {
-                console.log("settings out: ", settings)
-                getParamSettings(settings)
-             }}> 
+        <div className="params" style={{margin: "10px 0"}} > 
                 
                 {data.map((obj, index) => {
                     let result = [<InputRadio name="param_batch"

@@ -28,16 +28,28 @@ function PartyParameters() {
         event.preventDefault();
 
         if (partyNumber && Object.keys(settings).length !== 0) { 
-            setRedirect(true);
+            axios.put("/api/v1_0/batches", {
+                number: partyNumber,
+                params_id: settings.id
+            })
+            .then(() => setRedirect(true))
+            .catch(e => console.log(e))
         }
     }
 
-    if (redirect) return <Redirect to={
-        {
-            pathname: "/main",
-            state: {partyNumber, settings}
-        }
-    } /> 
+    if (redirect) {
+        
+        return <Redirect to={
+            {
+                pathname: "/main",
+                state: {
+                    partyNumber: partyNumber,
+                    multipacks: settings.multipacks,
+                    packs: settings.packs,
+                },
+            }
+        } />
+    }
 
     return (
         
