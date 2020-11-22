@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from "react";
+import axios from 'axios';
 import './index.css';
 
 import InputRadio from "../../components/InputRadio/index.js";
 import Button from "../../components/Buttons/Button.js";
+import Loader from "../../components/Loader/index.js";
 
 import { Redirect } from "react-router-dom";
+import InputRadioContainer from "../../components/InputRadioContainer";
 
-function PartyParameters({setPartyParamsState}) {
+function PartyParameters() {
     let [partyNumber, setPartyNumber] = useState('');
+    let [params, setParams] = useState({});
     let [settings, setSettings] = useState({})
     let [redirect, setRedirect] = useState(false);
+
+    useEffect(() => {
+        axios.get('/api/v1_0/batches_params')
+        .then(res => {
+            setParams(res.data);
+        })
+        .catch(e => console.log(e))
+
+    }, [setParams])
 
     function submitHandler(event) {
         event.preventDefault();
@@ -39,39 +52,15 @@ function PartyParameters({setPartyParamsState}) {
                        autoFocus/>
             </div>
 
-            <div className="params" style={{margin: "10px 0"}}>
-                <InputRadio name="param_party"
-                            htmlFor="param_1"
-                            settings={{
-                                multipack: 8,
-                                pack: 6,
-                            }}
-                            text="Куб: 8 мультипаков, мультипак: 6 пачек" 
-                            onClick={settings => setSettings(settings)}/>
-                
-                <hr />
-                
-                <InputRadio name="param_party"
-                            htmlFor="param_2"
-                            settings={{
-                                multipack: 8,
-                                pack: 8,
-                            }}
-                            text="Куб: 8 мультипаков, мультипак: 8 пачек"
-                            onClick={settings => setSettings(settings)} />
-                
-                <hr />
+            {Object.keys(params).length === 0 ? 
+                <Loader /> :
+                <InputRadioContainer data={params}
+                                     getParamSettings={(s) => {
+                                         console.log("settings in: ", s)
+                                         setSettings(s)
+                                     }} /> }
 
-                <InputRadio name="param_party"
-                            htmlFor="param_3"
-                            settings={{
-                                multipack: 4,
-                                pack: 6,
-                            }}
-                            text="Куб: 4 мультипаков, мультипак: 6 пачек"
-                            onClick={settings => setSettings(settings)} />
-            </div>
-
+            
             <Button text="Начать выпуск партии" />
             
         </form>

@@ -1,7 +1,7 @@
 import React from "react";
 import "./index.css";
 
-function InputRadio({ name, htmlFor, text, settings, onClick }) {
+function InputRadio({ name, htmlFor, text, settings, callback }) {
 
     return (
         <label className="radioContainer"
@@ -12,7 +12,7 @@ function InputRadio({ name, htmlFor, text, settings, onClick }) {
             <input name={name}
                    id={htmlFor} 
                    type="radio" 
-                   onClick={() => onClick(settings)}/>
+                   onClick={() => callback(settings)}/>
                 
             <div className="radio"
                  style={{backgroundImage: "url('./cross.svg')", backgroundSize: 0}}/>

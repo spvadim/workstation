@@ -25,8 +25,8 @@ function Main({ partyNumber, settings }) {
                 <div className="header-line">
                     <p>
                         Партия №: <u><b>{partyNumber}</b></u>,
-                        куб: <u><b>{settings.multipack}</b></u> мультипаков, 
-                        мультипак: <u><b>{settings.pack}</b></u> пачек.
+                        куб: <u><b>{settings.multipacks}</b></u> мультипаков, 
+                        мультипак: <u><b>{settings.packs}</b></u> пачек.
                     </p>
 
                     <div style={{display: "flex", width: "max-content", padding: "0 1rem", gap: "1rem"}}> 
