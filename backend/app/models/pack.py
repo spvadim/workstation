@@ -1,18 +1,31 @@
-from odmantic import Model, Reference, ObjectId
+from odmantic import Model
 from typing import Optional
-from .production_batch import ProductionBatch
+from pydantic import BaseModel
+
 
 
 class Pack(Model):
     qr: str
-    batch: ProductionBatch = Reference()
-    is_referenced: bool = False
+    barcode: str
+    batch_number: int
+    in_queue: bool = True
+    created_at: str
 
 
 class PackInput(Model):
     qr: str
-    batch_id: Optional[ObjectId]
+    barcode: str
+    batch_number: Optional[int]
 
 
 class PackOutput(Model):
     qr: str
+    created_at: str
+
+
+class PackPatchSchema(BaseModel):
+    qr: Optional[str]
+    barcode: Optional[str]
+
+
+
