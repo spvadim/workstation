@@ -1,3 +1,4 @@
+from typing import Optional
 from odmantic import Model, Reference, ObjectId
 
 
@@ -14,4 +15,8 @@ class ProductionBatchInput(Model):
 class ProductionBatch(Model):
     number: int
     params: ProductionBatchParams = Reference()
+    created_at: Optional[str]
+    closed_at: Optional[str]
+
+
 

@@ -1,8 +1,10 @@
 from typing import List
+from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException
 from fastapi import Depends, Header
 from fastapi_versioning import version
 from app.db.engine import engine
+from app.db.db_utils import get_last_batch
 from app.models.production_batch import ProductionBatchParams, ProductionBatchInput, ProductionBatch
 
 router = APIRouter()
@@ -22,12 +24,24 @@ async def create_params(params: ProductionBatchParams):
     return params
 
 
-@router.put("/batches", response_model=ProductionBatch)
+@router.put("/batches", response_model=ProductionBatch, response_model_exclude_unset=True)
 @version(1, 0)
 async def create_batch(batch: ProductionBatchInput):
     params = await engine.find_one(ProductionBatchParams, ProductionBatchParams.id == batch.params_id)
     if params is None:
         raise HTTPException(404)
     batch = ProductionBatch(number=batch.number, params=params)
+    batch.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    last_batch = await get_last_batch()
+    if last_batch:
+        last_batch.closed_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+        await engine.save(last_batch)
     await engine.save(batch)
     return batch
+
+
+@router.get("/batches", response_model=List[ProductionBatch])
+@version(1, 0)
+async def get_all_batches():
+    all_batches = await engine.find(ProductionBatch)
+    return all_batches
