@@ -13,7 +13,7 @@ WORKDIR /app
 # copy everything to /app directory
 # as opposed to on dev, in prod everything is copied to docker
 COPY . /app
-RUN npm install
+RUN npm install --silent
 CMD ["npm", "start"]
 
 # add the node_modules folder to $PATH

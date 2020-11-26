@@ -5,6 +5,7 @@ import { Redirect } from "react-router-dom";
 
 import RemoveButton from "../Buttons/RemoveButton.js";
 import EditButton from "../Buttons/EditButton.js"
+import Loader from "../Loader/index.js";
 
 function Table({ title, columns, data }) {
     let [page, setPage] = useState('');

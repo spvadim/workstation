@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from 'axios';
 import "./index.css";
 
 import SwitchSlider from "../../components/SwitchSlider/index.js";
@@ -8,10 +9,13 @@ import Button from "../../components/Buttons/Button.js";
 
 import { Redirect } from "react-router-dom";
 
-function Main({ partyNumber, multipacks, packs }) {
+function Main({ partyNumber, settings }) {
     let [error, setError] = useState('Ошибка');
     let [mode, setMode] = useState(false); // false = auto; true = manual
     let [page, setPage] = useState('');
+    let [packs, setPacks] = useState(axios.get('/api/v1_0/packs_queue')
+                                    .then(res => console.log(res.data))
+                                    .catch(e => console.log(e)));
 
     if (page === "party_parameters") {
         return (
@@ -19,13 +23,23 @@ function Main({ partyNumber, multipacks, packs }) {
         );
     } 
 
+    // function getPacks() {
+    //     axios.get('/api/v1_0/packs_queue')
+    //         .then(res => {
+    //             console.log(res.data);
+    //             setPacks(res.data)
+    //         })
+    //         .catch(e => console.log("error: ", e))
+    // }
+
+
     return(
         <div className="container">
             <div className="header">
                 <div className="header-line">
                     <p>
                         Партия №: <u><b>{partyNumber}</b></u>,
-                        куб: <u><b>{multipacks}</b></u> мультипаков, 
+                        куб: <u><b>{settings.multipacks}</b></u> мультипаков, 
                         мультипак: <u><b>{packs}</b></u> пачек.
                     </p>
 
@@ -107,24 +121,8 @@ function Main({ partyNumber, multipacks, packs }) {
                 />
 
                 <Table  title="Очередь пачек"
-                        columns={["Время", "ID", "QR", "/trash"]}
-                        data={
-                            {
-                                "type": "pack",
-                                "rows": [
-                                    {
-                                        "Время": "26.10.2020 16:52",
-                                        "ID": "h1g22jh4g12jgk2",
-                                        "QR": "https://xps.tn.ru....",
-                                    },
-                                    {
-                                        "Время": "26.10.2020 18:47",
-                                        "ID": "jsdkfhs4kdh25",
-                                        "QR": "https://xps.tn.ru....",
-                                    }
-                                ]
-                            }
-                        }
+                        columns={["created_at", "id", "qr", "/trash"]}
+                        data={packs}
                 />
 
             </div>

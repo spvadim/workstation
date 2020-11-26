@@ -9,6 +9,8 @@ import Loader from "../../components/Loader/index.js";
 import { Redirect } from "react-router-dom";
 import InputRadioContainer from "../../components/InputRadioContainer";
 
+axios.defaults.headers.common['mode'] = 'no-cors'
+
 function PartyParameters() {
     let [partyNumber, setPartyNumber] = useState('');
     let [params, setParams] = useState({});
@@ -16,11 +18,14 @@ function PartyParameters() {
     let [redirect, setRedirect] = useState(false);
 
     useEffect(() => {
-        axios.get('/api/v1_0/batches_params')
+        axios.get('api/v1_0/batches_params')
         .then(res => {
             setParams(res.data);
         })
         .catch(e => console.log(e))
+
+        // let promise = fetch('http://141.101.196.127/api/v1_0/batches_params')
+        // console.log(promise)
 
     }, [setParams])
 
@@ -44,8 +49,7 @@ function PartyParameters() {
                 pathname: "/main",
                 state: {
                     partyNumber: partyNumber,
-                    multipacks: settings.multipacks,
-                    packs: settings.packs,
+                    settings: settings,
                 },
             }
         } />
