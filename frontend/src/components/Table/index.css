@@ -6,7 +6,7 @@ th, td {
 table {
     border-spacing: 0;
     border-collapse: collapse;
-    width: max-content;
+    margin-bottom: 1rem;
 }
 
 .table-caption {

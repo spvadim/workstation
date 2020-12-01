@@ -12,6 +12,7 @@ function InputRadioContainer({ data, getParamSettings }) {
                 {data.map((obj, index) => {
                     let result = [<InputRadio name="param_batch"
                                               htmlFor={obj.id}
+                                              key={index}
                                               settings={obj}
                                               text={`Куб: ${obj.multipacks} мультипаков, мультипак: ${obj.packs} пачек`}
                                               callback={(s) => getParamSettings(s)} />]

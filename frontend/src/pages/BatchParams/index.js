@@ -9,16 +9,19 @@ import Loader from "../../components/Loader/index.js";
 import { Redirect } from "react-router-dom";
 import InputRadioContainer from "../../components/InputRadioContainer";
 
-axios.defaults.headers.common['mode'] = 'no-cors'
 
-function PartyParameters() {
+let address = "http://141.101.196.127";
+
+function BatchParams() {
+
     let [partyNumber, setPartyNumber] = useState('');
     let [params, setParams] = useState({});
     let [settings, setSettings] = useState({})
     let [redirect, setRedirect] = useState(false);
 
+
     useEffect(() => {
-        axios.get('api/v1_0/batches_params')
+        axios.get(address + '/api/v1_0/batches_params')
         .then(res => {
             setParams(res.data);
         })
@@ -33,7 +36,7 @@ function PartyParameters() {
         event.preventDefault();
 
         if (partyNumber && Object.keys(settings).length !== 0) { 
-            axios.put("/api/v1_0/batches", {
+            axios.put(address + "/api/v1_0/batches", {
                 number: partyNumber,
                 params_id: settings.id
             })
@@ -71,10 +74,7 @@ function PartyParameters() {
             {Object.keys(params).length === 0 ? 
                 <Loader /> :
                 <InputRadioContainer data={params}
-                                     getParamSettings={(s) => {
-                                         console.log("settings in: ", s)
-                                         setSettings(s)
-                                     }} /> }
+                                     getParamSettings={(s) => setSettings(s)} /> }
 
             
             <Button text="Начать выпуск партии" />
@@ -83,4 +83,4 @@ function PartyParameters() {
     );
 }
 
-export default PartyParameters;
+export default BatchParams;

@@ -1,8 +1,7 @@
-import { func } from "prop-types";
 import React from "react";
 import "./index.css";
 
-function Button({ text, callback }) {
+const Button = React.memo(({ text, callback }) => {
     return (
         <div className="button-wrapper"
              onClick={callback ? callback : null}>
@@ -11,6 +10,6 @@ function Button({ text, callback }) {
 
         </div>
     );
-}
+})
 
 export default Button;
