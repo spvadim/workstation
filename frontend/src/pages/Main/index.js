@@ -9,7 +9,8 @@ import Button from "../../components/Buttons/Button.js";
 
 import { Redirect } from "react-router-dom";
 
-let address = "http://141.101.196.127";
+// http://141.101.196.127
+let address = "";
 axios.patch(address + "/api/v1_0/set_mode", {work_mode: "auto"});
 
 

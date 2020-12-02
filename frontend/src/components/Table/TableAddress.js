@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import "./index.css";
 
-import { Redirect } from "react-router-dom";
-
 import DeleteButton from "../Buttons/DeleteButton.js";
 import EditButton from "../Buttons/EditButton.js"
 import Loader from "../Loader/index.js"

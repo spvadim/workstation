@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
-import axios from 'axios';
 import "./index.css";
 
 import DeleteButton from "../Buttons/DeleteButton.js";
-import EditButton from "../Buttons/EditButton.js";
 
 const TableData = React.memo(({ settings, callback, data }) => {
     let { title, addFields, type } = settings;

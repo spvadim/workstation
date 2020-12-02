@@ -2,15 +2,14 @@ import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import './index.css';
 
-import InputRadio from "../../components/InputRadio/index.js";
 import Button from "../../components/Buttons/Button.js";
 import Loader from "../../components/Loader/index.js";
 
 import { Redirect } from "react-router-dom";
 import InputRadioContainer from "../../components/InputRadioContainer";
 
-
-let address = "http://141.101.196.127";
+// http://141.101.196.127
+let address = "";
 
 function BatchParams() {
 

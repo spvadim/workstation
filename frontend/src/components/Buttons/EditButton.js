@@ -3,7 +3,8 @@ import { Redirect, Router } from "react-router-dom";
 
 import "./index.css";
 
-let address = "http://141.101.196.127";
+// http://141.101.196.127
+let address = "";
 
 const EditButton = React.memo (({ data, type }) => {
     console.log("edit button: ", data)
