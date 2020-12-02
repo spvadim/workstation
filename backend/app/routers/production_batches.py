@@ -1,10 +1,11 @@
 from typing import List
+from odmantic import ObjectId
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException
 from fastapi import Depends, Header
 from fastapi_versioning import version
 from app.db.engine import engine
-from app.db.db_utils import get_last_batch
+from app.db.db_utils import get_last_batch, get_by_id_or_404
 from app.models.production_batch import ProductionBatchParams, ProductionBatchInput, ProductionBatch
 
 router = APIRouter()
@@ -27,9 +28,7 @@ async def create_params(params: ProductionBatchParams):
 @router.put("/batches", response_model=ProductionBatch, response_model_exclude_unset=True)
 @version(1, 0)
 async def create_batch(batch: ProductionBatchInput):
-    params = await engine.find_one(ProductionBatchParams, ProductionBatchParams.id == batch.params_id)
-    if params is None:
-        raise HTTPException(404)
+    params = await get_by_id_or_404(ProductionBatchParams, batch.params_id)
     batch = ProductionBatch(number=batch.number, params=params)
     batch.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
     last_batch = await get_last_batch()
@@ -45,3 +44,10 @@ async def create_batch(batch: ProductionBatchInput):
 async def get_all_batches():
     all_batches = await engine.find(ProductionBatch)
     return all_batches
+
+
+@router.get('/batches/{id}', response_model=ProductionBatch)
+@version(1, 0)
+async def get_batch_by_id(id: ObjectId):
+    batch = await get_by_id_or_404(ProductionBatch, id)
+    return batch
