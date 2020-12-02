@@ -1,14 +1,12 @@
-from typing import List, Optional
+from typing import List
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException
-from fastapi import Depends, Header
+from fastapi import APIRouter
 from fastapi_versioning import version
 from odmantic import ObjectId
 from app.db.engine import engine
-from app.db.db_utils import get_qr_list, get_multipacks_queue, get_last_batch
-from app.models.production_batch import ProductionBatch
+from app.db.db_utils import check_qr_unique, get_multipacks_queue, get_batch_by_number_or_return_last, get_by_id_or_404
 from app.models.pack import Pack
-from app.models.multipack import Multipack, MultipackOutput, MultipackPatchSchema, Status
+from app.models.multipack import Multipack, MultipackOutput, MultipackPatchSchema
 
 router = APIRouter()
 
@@ -16,31 +14,22 @@ router = APIRouter()
 @router.put('/multipacks', response_model=Multipack, response_model_exclude_unset=True)
 @version(1, 0)
 async def create_multipack(multipack: Multipack):
-    qr_list = await get_qr_list()
-    if multipack.qr:
-        if multipack.qr in qr_list.list:
-            raise HTTPException(409)
-        else:
-            qr_list.list += [multipack.qr]
-            await engine.save(qr_list)
-
-    if multipack.batch_number:
-        batch = await engine.find_one(ProductionBatch, ProductionBatch.number == multipack.batch_number)
-        if not batch:
-            raise HTTPException(404)
-    else:
-        batch = await get_last_batch()
-        if not batch:
-            raise HTTPException(404)
+    batch = await get_batch_by_number_or_return_last(batch_number=multipack.batch_number)
 
     multipack.batch_number = batch.number
     multipack.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
+    packs_to_update = []
     for id in multipack.pack_ids:
-        pack = await engine.find_one(Pack, Pack.id == id)
-        if not pack:
-            raise HTTPException(404)
+        pack = await get_by_id_or_404(Pack, id)
         pack.in_queue = False
-        await engine.save(pack)
+        packs_to_update.append(pack)
+    await engine.save_all(packs_to_update)
+
+    if multipack.qr:
+        await check_qr_unique(multipack.qr)
+        multipack.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
     await engine.save(multipack)
     return multipack
 
@@ -52,12 +41,17 @@ async def get_current_multipacks():
     return multipacks_queue
 
 
+@router.get('/multipacks/{id}', response_model=Multipack)
+@version(1, 0)
+async def get_multipack_by_id(id: ObjectId):
+    multipack = await get_by_id_or_404(Multipack, id)
+    return multipack
+
+
 @router.delete('/multipacks/{id}', response_model=Multipack)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
-    multipack = await engine.find_one(Multipack, Multipack.id == id)
-    if multipack is None:
-        raise HTTPException(404)
+    multipack = await get_by_id_or_404(Multipack, id)
     await engine.delete(multipack)
     return multipack
 
@@ -65,17 +59,11 @@ async def delete_pack_by_id(id: ObjectId):
 @router.patch('/multipacks/{id}', response_model=Multipack)
 @version(1, 0)
 async def update_pack_by_id(id: ObjectId, patch: MultipackPatchSchema):
-    multipack = await engine.find_one(Multipack, Multipack.id == id)
-    if multipack is None:
-        raise HTTPException(404)
+    multipack = await get_by_id_or_404(Multipack, id)
 
-    qr_list = await get_qr_list()
     if patch.qr:
-        if patch.qr in qr_list.list:
-            raise HTTPException(409)
-        else:
-            qr_list.list += [patch.qr]
-            await engine.save(qr_list)
+        await check_qr_unique(patch.qr)
+        multipack.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     patch_dict = patch.dict(exclude_unset=True)
     for name, value in patch_dict.items():

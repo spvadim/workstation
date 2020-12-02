@@ -1,0 +1,217 @@
+from typing import List
+from datetime import datetime, timedelta
+from fastapi import APIRouter, HTTPException
+from fastapi_versioning import version
+from odmantic import query
+from app.db.engine import engine
+from app.db.db_utils import check_qr_unique_or_set_state_warning, check_qr_unique_or_set_state_error, \
+    get_last_batch, get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, get_multipacks_queue
+from app.models.pack import Pack, PackCameraInput, PackOutput
+from app.models.multipack import Multipack, MultipackOutput, Status
+from app.models.cube import Cube
+
+router = APIRouter()
+
+
+@router.put('/new_pack_after_applikator', response_model=PackCameraInput, response_model_exclude={"id"})
+@version(1, 0)
+async def new_pack_after_applikator(pack: PackCameraInput):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+    if not pack.qr or not pack.barcode:
+        error_msg = 'Нет qr кода или штрих кода!'
+        await set_column_yellow(error_msg)
+        raise HTTPException(400, detail=error_msg)
+
+    await check_qr_unique_or_set_state_warning(pack.qr)
+
+    return pack
+
+
+@router.put('/new_pack_after_pintset', response_model=Pack)
+@version(1, 0)
+async def new_pack_after_pintset(pack: PackCameraInput):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+    if not pack.qr or not pack.barcode:
+        error_msg = 'Нет qr кода или штрих кода!'
+        await set_column_red(error_msg)
+        raise HTTPException(400, detail=error_msg)
+
+    await check_qr_unique_or_set_state_error(pack.qr)
+
+    pack = Pack(qr=pack.qr, barcode=pack.barcode)
+
+    batch = await get_last_batch()
+    pack.batch_number = batch.number
+    pack.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    await engine.save(pack)
+    return pack
+
+
+@router.patch('/pintset_reverse', response_model=List[PackOutput])
+@version(1, 0)
+async def pintset_reverse():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    packs_queue = await get_packs_queue()
+    if len(packs_queue) < 2:
+        raise HTTPException(400, detail='Меньше двух пачек в очереди!')
+
+    pack_a, pack_b = packs_queue[-2:]
+
+    pack_a_dict = pack_a.dict(exclude={'id'})
+    pack_b_dict = pack_b.dict(exclude={'id'})
+
+    for name, value in pack_a_dict.items():
+        setattr(pack_b, name, value)
+
+    for name, value in pack_b_dict.items():
+        setattr(pack_a, name, value)
+
+    await engine.save(pack_a)
+    await engine.save(pack_b)
+    return await get_packs_queue()
+
+
+@router.put('/pintset_finish', response_model=List[MultipackOutput])
+@version(1, 0)
+async def pintset_finish():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    batch = await get_last_batch()
+    needed_packs = batch.params.packs * 2
+    number = batch.number
+
+    packs_queue = await get_packs_queue()
+
+    if len(packs_queue) < needed_packs:
+        error_msg = 'Недостаточно пачек'
+        await set_column_red(error_msg)
+        raise HTTPException(400, detail=error_msg)
+
+    pack_ids_a = []
+    pack_ids_b = []
+
+    for i in range(needed_packs):
+        packs_queue[i].in_queue = False
+        if i % 2 == 0:
+            pack_ids_a.append(packs_queue[i].id)
+        else:
+            pack_ids_b.append(packs_queue[i].id)
+
+    await engine.save_all(packs_queue)
+
+    multipack_a = Multipack(pack_ids=pack_ids_a)
+    multipack_b = Multipack(pack_ids=pack_ids_b)
+
+    multipack_a.batch_number = number
+    multipack_b.batch_number = number
+
+    current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
+    multipack_a.created_at = current_time
+    multipack_b.created_at = current_time
+
+    await engine.save(multipack_a)
+    await engine.save(multipack_b)
+
+    return [multipack_a, multipack_b]
+
+
+def find_first_without_qr(items):
+    for item in items:
+        if item.qr:
+            return item
+    return None
+
+
+@router.patch('/multipack_identification_auto', response_model=Multipack)
+@version(1, 0)
+async def multipack_identification_auto(qr: str, barcode: str):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    multipacks_queue = await get_multipacks_queue()
+    multipack_to_update = find_first_without_qr(multipacks_queue)
+
+    if not multipack_to_update:
+        error_msg = 'В очереди нет мультипаков без идентификатора'
+        await set_column_red(error_msg)
+        raise HTTPException(400, detail=error_msg)
+
+    await check_qr_unique_or_set_state_error(qr)
+
+    multipack_to_update.qr = qr
+    multipack_to_update.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    multipack_to_update.barcode = barcode
+    multipack_to_update.status = Status.ADDED_QR
+    await engine.save(multipack_to_update)
+
+    return multipack_to_update
+
+
+@router.patch('/cube_identification_auto', response_model=Cube)
+@version(1, 0)
+async def cube_identification_auto(qr: str, barcode: str):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    cube_queue = await engine.find(Cube, sort=query.asc(Cube.id))
+    cube_to_update = find_first_without_qr(cube_queue)
+
+    if not cube_to_update:
+        error_msg = 'В очереди нет кубов без идентификатора'
+        await set_column_red(error_msg)
+        raise HTTPException(400, detail=error_msg)
+
+    await check_qr_unique_or_set_state_error(qr)
+
+    cube_to_update.qr = qr
+    cube_to_update.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    cube_to_update.barcode = barcode
+    await engine.save(cube_to_update)
+
+    return cube_to_update
+
+
+@router.put('/cube_finish_auto', response_model=Cube)
+@version(1, 0)
+async def cube_finish_auto():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    batch = await get_last_batch()
+    needed_packs = batch.params.packs
+    needed_multipacks = batch.params.multipacks
+    number = batch.number
+
+    multipacks_queue = await get_multipacks_queue()
+
+    if len(multipacks_queue) < needed_multipacks:
+        error_msg = 'В очереди недостаточно мультипаков'
+        await set_column_red(error_msg)
+        raise HTTPException(400, detail=error_msg)
+
+    multipack_ids = []
+    for i in range(needed_multipacks):
+        multipacks_queue[i].status = Status.IN_CUBE
+        multipack_ids.append(multipacks_queue[i].id)
+
+    cube = Cube(multipack_ids=multipack_ids)
+    cube.batch_number = number
+    cube.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    cube.packs_in_multipacks = needed_packs
+    cube.multipack_in_cubes = needed_multipacks
+    await engine.save(cube)
+
+    return cube

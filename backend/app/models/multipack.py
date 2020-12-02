@@ -1,8 +1,7 @@
 from enum import Enum
 from typing import List, Optional
 from pydantic import BaseModel
-from odmantic import Model, ObjectId, Field
-from datetime import datetime
+from odmantic import Model, ObjectId
 
 
 class Status(str, Enum):
@@ -17,16 +16,17 @@ class Status(str, Enum):
 class Multipack(Model):
     qr: Optional[str]
     barcode: Optional[str]
-    status: Optional[Status]
+    status: Status = Status.EXIT_PINTSET
     pack_ids: List[ObjectId]
     batch_number: Optional[int]
     created_at: Optional[str]
+    added_qr_at: Optional[str]
 
 
 class MultipackOutput(Model):
     created_at: str
     qr: Optional[str]
-    status: Optional[Status]
+    status: Status
 
 
 class MultipackPatchSchema(BaseModel):

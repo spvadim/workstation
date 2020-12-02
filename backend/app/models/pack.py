@@ -3,19 +3,12 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-
 class Pack(Model):
     qr: str
     barcode: str
-    batch_number: int
-    in_queue: bool = True
-    created_at: str
-
-
-class PackInput(Model):
-    qr: str
-    barcode: str
     batch_number: Optional[int]
+    in_queue: bool = True
+    created_at: Optional[str]
 
 
 class PackOutput(Model):
@@ -28,4 +21,6 @@ class PackPatchSchema(BaseModel):
     barcode: Optional[str]
 
 
-
+class PackCameraInput(Model):
+    qr: Optional[str]
+    barcode: Optional[str]
