@@ -12,13 +12,15 @@ const Table = React.memo(({ settings }) => {
     let [tableData, setTableData] = useState("/loader");
 
     useEffect(() => {
-        setTimeout(() => {
-            let request = axios.get(address);
-            request.then(res => {
-                setTableData(res.data);
-            })
-            request.catch(e => console.log(e))
-        }, 1000)
+        if (address) {
+            setTimeout(() => {
+                let request = axios.get(address);
+                request.then(res => {
+                    setTableData(res.data);
+                })
+                request.catch(e => console.log(e))
+            }, 1000)
+        }
     }, [tableData])
     
     let columns = tableData.length !== 0 ? Object.keys(tableData[0]).concat(addFields) : [];  
