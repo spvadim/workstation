@@ -1,15 +1,31 @@
 import React, { useState } from "react";
+import { Redirect, Router } from "react-router-dom";
 
 import "./index.css";
 
-function EditButton({ callback }) {
+// http://141.101.196.127
+let address = "";
+
+const EditButton = React.memo (({ data, type }) => {
+    console.log("edit button: ", data)
+    let [page, setPage] = useState('');
+
+    if (page === "edit") return <Redirect to={
+        {
+            pathname: "/edit",
+            state: {
+                description: data,
+                type: type,
+            }
+        }
+    } />
 
     return (
         <div className="icon-container"
-             onClick={callback}>
-            <img className="icon" src="./edit.svg" alt="яйца"/>
+             onClick={() => setPage("edit")}>
+            <img className="icon" src="./edit.svg" alt="edit"/>
         </div>
     );
-}
+}, (prev, cur) => prev === cur ? false : true)
 
 export default EditButton;
