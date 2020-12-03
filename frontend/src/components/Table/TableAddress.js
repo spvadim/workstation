@@ -7,7 +7,7 @@ import EditButton from "../Buttons/EditButton.js"
 import Loader from "../Loader/index.js"
 
 const Table = React.memo(({ settings }) => {
-    let { title, addFields, address, type } = settings;
+    let { title, addFields, address, type, batch } = settings;
 
     let [tableData, setTableData] = useState("/loader");
 
@@ -32,7 +32,7 @@ const Table = React.memo(({ settings }) => {
                     if (col === "/trash") {
                         return <td><DeleteButton callback={() => {deleteRow(type, row.id)}} /></td>;
                     } else if (col === "/edit") {
-                        return <td><EditButton data={row} type={type} /></td>
+                        return <td><EditButton data={row} type={type} batch={batch} /></td>
                     } else if (row[col]) {
                         return <td>{row[col]}</td>;
                     } else {

@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import "./index.css";
 
+import Loader from "../Loader/index.js";
 import DeleteButton from "../Buttons/DeleteButton.js";
 
 const TableData = React.memo(({ settings, callback, data }) => {
-    let { title, addFields, type } = settings;
+    let { title, addFields, type, batchId } = settings;
 
-    let columns = data.length !== 0 ? Object.keys(data[0]).concat(addFields) : [];    
+    let columns = [];
+    if (data !== "/loader") {
+        columns = data.length !== 0 ? Object.keys(data[0]).concat(addFields) : [];
+    }
 
     const createRow = (row) => {
         return (
@@ -27,14 +31,12 @@ const TableData = React.memo(({ settings, callback, data }) => {
             <thead>
                 <caption style={{display: "flex"}} className="table-caption">{title}</caption>
                 <tr>
-                    {columns.map((name) => {
-                            return <td>{name[0] === "/" ? null : name}</td>
-                        })}
+                    {data === "/loader" ? null : columns.map((name) => <td>{name[0] === "/" ? null : name}</td>)}
                 </tr>
             </thead>
             <tfoot></tfoot>
             <tbody>
-                {data.map((row) => createRow(row))}
+                {data === "/loader" ? <Loader /> : data.map((row) => createRow(row))}
             </tbody>
 
             

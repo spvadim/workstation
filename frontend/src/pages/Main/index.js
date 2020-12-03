@@ -14,7 +14,7 @@ let address = "";
 axios.patch(address + "/api/v1_0/set_mode", {work_mode: "auto"});
 
 
-function Main({ partyNumber, settings }) {
+function Main({ partyNumber, settings, batch }) {
     const [error, setError] = useState('');
     const [mode, setMode] = useState("auto"); 
     const [page, setPage] = useState('');
@@ -23,13 +23,15 @@ function Main({ partyNumber, settings }) {
         cube: useMemo(() => ({
                         title: "Очередь кубов",
                         addFields: ["/edit", "/trash"],
-                        address: "",
+                        batch: batch,
+                        address: address + "/api/v1_0/cubes_queue",
                         type: "cubes",
                     }), []),
 
         multipack: useMemo(() => ({
                         title: "Очередь мультипаков",
                         addFields: ["/edit", "/trash"],
+                        batch: batch,
                         address: address + "/api/v1_0/multipacks_queue",
                         type: "multipacks",
                     }), []),
@@ -37,6 +39,7 @@ function Main({ partyNumber, settings }) {
         pack: useMemo(() => ({
                         title: "Очередь пачек",
                         addFields: ["/trash"],
+                        batch: batch,
                         address: address + "/api/v1_0/packs_queue",
                         type: "packs",
                     }), []),

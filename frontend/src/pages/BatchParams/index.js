@@ -14,6 +14,7 @@ let address = "";
 function BatchParams() {
 
     let [partyNumber, setPartyNumber] = useState('');
+    let [batch, setBatch] = useState('');
     let [params, setParams] = useState({});
     let [settings, setSettings] = useState({})
     let [redirect, setRedirect] = useState(false);
@@ -39,7 +40,7 @@ function BatchParams() {
                 number: partyNumber,
                 params_id: settings.id
             })
-            .then(() => setRedirect(true))
+            .then((res) => {setBatch({partyNumber: res.data.number, settings: res.data.params}); setRedirect(true)})
             .catch(e => console.log(e))
         }
     }
@@ -52,6 +53,7 @@ function BatchParams() {
                 state: {
                     partyNumber: partyNumber,
                     settings: settings,
+                    batch: batch
                 },
             }
         } />

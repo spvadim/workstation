@@ -1,61 +1,50 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import axios from "axios";
 import { Redirect } from "react-router-dom";
 import './index.css';
 
 import TableData from "../../components/Table/TableData.js";
 import Button from "../../components/Buttons/Button.js";
 
-function Edit({ description, type }) {
+// http://141.101.196.127
+let address = "";
 
-    let [addTableData, setAddTableData] = useState([
-        {
-            EAN13: "добавляемое",
-            QR: "................",
-            created_at: "......",
-            id: "12412542135"
-        },
-        {
-            EAN13: "добавл4яемое",
-            QR: "......12..........",
-            created_at: "..42....",
-            id: "2354635645734",
-        },
-        {
-            EAN13: "56234634",
-            QR: "......12..........",
-            created_at: "..42....",
-            id: "df234t",
-        }
-    ]);
+function Edit({ description, type, batch }) {
 
-    let [removeTableData, setRemoveTableData] = useState([
-        {
-            EAN13: "удаляемое",
-            QR: "................",
-            created_at: "......",
-            id: "234b28734b",
-        },
-        {
-            EAN13: "удаля235емое",
-            QR: ".........35.......",
-            created_at: "...35...",
-            id: "h23874b8273v625f",
+    let [containTableData, setContainTableData] = useState("/loader");
+    let [bigPack, setBigPack] = useState({});
+
+    console.log(batch)
+
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/" + type + "/" + description.id)
+        .then(async res => {
+
+            if (type === "multipacks") {
+                setBigPack(res.data)
+                setContainTableData(await getPacks(res.data.pack_ids))
+            }
+        })
+    }, [])
+
+    const getPacks = async (ids) => {
+        let packs = [];
+        for (let i = 0; i < ids.length; i++) {
+            let request = await axios.get(address + "/api/v1_0/packs/" + ids[i]);
+            let data = request.data;
+            packs.push({
+                qr: data.qr,
+                barcode: data.barcode,
+                created_at: data.created_at,
+                id: data.id,
+            })
         }
-    ]);
-    let [containTableData, setContainTableData] = useState([
-        {
-            EAN13: "567",
-            QR: "................",
-            created_at: "......",
-            id: "0vf92438b52",
-        },
-        {
-            EAN13: "123",
-            QR: "......43..........",
-            created_at: "...3...",
-            id: "230849283b52g956gh",
-        }
-    ]);
+
+        return packs;
+    }
+
+    let [addTableData, setAddTableData] = useState([]);
+    let [removeTableData, setRemoveTableData] = useState([]);
 
     let [page, setPage] = useState('');
 
@@ -115,8 +104,18 @@ function Edit({ description, type }) {
     }
 
     const submitChanges = () => {
-        console.log("Принять изменения")
-        setPage("/main");
+        if (containTableData.length === 0) {
+            axios.delete(address + "/api/v1_0/" + type + "/" + description.id)
+            .then(setPage("/main"))
+        } else if (containTableData !== "/loader") {
+            let temp = {};
+            Object.assign(temp, bigPack);
+            temp.pack_ids = containTableData.map((obj) => obj.id);
+            axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
+            .then(setPage("/main"))
+        } else {
+            setPage("/main")
+        }
     }
 
     const closeChanges = () => {
@@ -127,13 +126,7 @@ function Edit({ description, type }) {
     if (page === "/main") return <Redirect to={
         {
             pathname: "/main",
-            state: {
-                partyNumber: null,
-                settings: {
-                    multipacks: null,
-                    packs: null,
-                },
-            }
+            state: batch
         }
     } />
 

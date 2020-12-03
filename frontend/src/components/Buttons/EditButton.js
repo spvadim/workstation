@@ -6,8 +6,7 @@ import "./index.css";
 // http://141.101.196.127
 let address = "";
 
-const EditButton = React.memo (({ data, type }) => {
-    console.log("edit button: ", data)
+const EditButton = React.memo (({ data, type, batch }) => {
     let [page, setPage] = useState('');
 
     if (page === "edit") return <Redirect to={
@@ -16,6 +15,7 @@ const EditButton = React.memo (({ data, type }) => {
             state: {
                 description: data,
                 type: type,
+                batch: batch
             }
         }
     } />
