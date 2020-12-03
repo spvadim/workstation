@@ -7,16 +7,19 @@ import Loader from "../../components/Loader/index.js";
 
 import { Redirect } from "react-router-dom";
 import InputRadioContainer from "../../components/InputRadioContainer";
+import { useCookies } from "react-cookie";
+
 
 // http://141.101.196.127
 let address = "";
 
-function BatchParams({ setCookie, cookies }) {
-
+function BatchParams() {
     let [batchNumber, setPartyNumber] = useState('');
     let [params, setParams] = useState({});
     let [settings, setSettings] = useState({})
     let [redirect, setRedirect] = useState(false);
+
+    const [cookies, setCookie] = useCookies();
 
     useEffect(() => {
         axios.get(address + '/api/v1_0/batches_params')
