@@ -6,8 +6,8 @@ import DeleteButton from "../Buttons/DeleteButton.js";
 import EditButton from "../Buttons/EditButton.js"
 import Loader from "../Loader/index.js"
 
-const Table = React.memo(({ settings }) => {
-    let { title, addFields, address, type, batch } = settings;
+const Table = React.memo(({ settings, setError }) => {
+    let { title, addFields, address, type } = settings;
 
     let [tableData, setTableData] = useState("/loader");
 
@@ -18,21 +18,28 @@ const Table = React.memo(({ settings }) => {
                 request.then(res => {
                     setTableData(res.data);
                 })
-                request.catch(e => console.log(e))
+                request.catch(e => {setError(e); console.log(e)})
             }, 1000)
         }
     }, [tableData])
     
-    let columns = tableData.length !== 0 ? Object.keys(tableData[0]).concat(addFields) : [];  
+    // let columns = tableData.length !== 0 ? Object.keys(tableData[0]).concat(addFields) : [];  
+    let columns = [];
+
+    if (settings.columns) {
+        columns = settings.columns.concat(addFields);
+    } else if (tableData.length !== 0) {
+        columns = Object.keys(tableData[0]).concat(addFields);
+    }
 
     const createRow = (row) => {
         return (
             <tr>
                 {columns.map((col) => {
                     if (col === "/trash") {
-                        return <td><DeleteButton callback={() => {deleteRow(type, row.id)}} /></td>;
+                        return <td><DeleteButton callback={() => {deleteRow(row.id)}} /></td>;
                     } else if (col === "/edit") {
-                        return <td><EditButton data={row} type={type} batch={batch} /></td>
+                        return <td><EditButton data={row} type={type} /></td>
                     } else if (row[col]) {
                         return <td>{row[col]}</td>;
                     } else {
@@ -41,6 +48,15 @@ const Table = React.memo(({ settings }) => {
                 })}
             </tr>
         );
+    }
+
+    const deleteRow = (id) => {
+        // http://141.101.196.127
+        let address = "";
+
+        axios.delete(address + "/api/v1_0/" + type + "/" + id)
+        .then(res => console.log(res))
+        .catch(e => {setError(e); console.log(e)})
     }
 
     return (
@@ -69,14 +85,7 @@ const Table = React.memo(({ settings }) => {
     );
 })
 
-function deleteRow(type, id) {
-    let address = "http://141.101.196.127";
-    console.log(type)
-    axios.delete(address + "/api/v1_0/" + (type === "packs" ? "packs/" : 
-                                           type === "multipacks" ? "multipacks/" : null) + id)
-    .then(res => console.log(res))
-    .catch(e => console.log(e))
-}
+
 
 
 

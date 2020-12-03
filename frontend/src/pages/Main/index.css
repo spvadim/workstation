@@ -43,3 +43,10 @@
     display: flex;
     align-items: center;
 }
+
+.newbutton-container {
+    display: flex;
+    width: max-content;
+    padding: 0 1rem;
+    gap: 1rem;
+}

@@ -9,23 +9,36 @@ import Button from "../../components/Buttons/Button.js";
 // http://141.101.196.127
 let address = "";
 
-function Edit({ description, type, batch }) {
+function Edit({ description, type }) {
 
     let [containTableData, setContainTableData] = useState("/loader");
-    let [bigPack, setBigPack] = useState({});
-
-    console.log(batch)
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/" + type + "/" + description.id)
         .then(async res => {
-
             if (type === "multipacks") {
-                setBigPack(res.data)
-                setContainTableData(await getPacks(res.data.pack_ids))
+                setContainTableData(await getPacks(res.data.pack_ids));
+            } else if (type === "cubes") {
+                setContainTableData(await getMultipacks(res.data.multipack_ids));
             }
         })
     }, [])
+
+    const getMultipacks = async (ids) => {
+        let multipacks = [];
+        for (let i = 0; i < ids.length; i++) {
+            let request = await axios.get(address + "/api/v1_0/multipacks/" + ids[i]);
+            let data = request.data;
+            multipacks.push({
+                qr: data.qr,
+                barcode: data.barcode,
+                created_at: data.created_at,
+                id: data.id,
+            })
+        }
+
+        return multipacks;
+    }
 
     const getPacks = async (ids) => {
         let packs = [];
@@ -52,6 +65,7 @@ function Edit({ description, type, batch }) {
         description: useMemo(() =>({
                             title: type,
                             type: type,
+                            columns: ["created_at", "qr", "status", "id"],
                             addFields: [],
                         }), []),
         
@@ -59,6 +73,7 @@ function Edit({ description, type, batch }) {
                             title: "Добавляемое",
                             name: "addTable",
                             type: type,
+                            columns: ["created_at", "barcode", "qr", "id"],
                             addFields: "/delete",
                         }), []),
 
@@ -66,12 +81,14 @@ function Edit({ description, type, batch }) {
                             title: "Удаляемое",
                             name: "removeTable",
                             type: type,
+                            columns: ["created_at", "barcode", "qr", "id"],
                             addFields: "/return",
                         }), []),
 
         containTable: useMemo(() => ({
                             title: "Содержимое",
                             type: type,
+                            columns: ["created_at", "barcode", "qr", "id"],
                             addFields: "/remove",
                         }), []),
 
@@ -107,12 +124,13 @@ function Edit({ description, type, batch }) {
         if (containTableData.length === 0) {
             axios.delete(address + "/api/v1_0/" + type + "/" + description.id)
             .then(setPage("/main"))
+
         } else if (containTableData !== "/loader") {
-            let temp = {};
-            Object.assign(temp, bigPack);
-            temp.pack_ids = containTableData.map((obj) => obj.id);
+            let packs = containTableData.map((obj) => obj.id);
+            let temp = {pack_ids: packs};
             axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
             .then(setPage("/main"))
+
         } else {
             setPage("/main")
         }
@@ -123,12 +141,7 @@ function Edit({ description, type, batch }) {
         setPage("/main");
     }
 
-    if (page === "/main") return <Redirect to={
-        {
-            pathname: "/main",
-            state: batch
-        }
-    } />
+    if (page === "/main") return <Redirect to="/main" />
 
     return (
         <div className="container-edit">

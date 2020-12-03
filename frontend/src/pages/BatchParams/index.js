@@ -11,14 +11,12 @@ import InputRadioContainer from "../../components/InputRadioContainer";
 // http://141.101.196.127
 let address = "";
 
-function BatchParams() {
+function BatchParams({ setCookie, cookies }) {
 
-    let [partyNumber, setPartyNumber] = useState('');
-    let [batch, setBatch] = useState('');
+    let [batchNumber, setPartyNumber] = useState('');
     let [params, setParams] = useState({});
     let [settings, setSettings] = useState({})
     let [redirect, setRedirect] = useState(false);
-
 
     useEffect(() => {
         axios.get(address + '/api/v1_0/batches_params')
@@ -26,37 +24,27 @@ function BatchParams() {
             setParams(res.data);
         })
         .catch(e => console.log(e))
-
-        // let promise = fetch('http://141.101.196.127/api/v1_0/batches_params')
-        // console.log(promise)
-
     }, [setParams])
 
     function submitHandler(event) {
         event.preventDefault();
 
-        if (partyNumber && Object.keys(settings).length !== 0) { 
+        if (batchNumber && Object.keys(settings).length !== 0) { 
             axios.put(address + "/api/v1_0/batches", {
-                number: partyNumber,
+                number: batchNumber,
                 params_id: settings.id
             })
-            .then((res) => {setBatch({partyNumber: res.data.number, settings: res.data.params}); setRedirect(true)})
+            .then(() => setRedirect(true))
             .catch(e => console.log(e))
         }
     }
 
     if (redirect) {
-        
-        return <Redirect to={
-            {
-                pathname: "/main",
-                state: {
-                    partyNumber: partyNumber,
-                    settings: settings,
-                    batch: batch
-                },
-            }
-        } />
+        setCookie("batchNumber", batchNumber, {path: "/"});
+        setCookie("multipacks", settings.multipacks, {path: "/"});
+        setCookie("packs", settings.packs, {path: "/"});
+
+        return <Redirect to="/main" />
     }
 
     return (
@@ -67,7 +55,7 @@ function BatchParams() {
                 <span>Номер партии ГП: </span>
                 <input name="number_party" 
                        type="text"
-                       value={partyNumber} 
+                       value={batchNumber} 
                        onChange={event => setPartyNumber(event.target.value)} 
                        autoFocus/>
             </div>

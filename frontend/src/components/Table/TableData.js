@@ -5,11 +5,16 @@ import Loader from "../Loader/index.js";
 import DeleteButton from "../Buttons/DeleteButton.js";
 
 const TableData = React.memo(({ settings, callback, data }) => {
-    let { title, addFields, type, batchId } = settings;
+    let { title, addFields, type } = settings;
 
     let columns = [];
     if (data !== "/loader") {
-        columns = data.length !== 0 ? Object.keys(data[0]).concat(addFields) : [];
+        if (settings.columns) {
+            columns = settings.columns.concat(addFields);
+        } else if (data.length !== 0) {
+            columns = Object.keys(data[0]).concat(addFields);
+        }
+        // columns = data.length !== 0 ? Object.keys(data[0]).concat(addFields) : [];
     }
 
     const createRow = (row) => {

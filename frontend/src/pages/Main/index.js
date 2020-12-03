@@ -8,22 +8,28 @@ import ErrorBox from "../../components/ErrorBox/index.js";
 import Button from "../../components/Buttons/Button.js";
 
 import { Redirect } from "react-router-dom";
+import { useCookies } from "react-cookie";
 
 // http://141.101.196.127
 let address = "";
 axios.patch(address + "/api/v1_0/set_mode", {work_mode: "auto"});
 
-
-function Main({ partyNumber, settings, batch }) {
+function Main(props) {
     const [error, setError] = useState('');
     const [mode, setMode] = useState("auto"); 
     const [page, setPage] = useState('');
+
+    const [cookies] = useCookies();
+
+    const createError = (error) => {
+        return setError(JSON.parse(error.request.response).detail[0].msg || error.message)
+    }
 
     const tableSettings = {
         cube: useMemo(() => ({
                         title: "Очередь кубов",
                         addFields: ["/edit", "/trash"],
-                        batch: batch,
+                        columns: ["created_at", "qr", "id"],
                         address: address + "/api/v1_0/cubes_queue",
                         type: "cubes",
                     }), []),
@@ -31,7 +37,7 @@ function Main({ partyNumber, settings, batch }) {
         multipack: useMemo(() => ({
                         title: "Очередь мультипаков",
                         addFields: ["/edit", "/trash"],
-                        batch: batch,
+                        columns: ["created_at", "qr", "status", "id"],
                         address: address + "/api/v1_0/multipacks_queue",
                         type: "multipacks",
                     }), []),
@@ -39,7 +45,7 @@ function Main({ partyNumber, settings, batch }) {
         pack: useMemo(() => ({
                         title: "Очередь пачек",
                         addFields: ["/trash"],
-                        batch: batch,
+                        columns: ["created_at", "qr", "id"],
                         address: address + "/api/v1_0/packs_queue",
                         type: "packs",
                     }), []),
@@ -54,15 +60,12 @@ function Main({ partyNumber, settings, batch }) {
 
     const updateMode = () => {
         let newMode = mode === "auto" ? "manual" : "auto" 
-        console.log("mode: ", mode);
-        console.log("new mode: ", newMode);
         axios.patch(address + "/api/v1_0/set_mode", {work_mode: newMode})
         .then(res => {
-            console.log(res.data);
             setMode(newMode);
         })
         .catch(e => {
-            setError(JSON.parse(e.request.response).detail[0].msg || e.message)
+            createError(e);
         })
     }
 
@@ -72,12 +75,12 @@ function Main({ partyNumber, settings, batch }) {
             <div className="header">
                 <div className="header-line">
                     <p>
-                        Партия №: <u><b>{partyNumber ? partyNumber : "N/A"}</b></u>,
-                        куб: <u><b>{settings.multipacks ? settings.multipacks : "N/A"}</b></u> мультипаков, 
-                        мультипак: <u><b>{settings.packs ? settings.packs : "N/A"}</b></u> пачек.
+                        Партия №: <u><b>{cookies.batchNumber ? cookies.batchNumber : "N/A"}</b></u>,
+                        куб: <u><b>{cookies.multipacks ? cookies.multipacks : "N/A"}</b></u> мультипаков, 
+                        мультипак: <u><b>{cookies.packs ? cookies.packs : "N/A"}</b></u> пачек.
                     </p>
-
-                    <div style={{display: "flex", width: "max-content", padding: "0 1rem", gap: "1rem"}}> 
+                    
+                    <div className="newbutton-container" style={mode === "manual" ? {visibility: "visible"} : {visibility: "hidden"}}> 
                         <Button text="Новый куб"
                                 callback={() => {console.log("Новый куб")}} />
 
@@ -86,7 +89,6 @@ function Main({ partyNumber, settings, batch }) {
                     </div>
 
                 </div>
-                
 
                 <div className="switch-container">
                     <span>Автоматический</span>
@@ -109,11 +111,11 @@ function Main({ partyNumber, settings, batch }) {
             <br />
 
             <div className="tables-container">
-                <TableAddress settings={tableSettings.cube}/>
+                <TableAddress settings={tableSettings.cube} setError={(error) => createError(error)} />
                 
-                <TableAddress settings={tableSettings.multipack} />
+                <TableAddress settings={tableSettings.multipack} setError={(error) => createError(error)} />
 
-                <TableAddress settings={tableSettings.pack} />
+                <TableAddress settings={tableSettings.pack} setError={(error) => createError(error)} />
 
             </div>
 
