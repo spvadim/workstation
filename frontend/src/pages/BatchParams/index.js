@@ -19,7 +19,7 @@ function BatchParams() {
     let [settings, setSettings] = useState({})
     let [redirect, setRedirect] = useState(false);
 
-    const [cookies, setCookie] = useCookies();
+    const [cookies, setCookie] = useCookies([]);
 
     useEffect(() => {
         axios.get(address + '/api/v1_0/batches_params')
