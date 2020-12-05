@@ -108,18 +108,17 @@ async def pintset_finish():
 
     await engine.save_all(packs_queue)
 
-    multipack_a = Multipack(pack_ids=pack_ids_a)
-    multipack_b = Multipack(pack_ids=pack_ids_b)
-
-    multipack_a.batch_number = number
-    multipack_b.batch_number = number
-
     current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
+    multipack_a = Multipack(pack_ids=pack_ids_a)
+    multipack_a.batch_number = number
     multipack_a.created_at = current_time
-    multipack_b.created_at = current_time
-
     await engine.save(multipack_a)
+
+
+    multipack_b = Multipack(pack_ids=pack_ids_b)
+    multipack_b.batch_number = number
+    multipack_b.created_at = current_time
     await engine.save(multipack_b)
 
     return [multipack_a, multipack_b]
@@ -202,16 +201,15 @@ async def cube_finish_auto():
         await set_column_red(error_msg)
         raise HTTPException(400, detail=error_msg)
 
-    multipack_ids = []
+    multipack_ids_with_pack_ids = {}
     for i in range(needed_multipacks):
         multipacks_queue[i].status = Status.IN_CUBE
-        multipack_ids.append(multipacks_queue[i].id)
+        multipack_ids_with_pack_ids[str(multipacks_queue[i].id)] = multipacks_queue[i].pack_ids
+    await engine.save_all(multipacks_queue)
 
-    cube = Cube(multipack_ids=multipack_ids)
-    cube.batch_number = number
-    cube.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
-    cube.packs_in_multipacks = needed_packs
-    cube.multipack_in_cubes = needed_multipacks
+    current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids, batch_number=number, created_at=current_time,
+                packs_in_multipacks=needed_packs, multipacks_in_cubes=needed_multipacks)
     await engine.save(cube)
 
     return cube
