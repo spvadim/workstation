@@ -4,6 +4,7 @@ from odmantic import query, ObjectId, Model
 from .engine import engine
 from app.models.pack import Pack
 from app.models.multipack import Multipack, Status
+from app.models.cube import Cube
 from app.models.production_batch import ProductionBatch
 from app.models.qr_list import QrList
 from app.models.system_status import SystemStatus, Mode, SystemState, State
@@ -15,6 +16,12 @@ async def get_by_id_or_404(model, id: ObjectId) -> Model:
         raise HTTPException(404)
     return instance
 
+
+async def get_by_qr_or_404(model, qr: str) -> Model:
+    instance = await engine.find_one(model, model.qr == qr)
+    if instance is None:
+        raise HTTPException(404)
+    return instance
 
 async def get_current_status() -> SystemStatus:
     return await engine.find_one(SystemStatus)
@@ -129,6 +136,9 @@ async def get_multipacks_queue() -> List[Multipack]:
             and multipack.status != Status.IN_CUBE]
 
 
+async def get_cubes_queue() -> List[Cube]:
+    last_batch = await get_last_batch()
+    return await engine.find(Cube, Cube.batch_number == last_batch.number)
 
 
 
