@@ -6,20 +6,25 @@ import SwitchMode from "../../components/SwitchMode/index.js";
 import TableAddress from "../../components/Table/TableAddress.js";
 import ErrorBox from "../../components/ErrorBox/index.js";
 import Button from "../../components/Buttons/Button.js";
+import InputTextQr from "../../components/InputText/InputTextFQr.js";
+import ModalWindow from "../../components/ModalWindow/index.js";
 
 import { Redirect } from "react-router-dom";
 import { useCookies } from "react-cookie";
 
-// http://141.101.196.127
-let address = "";
+import address from "../../address.js";
+
 axios.patch(address + "/api/v1_0/set_mode", {work_mode: "auto"});
 
 function Main(props) {
     const [error, setError] = useState('');
     const [mode, setMode] = useState("auto"); 
     const [page, setPage] = useState('');
+    const [modal, setModal] = useState(false);
 
     const [cookies] = useCookies();
+
+    console.log(modal)
 
     const createError = (error) => {
         return setError(JSON.parse(error.request.response).detail[0].msg || error.message)
@@ -94,28 +99,24 @@ function Main(props) {
                     <span>Автоматический</span>
                         <SwitchMode callback={updateMode} />
                     <span>Ручной</span>
+                    {modal ? <ModalWindow text={"Вы действительно хотите удалить этот элемент?"} callback={(flag) => {if (flag) {modal[0](modal[1]); setModal(false)} else {setModal(false)}}} /> : null} 
                 </div>
 
                 <br />
 
-                <div className="container-error-button"
-                    style={{visibility: error ? "visible" : "hidden"}}>
-                    <ErrorBox text={error} />
-                    
-                    <Button text="Сбросить ошибку"
-                            callback={() => {setError('')}} />
-                </div>
+                <ErrorBox />
 
             </div>
 
             <br />
 
             <div className="tables-container">
-                <TableAddress settings={tableSettings.cube} setError={(error) => createError(error)} />
-                
-                <TableAddress settings={tableSettings.multipack} setError={(error) => createError(error)} />
 
-                <TableAddress settings={tableSettings.pack} setError={(error) => createError(error)} />
+                <TableAddress settings={tableSettings.cube} setError={(error) => createError(error)} setModal={setModal} />
+                
+                <TableAddress settings={tableSettings.multipack} setError={(error) => createError(error)} setModal={setModal}/>
+
+                <TableAddress settings={tableSettings.pack} setError={(error) => createError(error)} setModal={setModal} />
 
             </div>
 
@@ -125,12 +126,7 @@ function Main(props) {
             </span>
 
             <div className="footer-components">
-                <div>
-                    <label>QR: </label>
-                    <input type="text" 
-                        id="input-qr"
-                        autoFocus/>
-                </div>
+                <InputTextQr label="QR: " autoFocus={true} callback={(e) => {console.log(e)}}/>
                 
                 <Button text="Новая партия"
                         callback={() => {setPage("/")}} />

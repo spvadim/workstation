@@ -6,7 +6,7 @@ import DeleteButton from "../Buttons/DeleteButton.js";
 import EditButton from "../Buttons/EditButton.js"
 import Loader from "../Loader/index.js"
 
-const Table = React.memo(({ settings, setError }) => {
+const Table = React.memo(({ settings, setError, setModal }) => {
     let { title, addFields, address, type } = settings;
 
     let [tableData, setTableData] = useState("/loader");
@@ -18,7 +18,7 @@ const Table = React.memo(({ settings, setError }) => {
                 request.then(res => {
                     setTableData(res.data);
                 })
-                request.catch(e => {setError(e); console.log(e)})
+                request.catch(e => {console.log(e)})
             }, 1000)
         }
     }, [tableData])
@@ -37,7 +37,7 @@ const Table = React.memo(({ settings, setError }) => {
             <tr>
                 {columns.map((col) => {
                     if (col === "/trash") {
-                        return <td><DeleteButton callback={() => {deleteRow(row.id)}} /></td>;
+                        return <td><DeleteButton callback={() => {setModal([deleteRow, row.id])}} /></td>;
                     } else if (col === "/edit") {
                         return <td><EditButton data={row} type={type} /></td>
                     } else if (row[col]) {
@@ -52,7 +52,7 @@ const Table = React.memo(({ settings, setError }) => {
 
     const deleteRow = (id) => {
         // http://141.101.196.127
-        let address = "";
+        let address = "http://141.101.196.127";
 
         axios.delete(address + "/api/v1_0/" + type + "/" + id)
         .then(res => console.log(res))

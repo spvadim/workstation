@@ -13,8 +13,7 @@ const TableData = React.memo(({ settings, callback, data }) => {
             columns = settings.columns.concat(addFields);
         } else if (data.length !== 0) {
             columns = Object.keys(data[0]).concat(addFields);
-        }
-        // columns = data.length !== 0 ? Object.keys(data[0]).concat(addFields) : [];
+        } 
     }
 
     const createRow = (row) => {

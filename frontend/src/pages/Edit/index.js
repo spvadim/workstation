@@ -5,9 +5,7 @@ import './index.css';
 
 import TableData from "../../components/Table/TableData.js";
 import Button from "../../components/Buttons/Button.js";
-
-// http://141.101.196.127
-let address = "";
+import address from "../../address.js";
 
 function Edit({ description, type }) {
 
@@ -19,7 +17,7 @@ function Edit({ description, type }) {
             if (type === "multipacks") {
                 setContainTableData(await getPacks(res.data.pack_ids));
             } else if (type === "cubes") {
-                setContainTableData(await getMultipacks(res.data.multipack_ids));
+                setContainTableData(await getMultipacks(Object.keys(res.data.multipack_ids_with_pack_ids)));
             }
         })
     }, [])

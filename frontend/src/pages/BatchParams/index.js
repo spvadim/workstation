@@ -8,10 +8,8 @@ import Loader from "../../components/Loader/index.js";
 import { Redirect } from "react-router-dom";
 import InputRadioContainer from "../../components/InputRadioContainer";
 import { useCookies } from "react-cookie";
+import address from "../../address.js";
 
-
-// http://141.101.196.127
-let address = "";
 
 function BatchParams() {
     let [batchNumber, setPartyNumber] = useState('');
