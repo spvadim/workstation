@@ -23,7 +23,7 @@ const ErrorBox = () => {
             })
             request.catch(res => console.log(res))
         }, 1000)
-    }, [value])
+    })
 
     return (
         <div className="container-error-button"

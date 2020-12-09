@@ -6,19 +6,52 @@ import address from "../../address.js";
 let timer;
 const InputTextQr = React.memo(({ label, autoFocus=false }) => {
     const [value, setValue] = useState("");
-    const [valueFlag, setValueFlag] = useState(true);
+    const [idCube, setIdCube] = useState("");
+    const [valueFlag, setValueFlag] = useState(false);
+    const [flagSetQr, setFlagSetQr] = useState(false);
 
     useEffect(() => { // это чтобы checkCudeQr выполнился только после 2 секунд бездействия
         if (valueFlag) {
             clearTimeout(timer);
-            timer = setTimeout(checkCubeByQr, 2000);
+            console.log(flagSetQr, idCube)
+            if (flagSetQr) {
+                timer = setTimeout(setQrCube, 1000);
+            } else {
+                timer = setTimeout(checkCubeByQr, 1000);
+            }
             setValueFlag(false)
         }
     }, [valueFlag])
 
-    const checkCubeByQr = async () => {
-        let temp = await axios.get(address + "/api/v1_0/find_cube_by_included_qr/" + value, {mode: "no-cors"})
-        console.log(temp)
+    const setQrCube = () => {
+        console.log("Введите QR");
+        setValue("");
+        axios.patch(address + "/api/v1_0/cubes/" + idCube, {"qr": value})
+        .then(res => {
+            setFlagSetQr(false);
+            console.log(res)
+        })
+        .catch(res => {
+            if (res.response.status === 400) {
+                console.log("qr не уникален!")
+            } else {
+                console.log(res.responce.data.detail)
+            }
+        })
+
+    }
+
+    const checkCubeByQr = () => {
+        axios.get(address + "/api/v1_0/find_cube_by_included_qr/" + value)
+        .then(res => {
+            if (res.data.qr) {
+                console.log("Куб уже идентифицирован!")
+            } else {
+                setIdCube(res.data.id);
+                setFlagSetQr(true)
+            }
+        })
+        .catch(res => console.log(res.response))
     }
 
     return (
