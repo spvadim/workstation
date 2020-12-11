@@ -86,7 +86,10 @@ async def pintset_finish():
         raise HTTPException(400, detail='В данный момент используется ручной режим')
 
     batch = await get_last_batch()
-    needed_packs = batch.params.packs * 2
+
+#    needed_packs = batch.params.packs * 2
+    needed_packs = batch.params.packs
+
     number = batch.number
 
     packs_queue = await get_packs_queue()
@@ -97,14 +100,17 @@ async def pintset_finish():
         raise HTTPException(400, detail=error_msg)
 
     pack_ids_a = []
-    pack_ids_b = []
+
+#    pack_ids_b = []
 
     for i in range(needed_packs):
         packs_queue[i].in_queue = False
-        if i % 2 == 0:
-            pack_ids_a.append(packs_queue[i].id)
-        else:
-            pack_ids_b.append(packs_queue[i].id)
+
+        pack_ids_a.append(packs_queue[i].id)
+#         if i % 2 == 0:
+#            pack_ids_a.append(packs_queue[i].id)
+#        else:
+#            pack_ids_b.append(packs_queue[i].id)
 
     await engine.save_all(packs_queue)
 
@@ -116,12 +122,13 @@ async def pintset_finish():
     await engine.save(multipack_a)
 
 
-    multipack_b = Multipack(pack_ids=pack_ids_b)
-    multipack_b.batch_number = number
-    multipack_b.created_at = current_time
-    await engine.save(multipack_b)
+#    multipack_b = Multipack(pack_ids=pack_ids_b)
+#    multipack_b.batch_number = number
+#    multipack_b.created_at = current_time
+#    await engine.save(multipack_b)
 
-    return [multipack_a, multipack_b]
+#    return [multipack_a, multipack_b]
+    return [multipack_a]
 
 
 def find_first_without_qr(items):
