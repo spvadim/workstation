@@ -4,10 +4,11 @@ import "./index.css";
 
 import SwitchMode from "../../components/SwitchMode/index.js";
 import TableAddress from "../../components/Table/TableAddress.js";
-import ErrorBox from "../../components/ErrorBox/index.js";
 import Button from "../../components/Buttons/Button.js";
-import InputTextQr from "../../components/InputText/InputTextFQr.js";
+import InputTextQr from "../../components/InputText/InputTextQr.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
+import ColumnError from "../../components/ColumnError/index.js";
+import Notification from "../../components/Notification/index.js";
 
 import { Redirect } from "react-router-dom";
 import { useCookies } from "react-cookie";
@@ -17,18 +18,12 @@ import address from "../../address.js";
 axios.patch(address + "/api/v1_0/set_mode", {work_mode: "auto"});
 
 function Main(props) {
-    const [error, setError] = useState('');
     const [mode, setMode] = useState("auto"); 
     const [page, setPage] = useState('');
     const [modal, setModal] = useState(false);
+    const [notificationText, setNotificationText] = useState("");
 
     const [cookies] = useCookies();
-
-    console.log(modal)
-
-    const createError = (error) => {
-        return setError(JSON.parse(error.request.response).detail[0].msg || error.message)
-    }
 
     const tableSettings = {
         cube: useMemo(() => ({
@@ -104,8 +99,6 @@ function Main(props) {
 
                 <br />
 
-                <ErrorBox />
-
             </div>
 
             <br />
@@ -121,12 +114,11 @@ function Main(props) {
             </div>
 
         <div className="footer">
-            <span className="text-mode">
-                {mode === "manual" ? "Ручной: отсканируйте QR упаковки для редактирования" : "Автомат: отсканируйте внутренний QR для привязки к кубу"}
-            </span>
+            <Notification text={notificationText} />
+            <ColumnError />
 
             <div className="footer-components">
-                <InputTextQr label="QR: " autoFocus={true} callback={(e) => {console.log(e)}}/>
+                <InputTextQr label="QR: " autoFocus={true} setNotification={setNotificationText}/>
                 
                 <Button text="Новая партия"
                         callback={() => {setPage("/")}} />

@@ -6,7 +6,7 @@ import DeleteButton from "../Buttons/DeleteButton.js";
 import EditButton from "../Buttons/EditButton.js"
 import Loader from "../Loader/index.js"
 
-const Table = React.memo(({ settings, setError, setModal }) => {
+const TableAddress = React.memo(({ settings, setError, setModal }) => {
     let { title, addFields, address, type } = settings;
 
     let [tableData, setTableData] = useState("/loader");
@@ -89,4 +89,4 @@ const Table = React.memo(({ settings, setError, setModal }) => {
 
 
 
-export default Table;
+export default TableAddress;

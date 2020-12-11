@@ -4,7 +4,7 @@ import "./index.css";
 import address from "../../address.js";
 
 let timer;
-const InputTextQr = React.memo(({ label, autoFocus=false }) => {
+const InputTextQr = React.memo(({ label, autoFocus=false, setNotification }) => {
     const [value, setValue] = useState("");
     const [idCube, setIdCube] = useState("");
     const [valueFlag, setValueFlag] = useState(false);
@@ -13,7 +13,6 @@ const InputTextQr = React.memo(({ label, autoFocus=false }) => {
     useEffect(() => { // это чтобы checkCudeQr выполнился только после 2 секунд бездействия
         if (valueFlag) {
             clearTimeout(timer);
-            console.log(flagSetQr, idCube)
             if (flagSetQr) {
                 timer = setTimeout(setQrCube, 1000);
             } else {
@@ -24,18 +23,17 @@ const InputTextQr = React.memo(({ label, autoFocus=false }) => {
     }, [valueFlag])
 
     const setQrCube = () => {
-        console.log("Введите QR");
+        setNotification("Введите QR для идентификации куба")
         setValue("");
         axios.patch(address + "/api/v1_0/cubes/" + idCube, {"qr": value})
         .then(res => {
             setFlagSetQr(false);
-            console.log(res)
         })
         .catch(res => {
             if (res.response.status === 400) {
-                console.log("qr не уникален!")
+                setNotification("QR не уникален!")
             } else {
-                console.log(res.responce.data.detail)
+                setNotification(res.responce.data.detail)
             }
         })
 
@@ -45,13 +43,21 @@ const InputTextQr = React.memo(({ label, autoFocus=false }) => {
         axios.get(address + "/api/v1_0/find_cube_by_included_qr/" + value)
         .then(res => {
             if (res.data.qr) {
-                console.log("Куб уже идентифицирован!")
+                setNotification("Куб уже идентифицирован")
             } else {
+                setNotification("Куб найден, введите QR для идентификации")
                 setIdCube(res.data.id);
-                setFlagSetQr(true)
+                setFlagSetQr(true);
+                setValue("")
             }
         })
-        .catch(res => console.log(res.response))
+        .catch(res => {
+            if (res.response.status === 404) {
+                setNotification("Куб не найден");
+                setValue("");
+            } 
+            else setNotification(res.responce.data.detail)
+        })
     }
 
     return (

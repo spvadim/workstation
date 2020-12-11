@@ -1,0 +1,16 @@
+.error-container {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.error-container-title {
+    display: flex;
+    gap: 1rem;
+}
+
+.error-container div {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
