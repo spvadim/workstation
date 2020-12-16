@@ -6,7 +6,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Route } from "react-router-dom";
 import { CookiesProvider } from 'react-cookie';
-import store from './app/store';
+import store from './store';
 import { Provider } from 'react-redux';
 
 
