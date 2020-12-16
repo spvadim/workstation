@@ -1,8 +1,7 @@
 from typing import List
 from odmantic import ObjectId
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException
-from fastapi import Depends, Header
+from fastapi import APIRouter
 from fastapi_versioning import version
 from app.db.engine import engine
 from app.db.db_utils import get_last_batch, get_by_id_or_404
@@ -31,10 +30,12 @@ async def create_batch(batch: ProductionBatchInput):
     params = await get_by_id_or_404(ProductionBatchParams, batch.params_id)
     batch = ProductionBatch(number=batch.number, params=params)
     batch.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
     last_batch = await get_last_batch()
     if last_batch:
         last_batch.closed_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
         await engine.save(last_batch)
+
     await engine.save(batch)
     return batch
 
