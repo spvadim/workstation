@@ -1,0 +1,15 @@
+#params_box {
+    width: max-content;
+    margin: auto;
+}
+
+.input-text {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.input-text input {
+    height: 18px;
+    width: 40%;
+}
