@@ -1,7 +1,10 @@
 from typing import List, Optional, Union
 from fastapi import HTTPException
 from odmantic import query, ObjectId, Model
+from pydantic.tools import parse_obj_as
+
 from .engine import engine
+
 from app.models.pack import Pack
 from app.models.multipack import Multipack, Status
 from app.models.cube import Cube
@@ -9,6 +12,9 @@ from app.models.production_batch import ProductionBatch
 from app.models.qr_list import QrList
 from app.models.system_status import SystemStatus, Mode, SystemState, State
 from app.models.system_settings import SystemSettings, SystemSettingsResponse
+from app.models.report import ReportRequest, ReportResponse, \
+    CubeReportItem, MPackReportItem, PackReportItem
+
 from app.config import default_settings, get_apply_settings_url
 
 
@@ -169,3 +175,27 @@ async def create_system_settings_if_not_exists():
     if system_settings is None:
         system_settings = default_settings
         await engine.save(system_settings)
+
+
+async def get_report(q: ReportRequest) -> ReportResponse:
+    last_batch = await get_last_batch()
+
+    cubes = await engine.find(Cube, Cube.batch_number != last_batch.number and
+                              q.report_begin <= Cube.created_at <= q.report_end,
+                              sort=query.asc(Cube.created_at))
+    cubes_report = [parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes]
+
+    for i, cube in enumerate(cubes):
+        list_of_ids = [ObjectId(i) for i in cube.multipack_ids_with_pack_ids]
+        multipacks = await engine.find(Multipack, Multipack.id.in_(list_of_ids))
+        mpacks_report = [parse_obj_as(MPackReportItem, mpack.dict()) for mpack in multipacks]
+        cubes_report[i].multipacks = mpacks_report
+
+        for j, multipack in enumerate(multipacks):
+            packs = await engine.find(Pack, Pack.id.in_(multipack.pack_ids))
+            packs_report = [parse_obj_as(PackReportItem, pack.dict()) for pack in packs]
+            mpacks_report[j].packs = packs_report
+
+    report = ReportResponse(**q.dict(), cubes=cubes_report)
+
+    return report

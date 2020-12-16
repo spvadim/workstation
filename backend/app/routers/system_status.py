@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 from fastapi_versioning import version
 from app.models.system_status import Mode, SystemState, SystemStatus
+from app.models.report import ReportRequest, ReportResponse
 from app.db.db_utils import get_current_status, get_current_workmode, get_current_state, set_column_yellow, \
-    set_column_red, flush_state, change_coded_setting
+    set_column_red, flush_state, change_coded_setting, get_report
 from app.db.engine import engine
 
 router = APIRouter()
@@ -59,3 +60,9 @@ async def set_error_state(error_msg: str):
 @version(1, 0)
 async def set_normal_state():
     return await flush_state()
+
+
+@router.post("/get_report", response_model=ReportResponse)
+@version(1, 0)
+async def get_system_report(report_query: ReportRequest) -> ReportResponse:
+    return await get_report(report_query)
