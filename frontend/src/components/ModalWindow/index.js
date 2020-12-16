@@ -7,9 +7,9 @@ const ModalWindow = React.memo(({ text, callback }) => {
     
     return (
         <div className="modal-window">
-            <span >{text}</span>
-            <Button text="Удалить" callback={() => callback(true)} />
-            <Button text="Отменить" callback={() => callback(false)} />
+            <span>{text}</span>
+            <Button onClick={() => callback(true)} >Удалить</Button>
+            <Button onClick={() => callback(false)} >Отменить</Button>
         </div>
     );
 })

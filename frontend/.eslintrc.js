@@ -222,7 +222,6 @@ module.exports = {
         "no-undef-init": "error",
         "no-undef": "warn",
         "no-undefined": "error",
-        "no-underscore-dangle": "error",
         "no-unmodified-loop-condition": "error",
         "no-unneeded-ternary": "off",
         "no-unreachable-loop": "error",

@@ -81,11 +81,9 @@ function Main(props) {
                     </p>
                     
                     <div className="newbutton-container" style={mode === "manual" ? {visibility: "visible"} : {visibility: "hidden"}}> 
-                        <Button text="Новый куб"
-                                callback={() => {console.log("Новый куб")}} />
+                        <Button onClick={() => {console.log("Новый куб")}} >Новый куб</Button>
 
-                        <Button text="Новый мультипак"
-                                callback={() => {console.log("Новый мультипак")}} />
+                        <Button onClick={() => {console.log("Новый мультипак")}} >Новый мультипак</Button>
                     </div>
 
                 </div>
@@ -120,11 +118,9 @@ function Main(props) {
             <div className="footer-components">
                 <InputTextQr label="QR: " autoFocus={true} setNotification={setNotificationText}/>
                 
-                <Button text="Новая партия"
-                        callback={() => {setPage("/")}} />
+                <Button onClick={() => {setPage("/")}} >Новая партия</Button>
 
-                <Button text="Сформировать неполный куб"
-                        callback={() => {console.log("Сформировать неполный куб")}} /> 
+                <Button onClick={() => {console.log("Сформировать неполный куб")}} >Сформировать неполный куб</Button> 
             </div>
 
         </div>

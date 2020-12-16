@@ -148,10 +148,8 @@ function Edit({ description, type }) {
                             data={[description]}  />
 
                 <div>
-                    <Button text={"Принять изменения"}
-                            callback={submitChanges} />
-                    <Button text={"Отменить изменения"}
-                            callback={closeChanges} />
+                    <Button onClick={submitChanges} >Принять изменения</Button>
+                    <Button onClick={closeChanges} >Отменить изменения</Button>
                 </div>
 
                 <div className="add-remove-pack">

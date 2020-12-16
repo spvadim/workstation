@@ -26,10 +26,13 @@ const ColumnError = React.memo(() => {
                 </span>
                 <span>{errorMessage}</span>
             </div>
-            <Button text="Сбросить ошибку" callback={() => {
-                axios.patch(address + "/api/v1_0/flush_state")
-                .catch(e => console.log(e))
-            }}/>
+            <Button
+                    onClick={() => {
+                        axios.patch(address + "/api/v1_0/flush_state")
+                        .catch(e => console.log(e))
+                    }}>
+                Сбросить ошибку
+            </Button>
         </div>
     );
 })

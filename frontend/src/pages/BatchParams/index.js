@@ -9,6 +9,7 @@ import { Redirect } from "react-router-dom";
 import InputRadioContainer from "../../components/InputRadioContainer";
 import { useCookies } from "react-cookie";
 import address from "../../address.js";
+import { Paper } from "src/components";
 
 
 function BatchParams() {
@@ -49,27 +50,28 @@ function BatchParams() {
     }
 
     return (
-        
-        <form id="params_box" onSubmit={submitHandler}>
-           
-            <div className="input-text"> 
-                <span>Номер партии ГП: </span>
-                <input name="number_party" 
-                       type="text"
-                       value={batchNumber} 
-                       onChange={event => setPartyNumber(event.target.value)} 
-                       autoFocus/>
-            </div>
-
-            {Object.keys(params).length === 0 ? 
-                <Loader /> :
-                <InputRadioContainer data={params}
-                                     getParamSettings={(s) => setSettings(s)} /> }
-
+        <Paper>
+            <form id="params_box" onSubmit={submitHandler}>
             
-            <Button text="Начать выпуск партии" />
-            
-        </form>
+                <div className="input-text"> 
+                    <span>Номер партии ГП: </span>
+                    <input name="number_party" 
+                        type="text"
+                        value={batchNumber} 
+                        onChange={event => setPartyNumber(event.target.value)} 
+                        autoFocus/>
+                </div>
+
+                {Object.keys(params).length === 0 ? 
+                    <Loader /> :
+                    <InputRadioContainer data={params}
+                                        getParamSettings={(s) => setSettings(s)} /> }
+
+                
+                <Button color="yellow">Начать выпуск партии</Button>
+                
+            </form>
+        </Paper>
     );
 }
 
