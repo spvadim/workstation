@@ -152,7 +152,7 @@ async def get_cubes_queue() -> List[Cube]:
 
 
 async def get_current_system_settings() -> Union[SystemSettings, None]:
-    current_settings = await engine.find_one(SystemSettings, sort=query.desc(ProductionBatch.id))
+    current_settings = await engine.find_one(SystemSettings, sort=query.desc(SystemSettings.id))
     return current_settings
 
 
