@@ -23,6 +23,7 @@ async def get_by_qr_or_404(model, qr: str) -> Model:
         raise HTTPException(404)
     return instance
 
+
 async def get_current_status() -> SystemStatus:
     return await engine.find_one(SystemStatus)
 
@@ -45,6 +46,12 @@ async def get_current_state() -> SystemState:
     system_status = await get_current_status()
     return system_status.system_state
 
+
+async def change_coded_setting(coded: bool) -> SystemStatus:
+    system_status = await get_current_status()
+    system_status.multipack_coded_by_qr = coded
+    await engine.save(system_status)
+    return system_status
 
 async def set_column_yellow(error_msg: str) -> SystemState:
     current_status = await get_current_status()

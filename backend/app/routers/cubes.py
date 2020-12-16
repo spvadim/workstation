@@ -4,8 +4,8 @@ from fastapi import APIRouter, HTTPException
 from fastapi_versioning import version
 from odmantic import ObjectId
 from app.db.engine import engine
-from app.db.db_utils import check_qr_unique, get_batch_by_number_or_return_last, get_by_id_or_404, \
-    get_by_qr_or_404, get_cubes_queue
+from app.db.db_utils import check_qr_unique, get_last_batch, get_batch_by_number_or_return_last, get_by_id_or_404, \
+    get_by_qr_or_404, get_cubes_queue, get_packs_queue, get_multipacks_queue
 from app.models.pack import Pack
 from app.models.multipack import Status, Multipack
 from app.models.cube import Cube, CubeInput, CubeOutput, CubePatchSchema
@@ -41,6 +41,56 @@ async def create_cube(cube_input: CubeInput):
 
     if cube_input.barcode:
         cube.barcode = cube_input.barcode
+
+    await engine.save(cube)
+    return cube
+
+
+@router.put('/cube_finish_manual', response_model=Cube)
+@version(1, 0)
+async def finish_cube():
+    batch = await get_last_batch()
+    current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
+    multipacks_queue = await get_multipacks_queue()
+    packs_queue = await get_packs_queue()
+
+    batch_number = batch.number
+    needed_multipacks = batch.params.multipacks
+    needed_packs = batch.params.packs
+
+    delta = needed_multipacks - len(multipacks_queue)
+
+    if delta > 0:
+        chunked_packs = [packs_queue[i:i + needed_packs] for i in range(0, len(packs_queue), needed_packs)]
+
+        for chunk in chunked_packs:
+
+            if delta <= 0:
+                break
+
+            pack_ids = []
+            for i in range(len(chunk)):
+                chunk[i].in_queue = False
+                pack_ids.append(chunk[i].id)
+            await engine.save_all(chunk)
+
+            multipack = Multipack(batch_number=batch.number, pack_ids=pack_ids, created_at=current_time)
+            await engine.save(multipack)
+            multipacks_queue.append(multipack)
+
+            delta -= 1
+
+    multipacks_for_cube = multipacks_queue[:needed_multipacks]
+    multipack_ids_with_pack_ids = {}
+
+    for i in range(len(multipacks_for_cube)):
+        multipacks_for_cube[i].status = Status.IN_CUBE
+        multipack_ids_with_pack_ids[str(multipacks_for_cube[i].id)] = multipacks_for_cube[i].pack_ids
+    await engine.save_all(multipacks_for_cube)
+
+    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids, batch_number=batch_number,
+                multipacks_in_cubes=needed_multipacks, packs_in_multipacks=needed_packs, created_at=current_time)
 
     await engine.save(cube)
     return cube

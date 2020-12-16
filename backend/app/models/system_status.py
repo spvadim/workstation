@@ -22,7 +22,8 @@ class SystemState(EmbeddedModel):
     state: State = State.NORMAL
     error_msg: Optional[str]
 
+
 class SystemStatus(Model):
     mode: Mode
     system_state: SystemState
-
+    multipack_coded_by_qr: bool = False

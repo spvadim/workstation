@@ -5,6 +5,7 @@ from odmantic import Model, Reference, ObjectId
 class ProductionBatchParams(Model):
     multipacks: int
     packs: int
+    multipacks_after_pintset: int
 
 
 class ProductionBatchInput(Model):

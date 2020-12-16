@@ -58,23 +58,31 @@ async def pintset_reverse():
     if mode.work_mode == 'manual':
         raise HTTPException(400, detail='В данный момент используется ручной режим')
 
+    batch = await get_last_batch()
+    multipacks_after_pintset = batch.params.multipacks_after_pintset
+
     packs_queue = await get_packs_queue()
-    if len(packs_queue) < 2:
-        raise HTTPException(400, detail='Меньше двух пачек в очереди!')
+    if len(packs_queue) < multipacks_after_pintset:
+        raise HTTPException(400, detail=f'Меньше {multipacks_after_pintset} пачек в очереди!')
 
-    pack_a, pack_b = packs_queue[-2:]
+    last_packs = packs_queue[-multipacks_after_pintset:]
 
-    pack_a_dict = pack_a.dict(exclude={'id'})
-    pack_b_dict = pack_b.dict(exclude={'id'})
+    hiindex = multipacks_after_pintset - 1
+    its = multipacks_after_pintset // 2
 
-    for name, value in pack_a_dict.items():
-        setattr(pack_b, name, value)
+    for i in range(its):
+        pack_i_dict = last_packs[i].dict(exclude={'id'})
+        pack_hiindex_dict = last_packs[hiindex].dict(exclude={'id'})
 
-    for name, value in pack_b_dict.items():
-        setattr(pack_a, name, value)
+        for name, value in pack_i_dict.items():
+            setattr(last_packs[hiindex], name, value)
 
-    await engine.save(pack_a)
-    await engine.save(pack_b)
+        for name, value in pack_hiindex_dict.items():
+            setattr(last_packs[i], name, value)
+
+        hiindex -= 1
+
+    await engine.save_all(last_packs)
     return await get_packs_queue()
 
 
@@ -86,7 +94,8 @@ async def pintset_finish():
         raise HTTPException(400, detail='В данный момент используется ручной режим')
 
     batch = await get_last_batch()
-    needed_packs = batch.params.packs * 2
+    multipacks_after_pintset = batch.params.multipacks_after_pintset
+    needed_packs = batch.params.packs * multipacks_after_pintset
     number = batch.number
 
     packs_queue = await get_packs_queue()
@@ -96,32 +105,25 @@ async def pintset_finish():
         await set_column_red(error_msg)
         raise HTTPException(400, detail=error_msg)
 
-    pack_ids_a = []
-    pack_ids_b = []
+    all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
     for i in range(needed_packs):
         packs_queue[i].in_queue = False
-        if i % 2 == 0:
-            pack_ids_a.append(packs_queue[i].id)
-        else:
-            pack_ids_b.append(packs_queue[i].id)
+        all_pack_ids[i % multipacks_after_pintset].append(packs_queue[i].id)
 
     await engine.save_all(packs_queue)
 
     current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
-    multipack_a = Multipack(pack_ids=pack_ids_a)
-    multipack_a.batch_number = number
-    multipack_a.created_at = current_time
-    await engine.save(multipack_a)
+    new_multipacks = []
+    for pack_ids in all_pack_ids:
+        multipack = Multipack(pack_ids=pack_ids)
+        multipack.batch_number = number
+        multipack.created_at = current_time
+        new_multipacks.append(multipack)
+    await engine.save_all(new_multipacks)
 
-
-    multipack_b = Multipack(pack_ids=pack_ids_b)
-    multipack_b.batch_number = number
-    multipack_b.created_at = current_time
-    await engine.save(multipack_b)
-
-    return [multipack_a, multipack_b]
+    return new_multipacks
 
 
 def find_first_without_qr(items):
