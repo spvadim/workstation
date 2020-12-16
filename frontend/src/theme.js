@@ -4,6 +4,8 @@ export const color = {
     background: '#F5F5F5',
     borderGrey: '#A4A4A4',
     textGrey: '#8A8A8A',
+    trackGrey: '#C2C2C2',
+    linkBlue: '#0094FF',
 };
 
 export const borderRadius = {

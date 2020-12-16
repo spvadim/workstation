@@ -32,7 +32,7 @@ module.exports = {
         "arrow-spacing": "off",
         "block-scoped-var": "error",
         "block-spacing": [
-            "error",
+            "warn",
             "never"
         ],
         "brace-style": "off",
@@ -56,7 +56,6 @@ module.exports = {
             "error",
             "never"
         ],
-        "consistent-return": "error",
         "consistent-this": "error",
         "curly": "off",
         "default-case": "error",
@@ -114,7 +113,6 @@ module.exports = {
         "lines-around-comment": "error",
         "lines-around-directive": "error",
         "lines-between-class-members": "error",
-        "max-classes-per-file": "error",
         "max-depth": "error",
         "max-len": "off",
         "max-lines": "off",
@@ -144,6 +142,7 @@ module.exports = {
         "no-constant-condition": "warn",
         "no-constructor-return": "error",
         "no-continue": "error",
+        "no-debugger": "warn",
         "no-div-regex": "error",
         "no-duplicate-imports": "error",
         "no-else-return": "off",
@@ -185,6 +184,7 @@ module.exports = {
         "no-octal-escape": "error",
         "no-param-reassign": "error",
         "no-path-concat": "error",
+        "no-unreachable": "warn",
         "no-plusplus": [
             "error",
             {
@@ -220,7 +220,7 @@ module.exports = {
         "no-throw-literal": "error",
         "no-trailing-spaces": "off",
         "no-undef-init": "error",
-        "no-undef": "warn",
+        "no-undef": "error",
         "no-undefined": "error",
         "no-unmodified-loop-condition": "error",
         "no-unneeded-ternary": "off",
@@ -234,10 +234,10 @@ module.exports = {
         "no-useless-concat": "error",
         "no-useless-constructor": "error",
         "no-useless-rename": "error",
-        "no-useless-return": "error",
+        "no-useless-return": "warn",
         "no-var": "error",
         "no-void": "error",
-        "no-warning-comments": "error",
+        "no-warning-comments": "warn",
         "no-whitespace-before-property": "error",
         "nonblock-statement-body-position": "error",
         "object-curly-newline": "error",

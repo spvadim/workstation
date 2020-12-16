@@ -1,6 +1,5 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
-import "./index.css";
 import imgCheckMark from 'src/assets/images/check-mark.svg';
 
 const useStyles = createUseStyles({

@@ -1,5 +1,11 @@
 export { default as Button } from './Buttons/Button';
 export { default as Footer } from './Footer';
 export { default as InputRadio } from './InputRadio';
+export { default as Link } from './Link';
+export { default as Loader } from './Loader';
+export { default as NotificationPanel } from './NotificationPanel';
 export { default as Paper } from './Paper';
+export { default as Scrollbars } from './Scrollbars';
+export { default as Table } from './Table';
+export { default as Text } from './Text';
 export { default as TextField } from './TextField';

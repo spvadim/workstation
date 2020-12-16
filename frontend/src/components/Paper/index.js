@@ -13,10 +13,11 @@ const useStyles = createUseStyles({
         paddingBottom: 14,
         paddingLeft: 12,
         paddingRight: 12,
+        boxSizing: 'border-box',
     },
 });
 
-const Paper = React.memo(({className, ...restProps}) => {
+const Paper = React.memo(({ className, ...restProps }) => {
     const classes = useStyles();
     const _className = React.useMemo(() => ['paper', classes.root, className].join(' '), [className]);
     return <div className={_className} {...restProps} />

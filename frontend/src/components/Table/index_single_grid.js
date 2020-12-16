@@ -6,77 +6,62 @@ import imgTrash from "src/assets/images/trash.svg";
 import imgEdit from "src/assets/images/edit.svg";
 
 const spacing = 12;
-const headHeight = 50;
+const headHeight = 21;
 
 const useStyles = createUseStyles({
     root: {
-        '& .scrollbars_track-vertical': {
-            maxHeight: 488,
+        '&::-webkit-scrollbar': {
+            // display: 'none',
         },
         height: '100%',
         position: 'relative',
     },
     table: {
-        height: `calc(100% - ${(2 * spacing) + headHeight + 5}px)`,
+        borderSpacing: `0 ${spacing}px`,
+        width: '100%',
     },
     head: {
         display: 'flex',
-        alignItems: 'center',
-        height: 50,
         fontWeight: 400,
         fontSize: 18,
         paddingLeft: 12,
     },
-    body: ({ columns, buttonEdit, buttonDelete }) => ({
-        '& > div': {
-            display: 'grid',
-            gridTemplateColumns: (() => {
-                let template = columns
-                    .map(({ width }) => {
-                        if (typeof width === 'number') {
-                            return width + 'px';
-                        }
-                        if (typeof width === 'string') {
-                            return width;
-                        }
-                        return '1fr';
-                    })
-                    .join(' ');
-
-                if (buttonEdit) {
-                    template += ' 40px';
-                }
-                if (buttonDelete) {
-                    template += ' 40px';
-                }
-                return template;
-            })(),
+    body: ({ columnAmount, buttonEdit, buttonDelete }) => ({
+        ...(buttonEdit && buttonDelete) && {
+            [`& > div:nth-child(${columnAmount}n - 1)`]: {
+                // borderTopLeftRadius: borderRadius.normal,
+                // borderBottomLeftRadius: borderRadius.normal,
+            },
         },
-        '& > div > div': {
+        ...(buttonEdit || buttonDelete) && {
+            [`& > div:nth-child(${columnAmount}n - 0)`]: {
+                // borderTopLeftRadius: borderRadius.normal,
+                // borderBottomLeftRadius: borderRadius.normal,
+            },
+        },
+        [`& > div:nth-child(${columnAmount}n + 1)`]: {
+            borderTopLeftRadius: borderRadius.normal,
+            borderBottomLeftRadius: borderRadius.normal,
+        },
+        [`& > div:nth-child(${columnAmount}n)`]: {
+            borderTopRightRadius: borderRadius.normal,
+            borderBottomRightRadius: borderRadius.normal,
+        },
+        '& > div': {
             borderStyle: 'solid',
             borderRightStyle: 'none',
             borderWidth: 1,
             borderColor: color.borderGrey,
+            backgroundColor: '#FFF',
             height: 52,
-            paddingLeft: 11,
-            paddingRight: 11,
+            paddingLeft: 12,
+            paddingRight: 12,
             fontSize: 14,
             display: 'flex',
             alignItems: 'center',
-            backgroundColor: '#FFF',
-            overflow: 'hidden',
         },
-        '& > div > div:first-child': {
-            borderTopLeftRadius: borderRadius.normal,
-            borderBottomLeftRadius: borderRadius.normal,
-        },
-        '& > div > div:last-child': {
-            borderRightStyle: 'solid',
-            borderTopRightRadius: borderRadius.normal,
-            borderBottomRightRadius: borderRadius.normal,
-        },
-        marginRight: 14,
         display: 'grid',
+        gridTemplateColumns: `repeat(${columnAmount}, auto)`,
         rowGap: spacing + 'px',
     }),
     editCell: {
@@ -97,36 +82,37 @@ const useStyles = createUseStyles({
     },
 })
 
-function resizeHeader(head, body) {
-    const row = body.children[0];
-
-    if (!row) {
-        return;
-    }
-    Array.from(head.children).forEach((headCell, index) => {
-        headCell.style.width = row.children[index].clientWidth + 'px';
-    });
-}
-
 function Table({ rows, columns, className, buttonEdit, buttonDelete, onEdit, onDelete }) {
+    const columnNames = React.useMemo(() => columns.map(({ name }) => name), [columns]);
     const headRef = React.useRef(null);
     const bodyRef = React.useRef(null);
 
-    const classes = useStyles({ columns, buttonEdit, buttonDelete });
+    const columnAmount = React.useMemo(() => {
+        let amount = columnNames.length;
 
-    React.useEffect(() => {
-        if (bodyRef.current) {
-            resizeHeader(headRef.current, bodyRef.current);
+        if (buttonEdit) {
+            amount += 1;
         }
-    }, [bodyRef.current, columns]);
+        if (buttonDelete) {
+            amount += 1;
+        }
+        return amount;
+    }, [columnNames]);
+
+    const classes = useStyles({ columnAmount, buttonEdit, buttonDelete });
 
     React.useEffect(() => {
         if (!bodyRef.current) {
             return;
         }
-        const listener = () => resizeHeader(headRef.current, bodyRef.current);
-        window.addEventListener('resize', listener);
-        return () => window.removeEventListener('resize', listener);
+        const bodyCells = bodyRef.current.children;
+
+        if (!bodyCells.length) {
+            return;
+        }
+        Array.from(headRef.current.children).forEach((headCell, index) => {
+            headCell.style.width = bodyCells[index].clientWidth + 'px';
+        });
     }, [bodyRef.current]);
 
     return (
@@ -138,17 +124,15 @@ function Table({ rows, columns, className, buttonEdit, buttonDelete, onEdit, onD
                     ))
                 }
             </div>
-            <div className={classes.table}>
+            <div style={{ height: `calc(100% - ${(2 * spacing) + headHeight}px)` }}>
                 <Scrollbars>
                     <div className={classes.body} ref={bodyRef}>
                         {
                             rows.map((row, index) => (
-                                <div key={index}>
+                                <React.Fragment key={index}>
                                     {
-                                        columns.map(({ name, Component }) => (
-                                            <div key={name}>
-                                                {Component ? <Component>{row[name]}</Component> : row[name]}
-                                            </div>
+                                        columnNames.map(name => (
+                                            <div key={name}>{row[name]}</div>
                                         ))
                                     }
                                     {
@@ -157,7 +141,7 @@ function Table({ rows, columns, className, buttonEdit, buttonDelete, onEdit, onD
                                     {
                                         buttonDelete && <div className={classes.deleteCell} onClick={() => onDelete && onDelete(row)} />
                                     }
-                                </div>
+                                </React.Fragment>
                             ))
                         }
                     </div>

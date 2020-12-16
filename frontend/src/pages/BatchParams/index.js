@@ -141,7 +141,7 @@ function BatchParams() {
                             ))}
 
 
-                        <Button color="yellow" className={classes.submitButton}>Начать выпуск партии</Button>
+                        <Button className={classes.submitButton}>Начать выпуск партии</Button>
 
                     </form>
                 </Paper>

@@ -9,11 +9,11 @@ const useStyles = createUseStyles({
     },
 });
 
-function Loader() {
+function Loader({ className, ...restProps }) {
     const classes = useStyles();
 
     return (
-        <img className={['loader', classes.root].join(' ')} src="./loader.gif" alt="loader" />
+        <img className={['loader', classes.root, className].join(' ')} src="./loader.gif" alt="loader" {...restProps} />
     );
 }
 
