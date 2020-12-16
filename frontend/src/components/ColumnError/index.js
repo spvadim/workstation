@@ -8,13 +8,16 @@ const ColumnError = React.memo(() => {
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
-        setInterval(() => {
+        let isMounted = true;
+        let timer = setInterval(() => {
             axios.get(address + "/api/v1_0/get_state")
             .then(res => {
-                setErrorMessage(res.data.error_msg);
+                if (isMounted) setErrorMessage(res.data.error_msg);
             })
             .catch(e => {console.log(e)})
         }, 1000)
+
+        return () => { clearInterval(timer) }
     }, [])
     
     return (

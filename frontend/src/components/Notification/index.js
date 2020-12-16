@@ -4,7 +4,7 @@ import "./index.css";
 
 const Notification = React.memo(({ text }) => {
     return (
-        <div className="notification-container">
+        <div className="notification-container" style={text ? {visibility: "visible"} : {visibility: "hidden"}}>
             <div>
                 <img src="./notification.svg" alt="notification" />
                 <h3>Уведомление</h3>

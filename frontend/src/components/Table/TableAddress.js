@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from 'axios';
 import "./index.css";
+import globalAddress from "../../address.js";
 
 import DeleteButton from "../Buttons/DeleteButton.js";
 import EditButton from "../Buttons/EditButton.js"
 import Loader from "../Loader/index.js"
 
-const TableAddress = React.memo(({ settings, setError, setModal }) => {
+const TableAddress = React.memo(({ settings, setModal }) => {
     let { title, addFields, address, type } = settings;
 
     let [tableData, setTableData] = useState("/loader");
-
     useEffect(() => {
         if (address) {
             setTimeout(() => {
@@ -51,12 +51,10 @@ const TableAddress = React.memo(({ settings, setError, setModal }) => {
     }
 
     const deleteRow = (id) => {
-        // http://141.101.196.127
-        let address = "http://141.101.196.127";
 
-        axios.delete(address + "/api/v1_0/" + type + "/" + id)
+        axios.delete(globalAddress + "/api/v1_0/" + type + "/" + id)
         .then(res => console.log(res))
-        .catch(e => {setError(e); console.log(e)})
+        .catch(e => console.log(e))
     }
 
     return (

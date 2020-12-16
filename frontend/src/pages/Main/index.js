@@ -17,11 +17,11 @@ import address from "../../address.js";
 
 axios.patch(address + "/api/v1_0/set_mode", {work_mode: "auto"});
 
-function Main(props) {
+function Main() {
     const [mode, setMode] = useState("auto"); 
     const [page, setPage] = useState('');
     const [modal, setModal] = useState(false);
-    const [notificationText, setNotificationText] = useState("");
+    const [notificationText, setNotificationText] = useState("Отсканируйте QR пачки или мультипака для идентифицирования куба");
 
     const [cookies] = useCookies();
 
@@ -59,7 +59,15 @@ function Main(props) {
         } 
 
     const updateMode = () => {
-        let newMode = mode === "auto" ? "manual" : "auto" 
+        let newMode = "auto";
+        if (mode === "auto") {
+            newMode = "manual";
+            setNotificationText("Отсканируйте QR куба для редактирования");
+        } else if (mode === "manual") {
+            newMode = "auto";
+            setNotificationText("Отсканируйте QR пачки или мультипака для идентифицирования куба")
+        }
+
         axios.patch(address + "/api/v1_0/set_mode", {work_mode: newMode})
         .then(res => {
             setMode(newMode);
@@ -105,11 +113,11 @@ function Main(props) {
 
             <div className="tables-container">
 
-                <TableAddress settings={tableSettings.cube} setError={(error) => createError(error)} setModal={setModal} />
+                <TableAddress settings={tableSettings.cube} setModal={setModal} />
                 
-                <TableAddress settings={tableSettings.multipack} setError={(error) => createError(error)} setModal={setModal}/>
+                <TableAddress settings={tableSettings.multipack} setModal={setModal}/>
 
-                <TableAddress settings={tableSettings.pack} setError={(error) => createError(error)} setModal={setModal} />
+                <TableAddress settings={tableSettings.pack} setModal={setModal} />
 
             </div>
 
@@ -118,7 +126,7 @@ function Main(props) {
             <ColumnError />
 
             <div className="footer-components">
-                <InputTextQr label="QR: " autoFocus={true} setNotification={setNotificationText}/>
+                <InputTextQr label="QR: " autoFocus={true} setNotification={setNotificationText} mode={mode}/>
                 
                 <Button text="Новая партия"
                         callback={() => {setPage("/")}} />
