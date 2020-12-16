@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from fastapi import HTTPException
 from odmantic import query, ObjectId, Model
 from .engine import engine
@@ -8,6 +8,8 @@ from app.models.cube import Cube
 from app.models.production_batch import ProductionBatch
 from app.models.qr_list import QrList
 from app.models.system_status import SystemStatus, Mode, SystemState, State
+from app.models.system_settings import SystemSettings, SystemSettingsResponse
+from app.config import default_settings, get_apply_settings_url
 
 
 async def get_by_id_or_404(model, id: ObjectId) -> Model:
@@ -52,6 +54,7 @@ async def change_coded_setting(coded: bool) -> SystemStatus:
     system_status.multipack_coded_by_qr = coded
     await engine.save(system_status)
     return system_status
+
 
 async def set_column_yellow(error_msg: str) -> SystemState:
     current_status = await get_current_status()
@@ -148,6 +151,21 @@ async def get_cubes_queue() -> List[Cube]:
     return await engine.find(Cube, Cube.batch_number == last_batch.number)
 
 
+async def get_current_system_settings() -> Union[SystemSettings, None]:
+    current_settings = await engine.find_one(SystemSettings, sort=query.desc(ProductionBatch.id))
+    return current_settings
 
 
+async def get_system_settings_with_apply_url() -> Union[SystemSettingsResponse, None]:
+    current_settings = await get_current_system_settings()
+    if current_settings is None:
+        return None
+    setup_url = get_apply_settings_url(current_settings)
+    return SystemSettingsResponse(**current_settings.dict(), setupUrl=setup_url)
 
+
+async def create_system_settings_if_not_exists():
+    system_settings = await get_system_settings_with_apply_url()
+    if system_settings is None:
+        system_settings = default_settings
+        await engine.save(system_settings)
