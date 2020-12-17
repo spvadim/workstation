@@ -1,20 +1,40 @@
 version: '3.7'
 services: 
-    db:
+    mongo:
       image: mongo
+      env_file:
+        - .env
+      volumes:
+        - db:/data/db
+        - ./init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh
+      ports:
+      - 27017:27017
+
     docker-fastapi:
-        container_name: docker-fastapi
-        build: 
-            context: ./backend/
-            dockerfile: Dockerfile
-        restart: always
+      container_name: docker-fastapi
+      env_file:
+        - .env
+      build: 
+          context: ./backend/
+          dockerfile: Dockerfile
+      depends_on:
+          - mongo    
+      restart: always
+
     nginx:
-        depends_on: 
-            - docker-fastapi
-        container_name: proxy-app
-        build: 
-            context: ./frontend/
-            dockerfile: Dockerfile
-        ports: 
-            - "80:80"
-        restart: always
+      depends_on: 
+        - docker-fastapi
+      container_name: proxy-app
+      environment:
+        CHOKIDAR_USEPOLLING: "true"
+      volumes:
+        - ./frontend:/app
+      build: 
+          context: ./frontend/
+          dockerfile: Dockerfile
+      ports: 
+          - "80:80"
+      restart: always
+
+volumes:
+  db:

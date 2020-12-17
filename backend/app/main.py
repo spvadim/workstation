@@ -1,17 +1,33 @@
 from fastapi import FastAPI
-from odmantic import AIOEngine
-import uvicorn
+from fastapi_versioning import VersionedFastAPI
+from .routers import production_batches, packs, multipacks, cubes, system_status, cameras, system_settings
+from .db.db_utils import create_status_if_not_exists, create_qr_list_if_not_exists, create_system_settings_if_not_exists
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(docs_url="/docs", redoc_url=None, openapi_url="/openapi.json")
+
+app.include_router(production_batches.router, tags=['batches_frontend'])
+app.include_router(packs.router, tags=['packs_frontend'])
+app.include_router(multipacks.router, tags=['multipacks_frontend'])
+app.include_router(cubes.router, tags=['cubes_frontend'])
+app.include_router(system_status.router, tags=['state_and_mode'])
+app.include_router(cameras.router, tags=['camera'])
+app.include_router(system_settings.router, tags=['system_settings'])
+
+app = VersionedFastAPI(app, prefix_format='/api/v{major}_{minor}')
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
-app = FastAPI(docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
-
-engine = AIOEngine()
-
-
-@app.get('/api/ping')
-async def read_ping():
-    return {'ping': 'pong'}
-
-
-if __name__ == "__main__":
-    uvicorn.run("main:app", port=8000, reload=True)
+@app.on_event("startup")
+async def startup_event():
+    await create_status_if_not_exists()
+    await create_qr_list_if_not_exists()
+    await create_system_settings_if_not_exists()
