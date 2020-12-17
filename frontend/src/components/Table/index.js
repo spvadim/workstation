@@ -8,6 +8,28 @@ import imgEdit from "src/assets/images/edit.svg";
 const spacing = 12;
 const headHeight = 50;
 
+const getColumnTemplate = ({ columns, buttonEdit, buttonDelete }) => {
+    let template = columns
+        .map(({ width }) => {
+            if (typeof width === 'number') {
+                return width + 'px';
+            }
+            if (typeof width === 'string') {
+                return width;
+            }
+            return '1fr';
+        })
+        .join(' ');
+
+    if (buttonEdit) {
+        template += ' 40px';
+    }
+    if (buttonDelete) {
+        template += ' 40px';
+    }
+    return template;
+}
+
 const useStyles = createUseStyles({
     root: {
         '& .scrollbars_track-vertical': {
@@ -19,38 +41,19 @@ const useStyles = createUseStyles({
     table: {
         height: `calc(100% - ${(2 * spacing) + headHeight + 5}px)`,
     },
-    head: {
-        display: 'flex',
+    head: ({ columns, buttonEdit, buttonDelete }) => ({
+        display: 'grid',
+        gridTemplateColumns: getColumnTemplate({ columns, buttonEdit, buttonDelete }),
         alignItems: 'center',
         height: 50,
         fontWeight: 400,
         fontSize: 18,
         paddingLeft: 12,
-    },
+    }),
     body: ({ columns, buttonEdit, buttonDelete }) => ({
         '& > div': {
             display: 'grid',
-            gridTemplateColumns: (() => {
-                let template = columns
-                    .map(({ width }) => {
-                        if (typeof width === 'number') {
-                            return width + 'px';
-                        }
-                        if (typeof width === 'string') {
-                            return width;
-                        }
-                        return '1fr';
-                    })
-                    .join(' ');
-
-                if (buttonEdit) {
-                    template += ' 40px';
-                }
-                if (buttonDelete) {
-                    template += ' 40px';
-                }
-                return template;
-            })(),
+            gridTemplateColumns: getColumnTemplate({ columns, buttonEdit, buttonDelete }),
         },
         '& > div > div': {
             borderStyle: 'solid',
@@ -108,38 +111,25 @@ function resizeHeader(head, body) {
     });
 }
 
-function Table({ rows, columns, className, buttonEdit, buttonDelete, onEdit, onDelete }) {
+function Table({
+    rows, columns, className, buttonEdit, buttonDelete, onEdit, onDelete, hideTracksWhenNotNeeded
+}) {
     const headRef = React.useRef(null);
     const bodyRef = React.useRef(null);
 
     const classes = useStyles({ columns, buttonEdit, buttonDelete });
 
-    React.useEffect(() => {
-        if (bodyRef.current) {
-            resizeHeader(headRef.current, bodyRef.current);
-        }
-    }, [bodyRef.current, columns]);
-
-    React.useEffect(() => {
-        if (!bodyRef.current) {
-            return;
-        }
-        const listener = () => resizeHeader(headRef.current, bodyRef.current);
-        window.addEventListener('resize', listener);
-        return () => window.removeEventListener('resize', listener);
-    }, [bodyRef.current]);
-
     return (
         <div className={['table', classes.root, className].join(' ')}>
-            <div className={classes.head} style={{ display: 'flex' }} ref={headRef}>
+            <div className={classes.head} ref={headRef}>
                 {
-                    !!rows.length && columns.map(column => (
+                    columns.map(column => (
                         <div key={column.name}>{column.title}</div>
                     ))
                 }
             </div>
             <div className={classes.table}>
-                <Scrollbars>
+                <Scrollbars hideTracksWhenNotNeeded={hideTracksWhenNotNeeded}>
                     <div className={classes.body} ref={bodyRef}>
                         {
                             rows.map((row, index) => (

@@ -69,6 +69,8 @@ const InputTextQr = React.memo(({ setNotification, ...restProps }) => {
             }}
             value={value}
             outlined
+            forceFocus
+            autoFocus
             {...restProps}
         />
     );

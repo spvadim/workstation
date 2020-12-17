@@ -29,7 +29,7 @@ const useStyles = createUseStyles({
         opacity: 0,
         position: 'absolute',
     },
-    mark: {
+    thumb: {
         transition: '0.1s',
         boxSizing: 'border-box',
         backgroundColor: color.black,
@@ -42,14 +42,14 @@ const useStyles = createUseStyles({
     },
 })
 
-const SwitchMode = React.memo(({ onClick, className, ...restProps }) => {
+const Switch = React.memo(({ onClick, className, ...restProps }) => {
     const classes = useStyles();
     return (
         <label className={['switch', classes.root, className].join(' ')} {...restProps}>
             <input type="checkbox" onClick={onClick} className={classes.input} />
-            <div className={classes.mark} />
+            <div className={['switch_thumb', classes.thumb].join(' ')} />
         </label>
     );
 })
 
-export default SwitchMode;
+export default Switch;

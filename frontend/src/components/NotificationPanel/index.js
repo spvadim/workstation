@@ -23,6 +23,7 @@ const useStyles = createUseStyles({
     column: {
         display: 'grid',
         rowGap: '6px',
+        alignContent: 'flex-end',
     },
     icon: {
         height: iconHeight,
@@ -33,18 +34,18 @@ const useStyles = createUseStyles({
     }
 });
 
-function NotificationPanel() {
+function NotificationPanel({ notifications, errors }) {
     const classes = useStyles();
     return (
         <div className={['notification-panel', classes.root].join(' ')}>
             <div className={classes.container}>
                 <div className={classes.column}>
                     <Paper className={classes.icon} style={{ backgroundImage: `url(${imgNotification})` }} />
-                    <Paper className={classes.icon} >notify</Paper>
+                    {notifications}
                 </div>
                 <div className={classes.column}>
                     <Paper className={classes.icon} style={{ backgroundImage: `url(${imgError})` }} />
-                    <Paper className={classes.icon} >error</Paper>
+                    {errors}
                 </div>
             </div>
         </div>

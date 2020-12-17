@@ -1,13 +1,17 @@
 import React, { useEffect, useMemo, useState, useCallback, useContext } from "react";
 import axios from 'axios';
 
-import SwitchMode from "../../components/SwitchMode/index.js";
 import TableAddress from "../../components/Table/TableAddress.js";
 import InputTextQr from "../../components/InputText/InputTextQr.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import ColumnError from "../../components/ColumnError/index.js";
-import Notification from "../../components/Notification/index.js";
-import { Button, Text, Link, NotificationPanel } from "src/components";
+import { Notification, NotificationImage } from "../../components/Notification/index.js";
+import { Button, Text, Link, NotificationPanel, Switch } from "src/components";
+import imgCross from 'src/assets/images/cross.svg';
+import imgOk from 'src/assets/images/ok.svg';
+import imgScanner from 'src/assets/images/scanner.svg';
+import imgScannerActive from 'src/assets/images/scanner-active.svg';
+import imgQR from 'src/assets/images/qr.svg';
 
 import { Redirect } from "react-router-dom";
 import { useCookies } from "react-cookie";
@@ -116,6 +120,7 @@ const useStyles = createUseStyles({
             marginLeft: 12,
             flexBasis: 0,
             flexGrow: 1,
+            height: 662,
         },
         flexGrow: 1,
         display: 'flex',
@@ -142,13 +147,22 @@ const useStyles = createUseStyles({
         fontSize: 24,
         fontWeight: 700,
     },
+    modalButtonIcon: {
+        marginRight: 13,
+    },
+    notificationQrCodeImgContainer: {
+        display: 'grid',
+        columnGap: 9,
+        gridAutoFlow: 'column',
+        alignItems: 'center',
+    }
 });
 
 function Main(props) {
     const [mode, setMode] = useState('auto');
     const [page, setPage] = useState('');
     const [modalDeletion, setModalDeletion] = useState(false);
-    const [modalError, setModalError] = useState(true);
+    const [modalError, setModalError] = useState(false);
     const [notificationText, setNotificationText] = useState("");
     const [cookies] = useCookies();
     const classes = useStyles({ mode });
@@ -180,8 +194,14 @@ function Main(props) {
                     title="Удаление объекта"
                     description="Вы действительно хотите удалить данный объект?"
                 >
-                    <Button onClick={() => setModalDeletion(false)}>Удалить</Button>
-                    <Button onClick={() => setModalDeletion(false)} theme="secondary">Отмена</Button>
+                    <Button onClick={() => setModalDeletion(false)}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Удалить
+                    </Button>
+                    <Button onClick={() => setModalDeletion(false)} theme="secondary">
+                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        Отмена
+                    </Button>
                 </ModalWindow>
             )}
             {modalError && (
@@ -216,21 +236,85 @@ function Main(props) {
 
             <div className={classes.tableContainer}>
                 <div>
-                    <Text className={classes.tableTitle} type="tableTitle">Очередь кубов</Text>
+                    <Text className={classes.tableTitle} type="title2">Очередь кубов</Text>
                     <TableAddress {...tableProps.cube} setError={(error) => setModalError(true)} setModal={setModalDeletion} />
                 </div>
 
                 <div>
-                    <Text className={classes.tableTitle} type="tableTitle">Очередь мультипаков</Text>
+                    <Text className={classes.tableTitle} type="title2">Очередь мультипаков</Text>
                     <TableAddress {...tableProps.multipack} setError={(error) => setModalError(true)} setModal={setModalDeletion} />
                 </div>
 
                 <div>
-                    <Text className={classes.tableTitle} type="tableTitle">Очередь пачек</Text>
+                    <Text className={classes.tableTitle} type="title2">Очередь пачек</Text>
                     <TableAddress {...tableProps.pack} setError={(error) => setModalError(true)} setModal={setModalDeletion} />
                 </div>
             </div>
-            <NotificationPanel />
+            <NotificationPanel
+                notifications={
+                    <>
+                        <Notification
+                            title="Уведомление"
+                            description="Отсканируйте QR упаковки для редактирования"
+                        />
+
+                        {/* <Notification
+                            title="Уведомление"
+                            description="Отсканируйте внутренний QR для привязки к кубу"
+                        />
+
+                        <NotificationImage
+                            title="Вы пытаетесь сформировать неполный куб"
+                            description="Пожалуйста, выберите каким QR кодом хотите сформировать неполный куб"
+                        >
+                            <img src={imgScanner} />
+                        </NotificationImage>
+
+                        <NotificationImage
+                            title="Отсканируйте QR код"
+                            description="Пожалуйста, поднесите и отсканируйте QR код, для того, чтобы сформировать неполный куб"
+                        >
+                            <div className={classes.notificationQrCodeImgContainer}>
+                                <img src={imgQR} />
+                                <img src={imgScannerActive} />
+                            </div>
+                        </NotificationImage> */}
+                    </>
+                }
+                errors={
+                    <>
+                        {/* <Notification
+                            title="Ошибка"
+                            description="Вы используете QR вне куба. Пожалуйста перейдите в куб для редактирования."
+                            onClose={console.log}
+                            error
+                        />
+
+                        <Notification
+                            title="Удаление объекта"
+                            description="Вы действительно хотите удалить данный объект?"
+                            error
+                        >
+                            <Button>
+                                <img src={imgOk} style={{ marginRight: 8 }} />
+                                Удалить
+                            </Button>
+                            <Button theme="secondary">
+                                <img src={imgCross} style={{ filter: 'invert(1)', width: 16, marginRight: 8 }} />
+                                Отмена
+                            </Button>
+                        </Notification> */}
+
+                        <Notification
+                            title="Возникла ошибка"
+                            description="Подробная информация об ошибке"
+                            error
+                        >
+                            <Button>Сбросить ошибку</Button>
+                        </Notification>
+                    </>
+                }
+            />
             {/* 
             <ColumnError /> */}
 
@@ -241,7 +325,7 @@ function Main(props) {
                     </div>
                     <div className={classes.switchContainer}>
                         Автоматический
-                    <SwitchMode onClick={updateMode} />
+                    <Switch onClick={updateMode} />
                         Ручной
                     </div>
                 </div>
@@ -252,7 +336,7 @@ function Main(props) {
                     </div>
                     <div className={classes.switchContainer}>
                         Сжатый
-                    <SwitchMode onClick={updateMode} />
+                    <Switch onClick={updateMode} />
                         Расширенный
                     </div>
                 </div>

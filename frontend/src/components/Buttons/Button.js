@@ -23,6 +23,10 @@ const useStyles = createUseStyles({
         paddingRight: 17,
         outline: 'none',
         cursor: 'pointer',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        lineHeight: 1,
     }),
 });
 

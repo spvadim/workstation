@@ -5,7 +5,9 @@ import axios from 'axios';
 import Loader from "../Loader";
 import Table from './index';
 
-const TableAddress = React.memo(({ address, type, setError, setModal, columns, buttonEdit, buttonDelete }) => {
+const TableAddress = React.memo(({
+    address, type, setError, setModal, columns, buttonEdit, buttonDelete
+}) => {
     const [tableData, setTableData] = useState([]);
     const [loading, setLoading] = useState(false);
     const history = useHistory();
@@ -30,13 +32,6 @@ const TableAddress = React.memo(({ address, type, setError, setModal, columns, b
             .then(res => console.log(res))
             .catch(e => { setError(e); console.log(e) })
     }
-    let rows = tableData.concat(tableData)
-    rows = rows.concat(rows)
-    rows = rows.concat(rows)
-    rows = rows.concat(rows)
-    rows = rows.concat(rows)
-    rows = rows.concat(rows)
-
     if (loading) {
         return <Loader style={{ display: 'block', margin: 'auto' }} />
     }
@@ -44,7 +39,7 @@ const TableAddress = React.memo(({ address, type, setError, setModal, columns, b
     return (
         <Table
             columns={columns}
-            rows={rows}
+            rows={tableData}
             buttonEdit={buttonEdit}
             buttonDelete={buttonDelete}
             onEdit={row => history.push('/edit', { description: row, type, })}

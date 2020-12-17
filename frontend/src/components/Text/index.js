@@ -2,7 +2,11 @@ import React from 'react';
 import { createUseStyles } from 'react-jss';
 
 const useStyles = createUseStyles({
-    tableTitle: {
+    title: {
+        fontSize: 36,
+        fontWeight: 700,
+    },
+    title2: {
         fontSize: 24,
         fontWeight: 700,
     },

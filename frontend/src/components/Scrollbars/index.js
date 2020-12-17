@@ -11,6 +11,10 @@ const useStyles = createUseStyles({
         backgroundColor: color.yellow,
         boxSizing: 'border-box',
     },
+    thumbVertical: {
+        height: '21px !important',
+        width: '5px !important',
+    },
     trackVertical: {
         '&::after': {
             content: '""',
@@ -35,16 +39,13 @@ function Scrollbars(props) {
     return (
         <ScrollbarsBase
             renderThumbVertical={thumbProps => (
-                <div className={classes.thumb} {...thumbProps} />
+                <div className={[classes.thumb, classes.thumbVertical].join(' ')} {...thumbProps} />
             )}
-            renderThumbHorizontal={thumbProps => (
-                <div className={classes.thumb} {...thumbProps} />
-            )}
+            renderThumbHorizontal={thumbProps => <div />}
             renderTrackVertical={trackProps => (
                 <div className={['scrollbars_track-vertical', classes.trackVertical].join(' ')} {...trackProps} />
             )}
             thumbSize={21}
-            hideTracksWhenNotNeeded
             {...props}
         />
     );

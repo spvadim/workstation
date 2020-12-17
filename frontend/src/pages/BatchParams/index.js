@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { createUseStyles } from "react-jss";
 import axios from 'axios';
-
-import Loader from "../../components/Loader/index.js";
-
 import { Redirect } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import address from "../../address.js";
-import { Paper, Button, InputRadio, TextField } from "src/components";
-import { createUseStyles } from "react-jss";
+import { Paper, Button, InputRadio, TextField, Text, Loader } from "src/components";
 
 const useStyles = createUseStyles({
     BatchParams: {
@@ -56,8 +53,6 @@ const useStyles = createUseStyles({
         width: 140,
     },
     title: {
-        fontSize: 36,
-        fontWeight: 700,
         position: 'absolute',
         marginTop: 62,
         width: '100%',
@@ -108,7 +103,7 @@ function BatchParams() {
     }
     return (
         <div className={classes.BatchParams}>
-            <div className={classes.title}>Вход</div>
+            <Text type="title" className={classes.title}>Вход</Text>
             <div className={classes.main}>
                 <Paper className={classes.paperMain}>
                     <form className={classes.form} onSubmit={submitHandler} autoComplete="off">
@@ -122,7 +117,9 @@ function BatchParams() {
                                 type="text"
                                 value={batchNumber}
                                 onChange={event => setPartyNumber(event.target.value)}
-                                autoFocus />
+                                autoFocus
+                                forceFocus
+                            />
                         </div>
 
                         {loading ?

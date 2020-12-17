@@ -20,10 +20,27 @@ const useStyles = createUseStyles({
     }),
 })
 
-function TextField({ className, outlined, ...restProps }) {
+function TextField({ className, outlined, forceFocus, ...restProps }) {
     const classes = useStyles({ outlined });
+    const ref = React.useRef(null);
 
-    return <input className={['text-field', classes.root, className].join(' ')} {...restProps} />
+
+    React.useEffect(() => {
+        if (!forceFocus || !ref.current) {
+            return
+        }
+        const interval = setInterval(() => {
+            if (document.activeElement.tagName !== 'INPUT') {
+                ref.current.focus();
+            }
+            if (['checkbox', 'button', 'radio'].includes(document.activeElement.type)) {
+                ref.current.focus();
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [forceFocus, ref.current]);
+
+    return <input ref={ref} className={['text-field', classes.root, className].join(' ')} {...restProps} />
 }
 
 export default TextField
