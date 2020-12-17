@@ -29,4 +29,4 @@ class CubeOutput(Model):
 class CubePatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
-    multipack_ids_with_pack_ids: Dict[str, List[ObjectId]]
+    multipack_ids_with_pack_ids: Optional[Dict[str, List[ObjectId]]]
