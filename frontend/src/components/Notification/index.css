@@ -1,8 +1,0 @@
-.notification-container div{
-    display: flex;
-    gap: 1rem;
-}
-
-.notification-container span {
-    float: left;
-}

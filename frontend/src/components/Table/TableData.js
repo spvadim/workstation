@@ -1,28 +1,20 @@
 import React, { useState, useEffect, useMemo } from "react";
-import "./index.css";
 
 import Loader from "../Loader/index.js";
 import DeleteButton from "../Buttons/DeleteButton.js";
+import Table from './index';
 
-const TableData = React.memo(({ settings, callback, data }) => {
-    let { title, addFields, type } = settings;
-
-    let columns = [];
-    if (data !== "/loader") {
-        if (settings.columns) {
-            columns = settings.columns.concat(addFields);
-        } else if (data.length !== 0) {
-            columns = Object.keys(data[0]).concat(addFields);
-        } 
-    }
+const TableData = React.memo(({
+    columns, buttonEdit, buttonDelete, callback, rows, className, onDelete, hideTracksWhenNotNeeded
+}) => {
 
     const createRow = (row) => {
         return (
             <tr>
-                {columns.map((col) => { // :)
-                    if (col === "/delete") return <td><DeleteButton callback={() => {callback(row)}} /></td>
-                    else if (col === "/return") return <td><DeleteButton callback={() => {callback(row)}} /></td>
-                    else if (col === "/remove") return <td><DeleteButton callback={() => {callback(row)}} /></td>
+                {columns.map((col) => { // :) // 0_0
+                    if (col === "/delete") return <td><DeleteButton callback={() => { callback(row) }} /></td>
+                    else if (col === "/return") return <td><DeleteButton callback={() => { callback(row) }} /></td>
+                    else if (col === "/remove") return <td><DeleteButton callback={() => { callback(row) }} /></td>
                     else if (row[col]) return <td>{row[col]}</td>
                     else return <td>{null}</td>
                 })}
@@ -31,22 +23,17 @@ const TableData = React.memo(({ settings, callback, data }) => {
     };
 
     return (
-        <table>
-            <thead>
-                <caption style={{display: "flex"}} className="table-caption">{title}</caption>
-                <tr>
-                    {data === "/loader" ? null : columns.map((name) => <td>{name[0] === "/" ? null : name}</td>)}
-                </tr>
-            </thead>
-            <tfoot></tfoot>
-            <tbody>
-                {data === "/loader" ? <Loader /> : data.map((row) => createRow(row))}
-            </tbody>
-
-            
-        </table>
+        <Table
+            className={className}
+            columns={columns}
+            rows={rows}
+            buttonEdit={buttonEdit}
+            buttonDelete={buttonDelete}
+            onEdit={console.log}
+            onDelete={onDelete}
+            hideTracksWhenNotNeeded={hideTracksWhenNotNeeded}
+        />
     );
-
 })
 
 export default TableData;
