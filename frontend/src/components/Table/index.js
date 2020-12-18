@@ -32,9 +32,6 @@ const getColumnTemplate = ({ columns, buttonEdit, buttonDelete }) => {
 
 const useStyles = createUseStyles({
     root: {
-        '& .scrollbars_track-vertical': {
-            maxHeight: 488,
-        },
         height: '100%',
         position: 'relative',
     },
