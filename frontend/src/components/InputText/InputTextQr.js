@@ -4,7 +4,7 @@ import address from "../../address.js";
 import { TextField } from 'src/components';
 
 let timer;
-const InputTextQr = React.memo(({ setNotification, ...restProps }) => {
+const InputTextQr = React.memo(({ setNotification, setNotificationError, ...restProps }) => {
     const [value, setValue] = useState("");
     const [idCube, setIdCube] = useState("");
     const [valueFlag, setValueFlag] = useState(false);
@@ -31,9 +31,9 @@ const InputTextQr = React.memo(({ setNotification, ...restProps }) => {
             })
             .catch(res => {
                 if (res.response.status === 400) {
-                    setNotification("QR не уникален!")
+                    setNotificationError("QR не уникален!")
                 } else {
-                    setNotification(res.responce.data.detail)
+                    setNotificationError(res.responce.data.detail)
                 }
             })
 
@@ -53,10 +53,10 @@ const InputTextQr = React.memo(({ setNotification, ...restProps }) => {
             })
             .catch(res => {
                 if (res.response.status === 404) {
-                    setNotification("Куб не найден");
+                    setNotificationError("Куб не найден");
                     setValue("");
                 }
-                else setNotification(res.responce.data.detail)
+                else setNotificationError(res.responce.data.detail)
             })
     }
 

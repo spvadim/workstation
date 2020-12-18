@@ -121,10 +121,6 @@ module.exports = {
         "max-params": "off",
         "max-statements": "off",
         "max-statements-per-line": "off",
-        "multiline-comment-style": [
-            "error",
-            "separate-lines"
-        ],
         "multiline-ternary": "off",
         "new-parens": "error",
         "newline-after-var": "off",

@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import Loader from "../Loader";
 import Table from './index';
+import baseAddress from 'src/address';
 
 const TableAddress = React.memo(({
     address, type, setError, setModal, columns, buttonEdit, buttonDelete
@@ -14,7 +15,7 @@ const TableAddress = React.memo(({
 
     useEffect(() => {
         const request = () => {
-            let request = axios.get(address);
+            let request = axios.get(baseAddress + address);
             request.then(res => {
                 setTableData(res.data);
             })
@@ -27,10 +28,7 @@ const TableAddress = React.memo(({
     }, [address]);
 
     const deleteRow = (id) => {
-        // http://141.101.196.127
-        let address = "http://141.101.196.127";
-
-        axios.delete(address + "/api/v1_0/" + type + "/" + id)
+        axios.delete(baseAddress + "/api/v1_0/" + type + "/" + id)
             .then(res => console.log(res))
             .catch(e => { setError(e); console.log(e) })
     }

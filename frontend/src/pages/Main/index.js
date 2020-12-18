@@ -24,11 +24,9 @@ axios.patch(address + "/api/v1_0/set_mode", { work_mode: "auto" });
 
 const QrLink = ({ children }) => <Link href={children}>{children}</Link>;
 
-const getTableProps = (auto) => ({
+const getTableProps = (extended) => ({
     cube: {
-        buttonEdit: "/edit",
-        buttonDelete: "/trash",
-        columns: auto ?
+        columns: extended ?
             [
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr", Component: QrLink },
@@ -37,14 +35,10 @@ const getTableProps = (auto) => ({
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr", Component: QrLink },
             ],
-        address: address + "/api/v1_0/cubes_queue",
-        type: "cubes",
     },
 
     multipack: {
-        buttonEdit: "/edit",
-        buttonDelete: "/trash",
-        columns: auto ?
+        columns: extended ?
             [
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr", width: 48, Component: () => <>...</> },
@@ -55,13 +49,10 @@ const getTableProps = (auto) => ({
                 { name: "qr", title: "qr", Component: QrLink },
                 { name: "status", title: "Статус" },
             ],
-        address: address + "/api/v1_0/multipacks_queue",
-        type: "multipacks",
     },
 
     pack: {
-        buttonDelete: "/trash",
-        columns: auto ?
+        columns: extended ?
             [
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr", Component: QrLink },
@@ -70,8 +61,6 @@ const getTableProps = (auto) => ({
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr", Component: QrLink },
             ],
-        address: address + "/api/v1_0/packs_queue",
-        type: "packs",
     },
 
 });
@@ -160,13 +149,15 @@ const useStyles = createUseStyles({
 
 function Main(props) {
     const [mode, setMode] = useState('auto');
+    const [extended, setExtended] = useState(false);
     const [page, setPage] = useState('');
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
     const [notificationText, setNotificationText] = useState("");
+    const [notificationErrorText, setNotificationErrorText] = useState("");
     const [cookies] = useCookies();
     const classes = useStyles({ mode });
-    const tableProps = useMemo(() => getTableProps(mode === 'auto'), [mode]);
+    const tableProps = useMemo(() => getTableProps(extended), [extended]);
 
     if (page === "/") {
         return (
@@ -230,89 +221,70 @@ function Main(props) {
                 <div className={classes.headerRight}>
                     <Button>Новый куб</Button>
                     <Button>Новый мультипак</Button>
-                    <InputTextQr label="QR: " autoFocus={true} setNotification={setNotificationText} className={classes.qrInput} />
+                    <InputTextQr
+                        setNotification={setNotificationText}
+                        setNotificationError={setNotificationErrorText}
+                        className={classes.qrInput}
+                    />
                 </div>
             </div>
 
             <div className={classes.tableContainer}>
                 <div>
                     <Text className={classes.tableTitle} type="title2">Очередь кубов</Text>
-                    <TableAddress {...tableProps.cube} setError={(error) => setModalError(true)} setModal={setModalDeletion} />
+                    <TableAddress
+                        columns={tableProps.cube.columns}
+                        setError={(error) => setModalError(true)}
+                        setModal={setModalDeletion}
+                        type="cubes"
+                        address="/api/v1_0/cubes_queue"
+                        buttonEdit="/edit"
+                        buttonDelete="/trash"
+                    />
                 </div>
 
                 <div>
                     <Text className={classes.tableTitle} type="title2">Очередь мультипаков</Text>
-                    <TableAddress {...tableProps.multipack} setError={(error) => setModalError(true)} setModal={setModalDeletion} />
+                    <TableAddress
+                        columns={tableProps.multipack.columns}
+                        setError={(error) => setModalError(true)}
+                        setModal={setModalDeletion}
+                        type="multipacks"
+                        address="/api/v1_0/multipacks_queue"
+                        buttonEdit="/edit"
+                        buttonDelete="/trash"
+                    />
                 </div>
 
                 <div>
                     <Text className={classes.tableTitle} type="title2">Очередь пачек</Text>
-                    <TableAddress {...tableProps.pack} setError={(error) => setModalError(true)} setModal={setModalDeletion} />
+                    <TableAddress
+                        columns={tableProps.pack.columns}
+                        setError={(error) => setModalError(true)}
+                        setModal={setModalDeletion}
+                        type="packs"
+                        address="/api/v1_0/packs_queue"
+                        buttonDelete="/trash"
+                    />
                 </div>
             </div>
             <NotificationPanel
                 notifications={
-                    <>
+                    notificationText && (
                         <Notification
                             title="Уведомление"
-                            description="Отсканируйте QR упаковки для редактирования"
+                            description={notificationText}
                         />
-
-                        {/* <Notification
-                            title="Уведомление"
-                            description="Отсканируйте внутренний QR для привязки к кубу"
-                        />
-
-                        <NotificationImage
-                            title="Вы пытаетесь сформировать неполный куб"
-                            description="Пожалуйста, выберите каким QR кодом хотите сформировать неполный куб"
-                        >
-                            <img src={imgScanner} />
-                        </NotificationImage>
-
-                        <NotificationImage
-                            title="Отсканируйте QR код"
-                            description="Пожалуйста, поднесите и отсканируйте QR код, для того, чтобы сформировать неполный куб"
-                        >
-                            <div className={classes.notificationQrCodeImgContainer}>
-                                <img src={imgQR} />
-                                <img src={imgScannerActive} />
-                            </div>
-                        </NotificationImage> */}
-                    </>
+                    )
                 }
                 errors={
-                    <>
-                        {/* <Notification
+                    notificationErrorText && (
+                        <Notification
                             title="Ошибка"
-                            description="Вы используете QR вне куба. Пожалуйста перейдите в куб для редактирования."
-                            onClose={console.log}
+                            description={notificationErrorText}
                             error
                         />
-
-                        <Notification
-                            title="Удаление объекта"
-                            description="Вы действительно хотите удалить данный объект?"
-                            error
-                        >
-                            <Button>
-                                <img src={imgOk} style={{ marginRight: 8 }} />
-                                Удалить
-                            </Button>
-                            <Button theme="secondary">
-                                <img src={imgCross} style={{ filter: 'invert(1)', width: 16, marginRight: 8 }} />
-                                Отмена
-                            </Button>
-                        </Notification> */}
-
-                        <Notification
-                            title="Возникла ошибка"
-                            description="Подробная информация об ошибке"
-                            error
-                        >
-                            <Button>Сбросить ошибку</Button>
-                        </Notification>
-                    </>
+                    )
                 }
             />
             {/* 
@@ -336,7 +308,7 @@ function Main(props) {
                     </div>
                     <div className={classes.switchContainer}>
                         Сжатый
-                    <Switch onClick={updateMode} />
+                    <Switch onClick={() => setExtended(!extended)} />
                         Расширенный
                     </div>
                 </div>
