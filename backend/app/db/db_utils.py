@@ -180,8 +180,9 @@ async def create_system_settings_if_not_exists():
 async def get_report(q: ReportRequest) -> ReportResponse:
     last_batch = await get_last_batch()
 
-    cubes = await engine.find(Cube, Cube.batch_number != last_batch.number and
-                              q.report_begin <= Cube.created_at <= q.report_end,
+    cubes = await engine.find(Cube, query.and_(Cube.batch_number != last_batch.number,
+                                               Cube.created_at >= q.report_begin,
+                                               Cube.created_at <= q.report_end),
                               sort=query.asc(Cube.created_at))
     cubes_report = [parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes]
 
