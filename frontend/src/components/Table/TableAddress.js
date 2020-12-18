@@ -9,19 +9,21 @@ const TableAddress = React.memo(({
     address, type, setError, setModal, columns, buttonEdit, buttonDelete
 }) => {
     const [tableData, setTableData] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const history = useHistory();
 
     useEffect(() => {
-        if (address) {
-            setLoading(true);
+        const request = () => {
             let request = axios.get(address);
             request.then(res => {
                 setTableData(res.data);
             })
             request.catch(e => { console.log(e) })
             request.finally(() => setLoading(false));
-        }
+        };
+        request();
+        const interval = setInterval(request, 1000);
+        return () => clearInterval(interval);
     }, [address]);
 
     const deleteRow = (id) => {
