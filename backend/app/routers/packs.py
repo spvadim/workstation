@@ -1,10 +1,11 @@
 from typing import List
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from datetime import datetime, timedelta
 from fastapi_versioning import version
 from odmantic import ObjectId
 from app.db.engine import engine
-from app.db.db_utils import get_batch_by_number_or_return_last, get_packs_queue, check_qr_unique, get_by_id_or_404
+from app.db.db_utils import get_batch_by_number_or_return_last, get_packs_queue, check_qr_unique, get_by_id_or_404, \
+    get_by_qr_or_404
 from app.models.pack import Pack, PackOutput, PackPatchSchema
 
 
@@ -22,6 +23,13 @@ async def get_current_packs():
 @version(1, 0)
 async def get_pack_by_id(id: ObjectId):
     pack = await get_by_id_or_404(Pack, id)
+    return pack
+
+
+@router.get('/packs/', response_model=Pack)
+@version(1, 0)
+async def get_pack_by_qr(qr: str = Query(None)):
+    pack = await get_by_qr_or_404(Pack, qr)
     return pack
 
 

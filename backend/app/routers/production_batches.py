@@ -52,3 +52,10 @@ async def get_all_batches():
 async def get_batch_by_id(id: ObjectId):
     batch = await get_by_id_or_404(ProductionBatch, id)
     return batch
+
+
+@router.get("/current_batch", response_model=ProductionBatch)
+@version(1, 0)
+async def get_current_batch():
+    batch = await get_last_batch()
+    return batch

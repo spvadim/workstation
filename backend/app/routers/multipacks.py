@@ -1,10 +1,11 @@
 from typing import List
 from datetime import datetime, timedelta
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
 from app.db.engine import engine
-from app.db.db_utils import check_qr_unique, get_multipacks_queue, get_batch_by_number_or_return_last, get_by_id_or_404
+from app.db.db_utils import check_qr_unique, get_multipacks_queue, get_batch_by_number_or_return_last, get_by_id_or_404, \
+    get_by_qr_or_404
 from app.models.pack import Pack
 from app.models.multipack import Multipack, MultipackOutput, MultipackPatchSchema
 
@@ -45,6 +46,13 @@ async def get_current_multipacks():
 @version(1, 0)
 async def get_multipack_by_id(id: ObjectId):
     multipack = await get_by_id_or_404(Multipack, id)
+    return multipack
+
+
+@router.get('/multipacks/', response_model=Multipack)
+@version(1, 0)
+async def get_multipack_by_qr(qr: str = Query(None)):
+    multipack = await get_by_qr_or_404(Multipack, qr)
     return multipack
 
 
