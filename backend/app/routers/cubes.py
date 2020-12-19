@@ -1,6 +1,6 @@
 from typing import List
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
 from app.db.engine import engine
@@ -110,9 +110,16 @@ async def get_cube_by_id(id: ObjectId):
     return cube
 
 
-@router.get('/find_cube_by_included_qr/{qr}', response_model=Cube)
+@router.get('/cubes/', response_model=Cube)
 @version(1, 0)
-async def get_cube_by_included_qr(qr: str):
+async def get_cube_by_qr(qr: str = Query(None)):
+    cube = await get_by_qr_or_404(Cube, qr)
+    return cube
+
+
+@router.get('/find_cube_by_included_qr/', response_model=Cube)
+@version(1, 0)
+async def get_cube_by_included_qr(qr: str = Query(None)):
     multipack_or_pack = await engine.find_one(Multipack, Multipack.qr == qr)
     if not multipack_or_pack:
         multipack_or_pack = await get_by_qr_or_404(Pack, qr)
