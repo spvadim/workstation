@@ -48,12 +48,17 @@ async def create_cube(cube_input: CubeInput):
 
 @router.put('/cube_finish_manual', response_model=Cube)
 @version(1, 0)
-async def finish_cube():
+async def finish_cube(qr: str):
     batch = await get_last_batch()
     current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     multipacks_queue = await get_multipacks_queue()
     packs_queue = await get_packs_queue()
+
+    if not (multipacks_queue or packs_queue):
+        raise HTTPException(400, detail='Невозможно сформировать неполный куб')
+
+    await check_qr_unique(qr)
 
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
@@ -89,7 +94,7 @@ async def finish_cube():
         multipack_ids_with_pack_ids[str(multipacks_for_cube[i].id)] = multipacks_for_cube[i].pack_ids
     await engine.save_all(multipacks_for_cube)
 
-    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids, batch_number=batch_number,
+    cube = Cube(qr=qr, multipack_ids_with_pack_ids=multipack_ids_with_pack_ids, batch_number=batch_number,
                 multipacks_in_cubes=needed_multipacks, packs_in_multipacks=needed_packs, created_at=current_time)
 
     await engine.save(cube)
@@ -131,7 +136,8 @@ async def get_cube_by_included_qr(qr: str = Query(None)):
         multipack_ids = cube.multipack_ids_with_pack_ids.keys()
         list_of_pack_ids = cube.multipack_ids_with_pack_ids.values()
         if str(id) in multipack_ids:
-            return cube
+            if not cube.qr:
+                return cube
         else:
             for pack_ids in list_of_pack_ids:
                 if id in pack_ids:
