@@ -58,10 +58,4 @@ default_settings_response = SystemSettingsResponse(**default_settings.dict(),
 
 
 def is_settings_default(settings: SystemSettings, default: SystemSettings = default_settings) -> bool:
-    default_as_dict = default.dict().copy()
-    settings_as_dict = settings.dict().copy()
-
-    del default_as_dict['id']
-    del settings_as_dict['id']
-
-    return settings_as_dict == default_as_dict
+    return settings.dict(exclude={'id'}) == default.dict(exclude={'id'})
