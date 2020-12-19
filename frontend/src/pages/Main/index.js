@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import axios from 'axios';
 
 import TableAddress from "../../components/Table/TableAddress.js";
@@ -6,7 +6,7 @@ import InputTextQr from "../../components/InputText/InputTextQr.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
 // import ColumnError from "../../components/ColumnError/index.js";
 import { Notification, NotificationImage } from "../../components/Notification/index.js";
-import { Button, Text, Link, NotificationPanel, Switch } from "src/components";
+import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 // import imgScanner from 'src/assets/images/scanner.svg';
@@ -19,8 +19,6 @@ import { useCookies } from "react-cookie";
 import address from "../../address.js";
 import { createUseStyles } from "react-jss";
 import { HeaderInfo } from './HeaderInfo';
-
-axios.patch(address + "/api/v1_0/set_mode", { work_mode: "auto" });
 
 const QrLink = ({ children }) => <Link href={children}>{children}</Link>;
 
@@ -149,27 +147,71 @@ const useStyles = createUseStyles({
 
 function Main() {
     const [mode, setMode] = useState('auto');
+    const [batchSettings, setBatchSettings] = useState({});
     const [extended, setExtended] = useState(false);
     const [page, setPage] = useState('');
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
+    const [modalCube, setModalCube] = useState(false);
+    const [valueQrCube, setValueQrCube] = useState('');
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
+    const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
     const [cookies] = useCookies();
     const classes = useStyles({ mode });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
 
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/current_batch")
+            .then(res => {
+                setBatchSettings({
+                    batchNumber: res.data.number,
+                    multipacks: res.data.params.multipacks,
+                    packs: res.data.params.packs,
+                    multipacksAfterPintset: res.data.params.multipacks_after_pintset,
+                })
+            })
+            .catch(e => setNotificationErrorText(e.response.detail))
+
+        axios.get(address + "/api/v1_0/get_mode")
+            .then(res => {
+                setMode(res.data.work_mode);
+                setNotificationText(res.data.work_mode === "auto" ?
+                                                   "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                                                   "Сосканируйте QR куба для редактирования")
+            })
+            .catch(e => setNotificationErrorText(e.response.detail[0].msg))
+
+        const request = () => {
+            let request = axios.get(address + "/api/v1_0/get_state");
+            request.then(res => res.data.state !== "normal" ?
+                                               setNotificationColumnErrorText(res.data.error_msg) :
+                                               setNotificationColumnErrorText(""))
+            request.catch(e => setNotificationErrorText(e.response.detail[0].msg))
+        };
+        request();
+        const interval = setInterval(request, 1000);
+        return () => clearInterval(interval);
+    }, [notificationColumnErrorText]);
+
     if (page === "/") {
         return (
             <Redirect to="/" />
+        );
+    } else if (page === "/create") {
+        return (
+            <Redirect to="/create" />
         );
     }
 
     const updateMode = () => {
         let newMode = mode === "auto" ? "manual" : "auto"
         axios.patch(address + "/api/v1_0/set_mode", { work_mode: newMode })
-            .then(() => {
-                setMode(newMode);
+            .then(res => {
+                setMode(res.data.work_mode);
+                setNotificationText(res.data.work_mode === "auto" ?
+                                                            "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                                                            "Сосканируйте QR куба для редактирования")
             })
             .catch(e => {
                 // TOD0: handle error
@@ -177,6 +219,23 @@ function Main() {
             })
     }
 
+    const flushStateColumn = () => {
+        axios.patch(address + "/api/v1_0/flush_state")
+        .catch(e => setNotificationErrorText(e.response.detail[0].msg))
+    }
+
+    const createIncompleteCube = () => {
+        axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + valueQrCube.replace("/", "%2F"))
+        .then(() => {
+            setNotificationText("Неполный куб успешно сформирован");
+            setTimeout(() => {
+                setNotificationText("");
+            }, 2000);
+        })
+        .catch(e => {
+            setNotificationErrorText(e.response.data.detail)
+        })
+    }
 
     return (
         <div className={classes.Main}>
@@ -185,7 +244,10 @@ function Main() {
                     title="Удаление объекта"
                     description="Вы действительно хотите удалить данный объект?"
                 >
-                    <Button onClick={() => setModalDeletion(false)}>
+                    <Button onClick={() => {
+                        setModalDeletion(false);
+                        modalDeletion[0](modalDeletion[1])
+                    }}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Удалить
                     </Button>
@@ -203,31 +265,72 @@ function Main() {
                     <Button onClick={() => setModalError(false)}>Сбросить ошибку</Button>
                 </ModalWindow>
             )}
+            {modalCube && (
+                <ModalWindow
+                    title="Формирование неполного куба"
+                    description="Вы действительно хотите создать неполный куб?"
+                >
+                    <div style={{display: "grid", gap: "2rem"}}> 
+                        <div>
+                            <TextField
+                                placeholder="QR..."
+                                onChange={async e => {
+                                    setValueQrCube(e.target.value);
+                                }}
+                                value={valueQrCube}
+                                outlined
+                                forceFocus
+                                autoFocus
+                            />
+                        </div>
+                        <div style={{display: "flex", gap: "2rem"}}>
+                            <Button onClick={() => {
+                                if (valueQrCube) {
+                                    setModalCube(false);
+                                    createIncompleteCube();
+                                    setValueQrCube("")
+                                }
+                            }}>
+                                <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                                Создать
+                            </Button>
+                            <Button onClick={() => {
+                                setModalCube(false);
+                                setValueQrCube("");
+                            }} theme="secondary">
+                                <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                                Отмена
+                            </Button>
+                        </div>
+                    </div>
+                </ModalWindow>
+            )}
 
             <div className={classes.header}>
                 <div className={classes.headerInfo}>
-                    <HeaderInfo title="Партия №:" amount={cookies.batchNumber} />
-                    <HeaderInfo title="Куб:" amount={cookies.multipacks} suffix="мультипака" />
-                    <HeaderInfo title="Мультипак:" amount={cookies.packs} suffix="пачки" />
-                    <HeaderInfo title="Пинцет:" amount={cookies.todo} suffix="мультипак" />
+                    <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
+                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="мультипака" />
+                    <HeaderInfo title="Мультипак:" amount={batchSettings.packs} suffix="пачки" />
+                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="мультипак" />
                 </div>
 
                 <div className={classes.headerCenter}>
                     <Button onClick={() => {setPage("/")}} >Новая партия</Button>
 
-                    <Button onClick={() => {console.log("Сформировать неполный куб")}} >Сформировать неполный куб</Button>
+                    <Button onClick={() => {setModalCube([createIncompleteCube])}} >Сформировать неполный куб</Button>
                 </div>
 
-                <div className={classes.headerRight}>
-                    <Button>Новый куб</Button>
-                    <Button>Новый мультипак</Button>
-                    <InputTextQr
+                {/* <div className={classes.headerRight}> </div> */}
+                <Button onClick={() => setPage("/create")}>Новый куб</Button>
+                <InputTextQr
                         setNotification={setNotificationText}
                         setNotificationError={setNotificationErrorText}
                         mode={mode}
+                        forceFocus={!modalCube}
+                        extended={extended}
                         className={classes.qrInput}
                     />
-                </div>
+                
             </div>
 
             <div className={classes.tableContainer}>
@@ -238,6 +341,7 @@ function Main() {
                         setError={() => setModalError(true)}
                         setModal={setModalDeletion}
                         type="cubes"
+                        extended={extended}
                         address="/api/v1_0/cubes_queue"
                         buttonEdit="/edit"
                         buttonDelete="/trash"
@@ -252,7 +356,7 @@ function Main() {
                         setModal={setModalDeletion}
                         type="multipacks"
                         address="/api/v1_0/multipacks_queue"
-                        buttonEdit="/edit"
+                        // buttonEdit="/edit"
                         buttonDelete="/trash"
                     />
                 </div>
@@ -269,39 +373,63 @@ function Main() {
                     />
                 </div>
             </div>
+
             <NotificationPanel
-                notifications={
-                    notificationText && (
-                        <Notification
-                            title="Уведомление"
-                            description={notificationText}
-                        />
-                    )
-                }
-                errors={
-                    notificationErrorText && (
-                        <Notification
-                            title="Ошибка"
-                            description={notificationErrorText}
-                            error
-                        />
-                    )
-                }
-            />
+                    notifications={
+                        notificationText && (
+                            <Notification
+                                title="Уведомление"
+                                description={notificationText}
+                                onClose={() => setNotificationText("")}
+                            />
+                        )
+                    }
+                />
+
             {/* 
             <ColumnError /> */}
 
             <div className={classes.footer}>
-                <div>
-                    <div className={classes.switchTitle}>
-                        Режим управления:
+                <div style={{display: "flex"}}>
+                    <div>
+                        <div className={classes.switchTitle}>
+                            Режим управления:
+                        </div>
+                        <div className={classes.switchContainer}>
+                            Автоматический
+                        <Switch mode={mode} onClick={updateMode} />
+                            Ручной
+                        </div>
                     </div>
-                    <div className={classes.switchContainer}>
-                        Автоматический
-                    <Switch onClick={updateMode} />
-                        Ручной
-                    </div>
+
+                    <NotificationPanel
+                        errors={
+                            [
+                                notificationErrorText && (
+                                    <Notification
+                                        title="Ошибка"
+                                        description={notificationErrorText}
+                                        onClose={() => setNotificationErrorText("")}
+                                        error
+                                    />
+                                ),
+
+                                notificationColumnErrorText && (
+                                    <Notification
+                                        title="Ошибка"
+                                        description={notificationColumnErrorText}
+                                        error
+                                    > <Button onClick={() => flushStateColumn()}>Сбросить ошибку</Button>  </Notification>
+                                )
+                            ]
+
+                            
+                        }
+                    />
+
                 </div>
+
+                
 
                 <div>
                     <div className={classes.switchTitle} style={{ textAlign: 'right' }}>

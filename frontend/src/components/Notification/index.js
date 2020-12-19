@@ -64,7 +64,7 @@ export function Notification({ title, description, error, className, children, o
             )}
         </Paper>
     )
-}
+} 
 
 export function NotificationImage({ title, description, children, className, ...restProps }) {
     const classes = useStyles();

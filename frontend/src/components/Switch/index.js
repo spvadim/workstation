@@ -19,6 +19,7 @@ const useStyles = createUseStyles({
         paddingRight: 3,
         marginLeft: 12,
         marginRight: 12,
+        cursor: "pointer",
     },
     input: {
         '&:checked + div': {
@@ -42,11 +43,11 @@ const useStyles = createUseStyles({
     },
 })
 
-const Switch = React.memo(({ onClick, className, ...restProps }) => {
+const Switch = React.memo(({ onClick, mode, className, ...restProps }) => {
     const classes = useStyles();
     return (
         <label className={['switch', classes.root, className].join(' ')} {...restProps}>
-            <input type="checkbox" onClick={onClick} className={classes.input} />
+            <input type="checkbox" checked={mode && mode === "manual"} onClick={onClick} className={classes.input}  />
             <div className={['switch_thumb', classes.thumb].join(' ')} />
         </label>
     );

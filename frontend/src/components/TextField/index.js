@@ -20,7 +20,7 @@ const useStyles = createUseStyles({
     }),
 })
 
-function TextField({ className, outlined, forceFocus, ...restProps }) {
+function TextField({ className, outlined, forceFocus, hidden, ...restProps }) {
     const classes = useStyles({ outlined });
     const ref = React.useRef(null);
 
@@ -40,7 +40,7 @@ function TextField({ className, outlined, forceFocus, ...restProps }) {
         return () => clearInterval(interval);
     }, [forceFocus, ref.current]);
 
-    return <input ref={ref} className={['text-field', classes.root, className].join(' ')} {...restProps} />
+    return <input ref={ref} className={['text-field', classes.root, className].join(' ')} style={hidden ? {opacity: 0} : null} {...restProps} />
 }
 
 export default TextField

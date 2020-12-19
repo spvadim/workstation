@@ -41,7 +41,7 @@ function Scrollbars(props) {
             renderThumbVertical={thumbProps => (
                 <div className={[classes.thumb, classes.thumbVertical].join(' ')} {...thumbProps} />
             )}
-            renderThumbHorizontal={thumbProps => <div />}
+            renderThumbHorizontal={() => <div />}
             renderTrackVertical={trackProps => (
                 <div className={['scrollbars_track-vertical', classes.trackVertical].join(' ')} {...trackProps} />
             )}

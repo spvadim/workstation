@@ -113,7 +113,6 @@ function Table({
 }) {
     const headRef = React.useRef(null);
     const bodyRef = React.useRef(null);
-
     const classes = useStyles({ columns, buttonEdit, buttonDelete });
 
     return (
@@ -134,7 +133,8 @@ function Table({
                                     {
                                         columns.map(({ name, Component }) => (
                                             <div key={name}>
-                                                {Component ? <Component>{row[name]}</Component> : row[name]}
+                                                {/* {Component ? <Component>{row[name]}</Component> : row[name]} */}
+                                                {row[name]}
                                             </div>
                                         ))
                                     }

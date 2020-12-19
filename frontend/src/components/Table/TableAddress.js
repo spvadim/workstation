@@ -7,7 +7,7 @@ import Table from './index';
 import baseAddress from 'src/address';
 
 const TableAddress = React.memo(({
-    address, type, setError, setModal, columns, buttonEdit, buttonDelete
+    address, type, setError, setModal, extended, columns, buttonEdit, buttonDelete
 }) => {
     const [tableData, setTableData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -42,7 +42,7 @@ const TableAddress = React.memo(({
             rows={tableData}
             buttonEdit={buttonEdit}
             buttonDelete={buttonDelete}
-            onEdit={row => history.push('/edit', { description: row, type, })}
+            onEdit={row => history.push('/edit', { description: row, type, extended})}
             onDelete={row => setModal([deleteRow, row.id])}
         />
     );

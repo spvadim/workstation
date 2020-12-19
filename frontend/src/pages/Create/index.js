@@ -1,0 +1,393 @@
+import React, { useEffect, useState } from 'react';
+import { createUseStyles } from 'react-jss';
+import axios from "axios";
+import { Redirect } from "react-router-dom";
+
+import TableData from "../../components/Table/TableData.js";
+import address from "../../address.js";
+import ModalWindow from "../../components/ModalWindow/index.js";
+import { Text, Paper, InputRadio, Loader, Switch, Button, Link, TextField, NotificationPanel} from 'src/components';
+import { color } from 'src/theme';
+import imgCross from 'src/assets/images/cross.svg';
+import imgOk from 'src/assets/images/ok.svg';
+
+
+const useStyles = createUseStyles({
+    Edit: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+    },
+    header: {
+        paddingLeft: 49,
+        marginTop: 24,
+        marginBottom: 24,
+    },
+    tableContainer: {
+        '& > div': {
+            marginLeft: 12,
+            flexBasis: 0,
+            flexGrow: 0,
+            height: 662,
+        },
+        flexGrow: 1,
+        display: 'flex',
+        paddingRight: 22,
+        paddingLeft: 36,
+        position: 'relative',
+    },
+    tableTitle: {
+        marginLeft: 12,
+    },
+    footer: {
+        display: 'flex',
+        justifyContent: 'flex-end',
+        paddingBottom: 22,
+        paddingLeft: 27,
+        paddingRight: 27,
+    },
+    switchContainer: {
+        userSelect: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        fontSize: 18,
+    },
+    switchTitle: {
+        fontSize: 24,
+        fontWeight: 700,
+    },
+    tableDescription: {
+        height: 135,
+    },
+    buttonContainer: {
+        '& > .button > span': {
+            flexGrow: 1,
+        },
+        display: 'grid',
+        gridAutoFlow: 'column',
+        gridAutoColumns: '1fr',
+        columnGap: 10,
+        marginTop: -19,
+        paddingRight: 14,
+        height: 54,
+    },
+    buttonSubmit: {
+        borderColor: color.yellow,
+    },
+    titleContent: {
+        display: 'block',
+        marginTop: 65,
+    },
+    tableContent: {
+        height: 397,
+    },
+    switchTable: {
+        '& .switch_thumb': {
+            backgroundColor: color.yellow,
+        },
+        position: 'absolute',
+        left: 1000,
+        zIndex: 1,
+    },
+    textEditor: {
+        borderStyle: 'none',
+        outline: 'none',
+    },
+});
+
+const getTableProps = (type, extended) => ({
+    multipacksTable: {
+        name: "multipacksTable",
+        columns: [
+            { name: "radioButton", title: "", width: 48 },
+            { name: "number", title: "№", width: 64 },
+        ],
+        buttonDelete: "/delete",
+    },
+    packsTable: {
+        name: "packsTable",
+        columns: [
+            { name: "number", title: "№", width: 64},
+            { name: "qr", title: "QR", width: 300 },
+        ],
+        buttonDelete: "/delete",
+    }
+
+});
+
+
+function Create({ description, type, extended }) {
+    const classes = useStyles();
+    const tableProps = getTableProps();
+    const [page, setPage] = useState('');
+    const [batchNumber, setBatchNumber] = useState('');
+    const [params, setParams] = useState([]);
+    const [settings, setSettings] = useState({}); 
+    const [cubeQr, setCubeQr] = useState('');
+    const [packQr, setPackQr] = useState('');
+    const [modalCancel, setModalCancel] = useState(false);
+    const [modalSubmit, setModalSubmit] = useState(false);
+    const [barcode, setBarcode] = useState('');
+    const [notificationTextError, setNotificationTextError] = useState('');
+    const [multipacksTableData, setMultipacksTableData] = useState([]);
+    const [currentMultipack, setCurrentMultipack] = useState('');
+
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/batches_params")
+        .then(res => setParams(res.data))
+        .catch(e => setNotificationTextError(e.response.detail))
+    }, [])
+
+    // const deleteRow = (row, from) => {
+    //     console.log(row, from)
+    //     if (from === "addTable") {
+    //         let temp = addTableData.filter((obj) => obj.qr !== row.qr);
+    //         setAddTableData(temp);
+    //     } else if (from === "removeTable") {
+    //         let temp = removeTableData.filter((obj) => obj.qr !== row.qr);
+    //         setRemoveTableData(temp);
+    //     } else if (from === "containTable") {
+    //         let finded = containTableData.find(obj => obj.qr === row.qr)
+    //         let findedInRemoveTable = removeTableData.find(obj => obj.qr === row.qr)
+    //         if (finded && !findedInRemoveTable) {
+    //             let temp = removeTableData.slice();
+    //             temp.push(row)
+    //             setRemoveTableData(temp);
+    //         }
+    //     }
+    // }
+
+    // const addPack = (qr) => {
+    //     let temp = addTableData.slice();
+    //     temp.push({ barcode: barcode, qr: qr})
+    //     setAddTableData(temp);
+    // }
+
+    // const submitChanges = () => {
+    //     if (containTableData.length === 0) {
+    //         axios.delete(address + "/api/v1_0/" + type + "/" + description.id)
+    //             .then(() => setPage("/main"))
+
+    //     } else if (containTableData !== "/loader") {
+    //         let packs = containTableData.map((obj) => obj.id);
+    //         let temp = { pack_ids: packs };
+    //         axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
+    //             .then(() => {
+    //                 setModalSubmit(false);
+    //                 setPage("/main");
+    //             })
+
+    //     } else {
+    //         setPage("/main")
+    //     }
+    // }
+
+    const deletePack = (indexPack, indexMultipack) => {
+        let temp = multipacksTableData.slice();
+        temp[indexMultipack].splice(indexPack, 1);
+        setMultipacksTableData(temp);
+    }
+
+    const deleteMultipack = (index) => {
+        let temp = multipacksTableData.slice();
+        temp.splice(index, 1);
+        setMultipacksTableData(temp);
+    }
+
+    const submitChanges = () => {
+        setModalCancel([setPage, "/main"]);
+        setPage("/main")
+    }
+
+    const closeChanges = () => {
+        setModalCancel([setPage, "/main"]);
+        setPage("/main")
+    }
+
+    const addEmptyMultipack = () => {
+        let temp = multipacksTableData.slice();
+        temp.push([]);
+        setMultipacksTableData(temp);
+    }
+
+    const addPackToMultipack = (qr, indexMultipack) => {
+        let temp = multipacksTableData.slice();
+        let packs = temp[indexMultipack];
+
+        if (!packs) return false;
+
+        if (packs.length < settings.packs) {
+            packs.push({qr: qr});
+            temp[indexMultipack] = packs;
+
+            setMultipacksTableData(temp);
+        } else {
+            addEmptyMultipack();
+            setCurrentMultipack(multipacksTableData.length);
+        }
+    }
+    
+    if (page === "/main") return <Redirect to="/main" />
+
+    return (
+        <div className={classes.Edit}>
+            {modalCancel && (
+                <ModalWindow
+                    title="Отменить изменения"
+                    description="Вы действительно хотите отменить изменения?"
+                >
+                    <Button onClick={() => {
+                        modalCancel[0](modalCancel[1]);
+                        setModalCancel(false);
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Отменить
+                    </Button>
+                    <Button onClick={() => setModalCancel(false)} theme="secondary">
+                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        Вернуться к изменениям
+                    </Button>
+                </ModalWindow>
+            )}
+            {modalSubmit && (
+                <ModalWindow
+                    title="Принять изменения"
+                    description="Вы действительно хотите принять изменения?"
+                >
+                    <Button onClick={() => {
+                        modalSubmit[0](modalSubmit[1]);
+                        setModalSubmit(false);
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Принять изменения
+                    </Button>
+                    <Button onClick={() => setModalSubmit(false)} theme="secondary">
+                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        Отменить
+                    </Button>
+                </ModalWindow>
+            )}
+
+            <div className={classes.header}>
+                <Text type="title">Создание</Text>
+                <div>
+                    <span className={classes.inputLabel}>Номер партии ГП: </span>
+                    <TextField
+                        placeholder="0000"
+                        name="batch_number"
+                        type="text"
+                        value={batchNumber}
+                        onChange={e => setBatchNumber(e.target.value)}
+                    />
+
+                    <span className={classes.inputLabel}>QR куба: </span>
+                    <TextField
+                        placeholder="0000"
+                        name="cube_qr"
+                        type="text"
+                        value={cubeQr}
+                        onChange={e => setCubeQr(e.target.value)}
+                    />
+
+                    <span className={classes.inputLabel}>Штрихкод каждой пачки в кубе: </span>
+                    <TextField
+                        placeholder="0000"
+                        name="barcode"
+                        type="text"
+                        value={barcode}
+                        onChange={e => setBarcode(e.target.value)}
+                    />
+                    
+                </div>
+
+                <div style={{width: "max-content"}}>
+                    {params.map((obj, index) => (
+                            <InputRadio name="param_batch"
+                                htmlFor={obj.id}
+                                key={index}
+                                onClick={() => setSettings(obj)}>
+                                <span className={classes.radioLabel}>
+                                    Куб: {obj.multipacks} мультипаков, мультипак: {obj.packs} пачек,
+                                    <br />
+                                    пинцет: {obj.multipacks_after_pintset} мультипак
+                                </span>
+                            </InputRadio>
+                    ))}
+                </div>
+                <div style={{width: "max-content"}}>
+                    <br />
+                    <br />
+                    <div className={classes.buttonContainer}>
+                        <Button onClick={() => setModalSubmit([submitChanges])} className={classes.buttonSubmit}>
+                            <img src={imgOk} /><span>Принять изменения</span>
+                        </Button>
+                        <Button onClick={() => setModalCancel([closeChanges])} theme="secondary">
+                            <img src={imgCross} style={{ filter: 'invert(1)' }} /><span>Отменить изменения</span>
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <div className={classes.tableContainer}>
+                <div style={{width: "max-content"}}>
+                    <Text className={[classes.tableTitle, classes.titleContent].join(' ')} type="title2">Мультипаки</Text>
+                    <Button onClick={() => addEmptyMultipack()}><span>Добавить</span></Button>
+                    <TableData
+                        rows={multipacksTableData.map((_, index) => {
+                            return {
+                                number: index + 1,
+                                radioButton: <InputRadio name="multipacksChoose"
+                                                htmlFor={index}
+                                                key={index}
+                                                checked={index === currentMultipack}
+                                                onClick={() => setCurrentMultipack(index)}>
+                                            </InputRadio>,
+                            }
+                        })}
+                        className={classes.tableContent}
+                        onDelete={obj => deleteMultipack(obj.number - 1)}
+                        hideTracksWhenNotNeeded
+                        {...tableProps.multipacksTable}
+                    />
+                </div>
+
+                <div style={{width: "max-content"}}>
+                    <Text className={[classes.tableTitle, classes.titleContent].join(' ')} type="title2">Пачки</Text>
+                    <TextField
+                        placeholder="0000"
+                        name="pack_qr"
+                        type="text"
+                        value={packQr}
+                        forceFocus
+                        onChange={e => setPackQr(e.target.value)}
+                        onKeyPress={e => (e.charCode === 13) && addPackToMultipack(packQr, currentMultipack)}
+                    />
+                    <TableData
+                        rows={multipacksTableData[currentMultipack] ? 
+                              multipacksTableData[currentMultipack].map((obj, index) => ({number: index + 1, qr: obj.qr})) :
+                              []}
+                        className={classes.tableContent}
+                        onDelete={obj => deletePack(obj.number-1, currentMultipack)}
+                        hideTracksWhenNotNeeded
+                        {...tableProps.packsTable}
+                    />
+                </div>
+            </div>
+
+            {/* <div className={classes.footer}>
+                <div>
+                    <div className={classes.switchTitle} style={{ textAlign: 'right' }}>
+                        Вид интерфейса:
+                    </div>
+                    <div className={classes.switchContainer}>
+                        Сжатый
+                    <Switch onClick={console.error} />
+                        Расширенный
+                    </div>
+                </div>
+            </div> */}
+        </div>
+    );
+}
+
+export default Create;

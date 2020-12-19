@@ -33,7 +33,7 @@ const useStyles = createUseStyles({
     },
 });
 
-function InputRadio({ name, htmlFor, children, onClick, className, ...restProps }) {
+function InputRadio({ name, htmlFor, children, checked, onClick, className, ...restProps }) {
     const classes = useStyles();
 
     return (
@@ -47,6 +47,7 @@ function InputRadio({ name, htmlFor, children, onClick, className, ...restProps 
                 className={classes.input}
                 name={name}
                 id={htmlFor}
+                checked={checked}
                 type="radio"
                 onClick={onClick} />
 

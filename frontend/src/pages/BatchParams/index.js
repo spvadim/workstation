@@ -70,6 +70,7 @@ function BatchParams() {
 
     const [cookies, setCookie] = useCookies([]);
 
+
     useEffect(() => {
         setLoading(true);
 
@@ -98,6 +99,7 @@ function BatchParams() {
         setCookie("batchNumber", batchNumber, { path: "/" });
         setCookie("multipacks", settings.multipacks, { path: "/" });
         setCookie("packs", settings.packs, { path: "/" });
+        setCookie("multipacksAfterPintset", settings.multipacks_after_pintset, { path: "/" })
 
         return <Redirect to="/main" />
     }

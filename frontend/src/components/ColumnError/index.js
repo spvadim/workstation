@@ -17,7 +17,7 @@ const ColumnError = React.memo(() => {
             .catch(e => {console.log(e)})
         }, 1000)
 
-        return () => { clearInterval(timer) }
+        return () => {clearInterval(timer)}
     }, [])
     
     return (

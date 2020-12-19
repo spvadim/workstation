@@ -40,11 +40,11 @@ function NotificationPanel({ notifications, errors }) {
         <div className={['notification-panel', classes.root].join(' ')}>
             <div className={classes.container}>
                 <div className={classes.column}>
-                    <Paper className={classes.icon} style={{ backgroundImage: `url(${imgNotification})` }} />
+                    {/* <Paper className={classes.icon} style={{ backgroundImage: `url(${imgNotification})` }} /> */}
                     {notifications}
                 </div>
                 <div className={classes.column}>
-                    <Paper className={classes.icon} style={{ backgroundImage: `url(${imgError})` }} />
+                    {/* <Paper className={classes.icon} style={{ backgroundImage: `url(${imgError})` }} /> */}
                     {errors}
                 </div>
             </div>

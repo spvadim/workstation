@@ -5,7 +5,7 @@ import { Redirect } from "react-router-dom";
 import { TextField } from 'src/components';
 
 let timer;
-const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, ...restProps }) => {
+const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, extended, forceFocus, ...restProps }) => {
     const [value, setValue] = useState("");
     const [idCube, setIdCube] = useState("");
     const [page, setPage] = useState("");
@@ -32,7 +32,7 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, .
                         setCubeData(finded);
                         setPage("edit");
                     } else {
-                        setNotification("Нет куба с таким QR");
+                        setNotificationError("Нет куба с таким QR");
                         setValue("");
                     }
                 })
@@ -52,22 +52,27 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, .
         axios.patch(address + "/api/v1_0/cubes/" + idCube, { "qr": value })
             .then(() => {
                 setFlagSetQr(false);
+                setNotification("Куб успешно идентифицирован");
+                setTimeout(() => {
+                    setNotification("")
+                }, 2000);
             })
             .catch(res => {
                 if (res.response.status === 400) {
                     setNotificationError("QR не уникален!")
                 } else {
-                    setNotificationError(res.responce.data.detail)
+                    setNotificationError(res.response.data.detail[0].msg)
                 }
             })
 
     }
 
     const checkCubeByQr = () => {
-        axios.get(address + "/api/v1_0/find_cube_by_included_qr/" + value)
+        console.log("value: ", value)
+        axios.get(address + "/api/v1_0/find_cube_by_included_qr/?qr=" + value.replace("/", "%2F"))
             .then(res => {
                 if (res.data.qr) {
-                    setNotification("Куб уже идентифицирован")
+                    setNotificationError("Куб уже идентифицирован")
                 } else {
                     setNotification("Куб найден, введите QR для идентификации")
                     setIdCube(res.data.id);
@@ -80,7 +85,7 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, .
                     setNotificationError("Куб не найден");
                     setValue("");
                 }
-                else setNotificationError(res.responce.data.detail)
+                else setNotificationError(res.response.data.detail[0].msg)
             })
     }
 
@@ -101,9 +106,10 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, .
                 setValueFlag(true);
                 setValue(e.target.value);
             }}
+            hidden={!extended}
             value={value}
             outlined
-            forceFocus
+            forceFocus={forceFocus}
             autoFocus
             {...restProps}
         />

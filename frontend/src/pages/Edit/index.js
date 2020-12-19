@@ -5,7 +5,8 @@ import { Redirect } from "react-router-dom";
 
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
-import { Text, Switch, Button, Link } from 'src/components';
+import ModalWindow from "../../components/ModalWindow/index.js";
+import { Text, Switch, Button, Link, TextField} from 'src/components';
 import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
@@ -93,24 +94,24 @@ const useStyles = createUseStyles({
     },
 });
 
-const QrLink = ({ children }) => <Link href={children}>{children}</Link>;
+// const QrLink = ({ children }) => <Link href={children}>{children}</Link>;
 
-const TextEditor = ({ children, style }) => {
-    const classes = useStyles();
-    return <input className={classes.textEditor} style={style} defaultValue={children} />
-};
+// const TextEditor = ({ children, style }) => {
+//     const classes = useStyles();
+//     return <input className={classes.textEditor} style={style} defaultValue={children} />
+// };
 
-const LinkEditor = ({ children }) => {
-    return <TextEditor style={{ color: color.linkBlue }}>{children}</TextEditor>
-}
+// const LinkEditor = ({ children }) => {
+//     return <TextEditor style={{ color: color.linkBlue }}>{children}</TextEditor>
+// }
 
-const getTableProps = (type) => ({
+const getTableProps = (type, extended) => ({
     description: {
         type: type,
         columns: [
-            { name: "created_at", title: "Создано", width: 123, Component: TextEditor },
-            { name: "qr", title: "qr", Component: LinkEditor },
-            { name: "id", title: "id", width: 240, Component: TextEditor },
+            { name: "created_at", title: "Создано", width: 123 },
+            { name: "qr", title: "qr" },
+            { name: "id", title: "id", width: 240 },
         ],
     },
 
@@ -118,10 +119,8 @@ const getTableProps = (type) => ({
         name: "addTable",
         type: type,
         columns: [
-            { name: "created_at", title: "Создано", width: 123 },
-            { name: "barcode", title: "barcode", width: 130 },
-            { name: "qr", title: "qr", width: 48, Component: () => <>...</> },
-            { name: "id", title: "id" },
+            { name: "barcode", title: "barcode", width: 200 },
+            { name: "qr", title: "qr" },
         ],
         buttonDelete: "/delete",
     },
@@ -129,59 +128,105 @@ const getTableProps = (type) => ({
     removeTable: {
         name: "removeTable",
         type: type,
-        columns: [
+        columns: extended ?
+        [
             { name: "created_at", title: "Создано", width: 123 },
             { name: "barcode", title: "barcode", width: 130 },
-            { name: "qr", title: "qr", width: 48, Component: () => <>...</> },
-            { name: "id", title: "id" },
+            { name: "qr", title: "qr" },
+            { name: "id", title: "id", width: 200},
+        ] : 
+        [
+            { name: "created_at", title: "Создано", width: 123 },
+            { name: "barcode", title: "barcode", width: 130 },
+            { name: "qr", title: "qr" },
         ],
         buttonDelete: "/return",
     },
 
     containTable: {
         type: type,
-        columns: [
+        columns: extended ? 
+        [
             { name: "created_at", title: "Создано", width: 123 },
-            { name: "qr", title: "qr", Component: QrLink },
+            { name: "qr", title: "qr"},
             { name: "id", title: "id", width: 200 },
+        ] : 
+        [
+            { name: "created_at", title: "Создано", width: 123 },
+            { name: "qr", title: "qr"},
         ],
         buttonDelete: "/remove",
     },
 });
 
-function Edit({ description, type }) {
+let timer;
+function Edit({ description, type, extended }) {
     const classes = useStyles();
-    const tableProps = getTableProps(type);
+    const tableProps = getTableProps(type, extended);
     const [tableSwitch, setTableSwitch] = useState(false);
+    const [valueQr, setValueQr] = useState('');
+    const [valueFlag, setValueFlag] = useState(false);
+    const [addTableData, setAddTableData] = useState([]);
+    const [removeTableData, setRemoveTableData] = useState([]);
+    const [page, setPage] = useState('');
+    const [containTableData, setContainTableData] = useState("/loader");
+    const [modalCancel, setModalCancel] = useState(false);
+    const [modalSubmit, setModalSubmit] = useState(false);
 
-    let [containTableData, setContainTableData] = useState("/loader");
+    const barcode = "placeholder";
 
     useEffect(() => {
+        if (valueFlag) {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                if (tableSwitch) deleteRow({qr: valueQr}, "containTable")
+                else addPack(valueQr);
+                setValueQr("")
+            }, 500);
+        }
+        setValueFlag(false);
+
+    }, [valueFlag])
+
+    useEffect(() => {
+        
+
         axios.get(address + "/api/v1_0/" + type + "/" + description.id)
             .then(async res => {
                 if (type === "multipacks") {
                     setContainTableData(await getPacks(res.data.pack_ids));
                 } else if (type === "cubes") {
-                    setContainTableData(await getMultipacks(Object.keys(res.data.multipack_ids_with_pack_ids)));
+                    setContainTableData(await getPacksFromMultipacks(Object.keys(res.data.multipack_ids_with_pack_ids)));
                 }
             })
     }, [])
 
-    const getMultipacks = async (ids) => {
-        let multipacks = [];
+    const getPacksFromMultipacks = async (ids) => {
+        let packsIds = [];
         for (let i = 0; i < ids.length; i++) {
             let request = await axios.get(address + "/api/v1_0/multipacks/" + ids[i]);
             let data = request.data;
-            multipacks.push({
-                qr: data.qr,
-                barcode: data.barcode,
-                created_at: data.created_at,
-                id: data.id,
-            })
+            packsIds.push(data.pack_ids)
         }
 
-        return multipacks;
+        return getPacks(packsIds.flat())
     }
+
+    // const getMultipacks = async (ids) => {
+    //     let multipacks = [];
+    //     for (let i = 0; i < ids.length; i++) {
+    //         let request = await axios.get(address + "/api/v1_0/multipacks/" + ids[i]);
+    //         let data = request.data;
+    //         multipacks.push({
+    //             qr: data.qr,
+    //             barcode: data.barcode,
+    //             created_at: data.created_at,
+    //             id: data.id,
+    //         })
+    //     }
+
+    //     return multipacks;
+    // }
 
     const getPacks = async (ids) => {
         let packs = [];
@@ -199,47 +244,44 @@ function Edit({ description, type }) {
         return packs;
     }
 
-    let [addTableData, setAddTableData] = useState([]);
-    let [removeTableData, setRemoveTableData] = useState([]);
+    const deleteRow = (row, from) => {
+        console.log(row, from)
+        if (from === "addTable") {
+            let temp = addTableData.filter((obj) => obj.qr !== row.qr);
+            setAddTableData(temp);
+        } else if (from === "removeTable") {
+            let temp = removeTableData.filter((obj) => obj.qr !== row.qr);
+            setRemoveTableData(temp);
+        } else if (from === "containTable") {
+            let finded = containTableData.find(obj => obj.qr === row.qr)
+            let findedInRemoveTable = removeTableData.find(obj => obj.qr === row.qr)
+            if (finded && !findedInRemoveTable) {
+                let temp = removeTableData.slice();
+                temp.push(row)
+                setRemoveTableData(temp);
+            }
+        }
+    }
 
-    let [page, setPage] = useState('');
-
-    const deleteRow = (row) => {
-        let temp = addTableData.filter((obj) => obj.id !== row.id);
+    const addPack = (qr) => {
+        let temp = addTableData.slice();
+        temp.push({ barcode: barcode, qr: qr})
         setAddTableData(temp);
-    }
-
-    const returnRow = (row) => {
-        let foo = containTableData.slice();
-        foo.push(row);
-
-        let bar = removeTableData.filter((obj) => obj.id !== row.id)
-
-        setContainTableData(foo);
-        setRemoveTableData(bar);
-    }
-
-    const removeRow = (row) => {
-        let foo = removeTableData.slice();
-        foo.push(row);
-
-        let bar = containTableData.filter((obj) => obj.id !== row.id);
-
-        setRemoveTableData(foo);
-        setContainTableData(bar);
-
     }
 
     const submitChanges = () => {
         if (containTableData.length === 0) {
             axios.delete(address + "/api/v1_0/" + type + "/" + description.id)
-                .then(setPage("/main"))
+                .then(() => setPage("/main"))
 
         } else if (containTableData !== "/loader") {
             let packs = containTableData.map((obj) => obj.id);
             let temp = { pack_ids: packs };
             axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
-                .then(setPage("/main"))
+                .then(() => {
+                    setModalSubmit(false);
+                    setPage("/main");
+                })
 
         } else {
             setPage("/main")
@@ -247,18 +289,75 @@ function Edit({ description, type }) {
     }
 
     const closeChanges = () => {
-        console.log("Отменить изменения")
-        setPage("/main");
+        if (removeTableData.length === 0 && addTableData.length === 0) {
+            setPage("/main");
+        } else {
+            setModalCancel([setPage, "/main"]);
+        }
     }
 
     if (page === "/main") return <Redirect to="/main" />
 
     return (
         <div className={classes.Edit}>
-            <Text type="title" className={classes.header}>Редактор</Text>
+            {modalCancel && (
+                <ModalWindow
+                    title="Отменить изменения"
+                    description="Вы действительно хотите отменить изменения?"
+                >
+                    <Button onClick={() => {
+                        setModalCancel(false);
+                        modalCancel[0](modalCancel[1])
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Отменить
+                    </Button>
+                    <Button onClick={() => setModalCancel(false)} theme="secondary">
+                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        Вернуться к изменениям
+                    </Button>
+                </ModalWindow>
+            )}
+            {modalSubmit && (
+                <ModalWindow
+                    title="Применить изменения"
+                    description="Вы действительно хотите применить изменения?"
+                >
+                    <Button onClick={() => {
+                        setModalSubmit(false);
+                        modalSubmit[0](modalSubmit[1])
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Применить
+                    </Button>
+                    <Button onClick={() => setModalSubmit(false)} theme="secondary">
+                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        Отмена
+                    </Button>
+                </ModalWindow>
+            )}
+
+
+            <div className={classes.header}>
+                <Text type="title">Редактор</Text>
+                <TextField
+                    placeholder="QR..."
+                    onChange={async e => {
+                        setValueFlag(true);
+                        setValueQr(e.target.value);
+                    }}
+                    hidden
+                    value={valueQr}
+                    forceFocus
+                    autoFocus
+                />
+            </div>
 
             <div className={classes.tableContainer}>
-                <Switch onClick={() => setTableSwitch(!tableSwitch)} className={classes.switchTable} />
+                <Switch onClick={() => {
+                    setTableSwitch(!tableSwitch);
+                    setValueQr("");
+                }} className={classes.switchTable} />
                 <div>
                     <Text className={classes.tableTitle} type="title2">{type}</Text>
                     <TableData
@@ -281,7 +380,7 @@ function Edit({ description, type }) {
                     <TableData
                         rows={typeof containTableData === 'string' ? [] : containTableData}
                         className={classes.tableContent}
-                        onDelete={row => removeRow(row)}
+                        onDelete={row => deleteRow(row, "containTable")}
                         hideTracksWhenNotNeeded
                         {...tableProps.containTable}
                     />
@@ -291,7 +390,7 @@ function Edit({ description, type }) {
                     <Text className={classes.tableTitle} type="title2">Добавляемое</Text>
                     <TableData
                         rows={addTableData}
-                        onDelete={row => deleteRow(row)}
+                        onDelete={row => deleteRow(row, "addTable")}
                         {...tableProps.addTable}
                     />
                 </div>
@@ -300,13 +399,13 @@ function Edit({ description, type }) {
                     <Text className={classes.tableTitle} type="title2">Удаляемое</Text>
                     <TableData
                         rows={removeTableData}
-                        onDelete={row => returnRow(row)}
+                        onDelete={row => deleteRow(row, "removeTable")}
                         {...tableProps.removeTable}
                     />
                 </div>
             </div>
 
-            <div className={classes.footer}>
+            {/* <div className={classes.footer}>
                 <div>
                     <div className={classes.switchTitle} style={{ textAlign: 'right' }}>
                         Вид интерфейса:
@@ -317,7 +416,7 @@ function Edit({ description, type }) {
                         Расширенный
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }
