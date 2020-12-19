@@ -2,6 +2,7 @@ from typing import List, Optional, Union
 from fastapi import HTTPException
 from odmantic import query, ObjectId, Model
 from pydantic.tools import parse_obj_as
+from datetime import datetime
 
 from .engine import engine
 
@@ -179,21 +180,31 @@ async def create_system_settings_if_not_exists():
 
 async def get_report(q: ReportRequest) -> ReportResponse:
     last_batch = await get_last_batch()
+    dtf = datetime.strptime
+    tf = '%d.%m.%Y %H:%M'
 
-    cubes = await engine.find(Cube, query.and_(Cube.batch_number != last_batch.number,
-                                               Cube.created_at >= q.report_begin,
-                                               Cube.created_at <= q.report_end),
-                              sort=query.asc(Cube.created_at))
+    dt_begin = dtf(q.report_begin, tf)
+    dt_end = dtf(q.report_end, tf)
+
+    cubes = await engine.find(Cube, query.and_(Cube.batch_number != last_batch.number))
+
+    cubes = [cube for cube in cubes if dt_begin <= dtf(cube.created_at, tf) <= dt_end]
+
+    cubes = sorted(cubes, key=lambda c: dtf(c.created_at, tf))
+
     cubes_report = [parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes]
 
     for i, cube in enumerate(cubes):
         list_of_ids = [ObjectId(i) for i in cube.multipack_ids_with_pack_ids]
         multipacks = await engine.find(Multipack, Multipack.id.in_(list_of_ids))
+        multipacks = sorted(multipacks, key=lambda mp: dtf(mp.created_at, tf))
         mpacks_report = [parse_obj_as(MPackReportItem, mpack.dict()) for mpack in multipacks]
+
         cubes_report[i].multipacks = mpacks_report
 
         for j, multipack in enumerate(multipacks):
             packs = await engine.find(Pack, Pack.id.in_(multipack.pack_ids))
+            packs = sorted(packs, key=lambda p: dtf(p.created_at, tf))
             packs_report = [parse_obj_as(PackReportItem, pack.dict()) for pack in packs]
             mpacks_report[j].packs = packs_report
 

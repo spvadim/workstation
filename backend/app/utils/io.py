@@ -1,6 +1,14 @@
-import os
+from typing import Tuple
 import requests
 from datetime import datetime as dt
+
+from app.db.engine import engine
+
+from app.models.system_settings import SystemSettings
+from app.models.message import TGMessage
+
+from odmantic import query
+
 
 
 msg_templates_by_subject = {
@@ -10,31 +18,28 @@ msg_templates_by_subject = {
 }
 
 
-def send_telegram_message(subject: str, filling: list = [], with_timestamp: bool = True):
+async def send_telegram_message(msg: TGMessage) -> bool:
     """
-    :param subject: тема сообщения, по которой будет выбран шаблон.
-    :param filling: Питон-список данных для заполнения шаблона. Элемент должен уметь __str__()
-    :param with_timestamp: Флаг. Если True то в конце сообщения будет добавлена временная метка отправки.
-    :return: отсутствует
+    функция отправки сообщения в телеграмм канал
     """
-    tg_token = os.environ['TLG_TOKEN']
-    tg_channel_id = os.environ['TLG_CHAT']
-    tg_message = msg_templates_by_subject.get(subject, "Шаблон отсутствует")
 
-    timestamp = dt.now().strftime('%c')
+    cs = await engine.find_one(SystemSettings, sort=query.desc(SystemSettings.id))
 
-    if filling:
-        try:
-            tg_message = tg_message.format(*filling)
-        except:
-            raise Exception('problem with tg message formatting')
+    if cs:
+        tg_token = cs.telegram_token
+        tg_channel_id = cs.telegram_chat
+    else:
+        return False
 
-    if with_timestamp:
-        tg_message += f' Время на сервере: {timestamp}.'
+    message = msg.text
+    if msg.timestamp:
+        timestamp = dt.now().strftime('%c')
+        message += f' Время на сервере: {timestamp}.'
 
     r = requests.get('https://api.telegram.org/bot{}/sendMessage'.format(tg_token),
-                     params=dict(chat_id=tg_channel_id, text=tg_message)
+                     params=dict(chat_id=tg_channel_id, text=message)
                      )
-
     if r.status_code != 200:
-        raise Exception('problem with sending tg message')
+        return False
+
+    return True
