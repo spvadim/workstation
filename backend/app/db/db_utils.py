@@ -196,15 +196,13 @@ async def get_report(q: ReportRequest) -> ReportResponse:
 
     for i, cube in enumerate(cubes):
         list_of_ids = [ObjectId(i) for i in cube.multipack_ids_with_pack_ids]
-        multipacks = await engine.find(Multipack, Multipack.id.in_(list_of_ids))
-        multipacks = sorted(multipacks, key=lambda mp: dtf(mp.created_at, tf))
+        multipacks = await engine.find(Multipack, Multipack.id.in_(list_of_ids), sort=query.asc(Multipack.created_at))
         mpacks_report = [parse_obj_as(MPackReportItem, mpack.dict()) for mpack in multipacks]
 
         cubes_report[i].multipacks = mpacks_report
 
         for j, multipack in enumerate(multipacks):
-            packs = await engine.find(Pack, Pack.id.in_(multipack.pack_ids))
-            packs = sorted(packs, key=lambda p: dtf(p.created_at, tf))
+            packs = await engine.find(Pack, Pack.id.in_(multipack.pack_ids), sort=query.asc(Pack.created_at))
             packs_report = [parse_obj_as(PackReportItem, pack.dict()) for pack in packs]
             mpacks_report[j].packs = packs_report
 
