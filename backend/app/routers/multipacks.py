@@ -4,8 +4,8 @@ from fastapi import APIRouter, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
 from app.db.engine import engine
-from app.db.db_utils import check_qr_unique, get_multipacks_queue, get_batch_by_number_or_return_last, get_by_id_or_404, \
-    get_by_qr_or_404
+from app.db.db_utils import check_qr_unique, add_qr_to_list, get_multipacks_queue, get_batch_by_number_or_return_last, \
+    get_by_id_or_404, get_by_qr_or_404
 from app.models.pack import Pack
 from app.models.multipack import Multipack, MultipackOutput, MultipackPatchSchema
 
@@ -28,7 +28,8 @@ async def create_multipack(multipack: Multipack):
     await engine.save_all(packs_to_update)
 
     if multipack.qr:
-        await check_qr_unique(multipack.qr)
+        if await check_qr_unique(multipack.qr):
+            await add_qr_to_list(multipack.qr)
         multipack.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     await engine.save(multipack)
@@ -70,7 +71,8 @@ async def update_pack_by_id(id: ObjectId, patch: MultipackPatchSchema):
     multipack = await get_by_id_or_404(Multipack, id)
 
     if patch.qr:
-        await check_qr_unique(patch.qr)
+        if await check_qr_unique(patch.qr):
+            add_qr_to_list(patch.qr)
         multipack.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     patch_dict = patch.dict(exclude_unset=True)

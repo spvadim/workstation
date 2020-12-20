@@ -94,13 +94,23 @@ async def create_qr_list_if_not_exists():
         await engine.save(qr_list)
 
 
-async def check_qr_unique(qr: str):
+async def check_qr_unique(qr: str) -> bool:
     qr_list = await get_qr_list()
     if qr in qr_list.list:
         raise HTTPException(400, detail='qr не уникален!')
-    else:
-        qr_list.list += [qr]
-        await engine.save(qr_list)
+    return True
+
+
+async def add_qr_to_list(qr: str):
+    qr_list = await get_qr_list()
+    qr_list.list += [qr]
+    await engine.save(qr_list)
+
+
+async def append_qr_list_to_list(appended_qr_list: List[str]):
+    qr_list = await get_qr_list()
+    qr_list.list += appended_qr_list
+    await engine.save(qr_list)
 
 
 async def check_qr_unique_or_set_state_warning(qr: str):
