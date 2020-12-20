@@ -38,19 +38,17 @@ const useStyles = createUseStyles({
     table: {
         height: `calc(100% - ${(2 * spacing) + headHeight + 5}px)`,
     },
-    head: ({ columns, buttonEdit, buttonDelete }) => ({
+    head: {
         display: 'grid',
-        gridTemplateColumns: getColumnTemplate({ columns, buttonEdit, buttonDelete }),
         alignItems: 'center',
         height: 50,
         fontWeight: 400,
         fontSize: 18,
         paddingLeft: 12,
-    }),
-    body: ({ columns, buttonEdit, buttonDelete }) => ({
+    },
+    body: {
         '& > div': {
             display: 'grid',
-            gridTemplateColumns: getColumnTemplate({ columns, buttonEdit, buttonDelete }),
         },
         '& > div > div': {
             borderStyle: 'solid',
@@ -78,7 +76,7 @@ const useStyles = createUseStyles({
         marginRight: 14,
         display: 'grid',
         rowGap: spacing + 'px',
-    }),
+    },
     editCell: {
         borderLeftStyle: 'none !important',
         backgroundImage: `url(${imgEdit})`,
@@ -115,9 +113,13 @@ function Table({
     const bodyRef = React.useRef(null);
     const classes = useStyles({ columns, buttonEdit, buttonDelete });
 
+    const gridTemplateColumns = React.useMemo(() => {
+        return getColumnTemplate({ columns, buttonEdit, buttonDelete });
+    }, [columns, buttonDelete, buttonEdit])
+
     return (
         <div className={['table', classes.root, className].join(' ')}>
-            <div className={classes.head} ref={headRef}>
+            <div className={classes.head} style={{ gridTemplateColumns }} ref={headRef}>
                 {
                     columns.map(column => (
                         <div key={column.name}>{column.title}</div>
@@ -129,7 +131,7 @@ function Table({
                     <div className={classes.body} ref={bodyRef}>
                         {
                             rows.map((row, index) => (
-                                <div key={index}>
+                                <div style={{ gridTemplateColumns }} key={index}>
                                     {
                                         columns.map(({ name, Component }) => (
                                             <div key={name}>
