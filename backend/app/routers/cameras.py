@@ -6,7 +6,7 @@ from odmantic import query
 from app.db.engine import engine
 from app.db.db_utils import check_qr_unique_or_set_state_warning, check_qr_unique_or_set_state_error, \
     get_last_batch, get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, get_multipacks_queue,\
-    get_first_exited_pintset_multipack, get_all_wrapping_multipacks, get_cubes_queue
+    get_first_exited_pintset_multipack, get_all_wrapping_multipacks, get_cubes_queue, delete_qr_list_from_list
 from app.models.pack import Pack, PackCameraInput, PackOutput
 from app.models.multipack import Multipack, MultipackOutput, Status, MultipackIdentificationAuto
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -85,6 +85,23 @@ async def pintset_reverse():
 
     await engine.save_all(last_packs)
     return await get_packs_queue()
+
+
+@router.delete('/remove_packs_from_pintset', response_model=List[PackOutput])
+@version(1, 0)
+async def remove_packs_from_pintset():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    qr_list = []
+    packs = await get_packs_queue()
+    for pack in packs:
+        qr_list.append(pack.qr)
+        await engine.delete(pack)
+
+    await delete_qr_list_from_list(qr_list)
+    return packs
 
 
 @router.put('/pintset_finish', response_model=List[MultipackOutput])

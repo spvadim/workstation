@@ -107,6 +107,18 @@ async def add_qr_to_list(qr: str):
     await engine.save(qr_list)
 
 
+async def delete_qr_from_list(qr: str):
+    qr_list = await get_qr_list()
+    qr_list.list.remove(qr)
+    await engine.save(qr_list)
+
+
+async def delete_qr_list_from_list(to_delete: List[str]):
+    qr_list = await get_qr_list()
+    qr_list.list = list(set(qr_list.list) - set(to_delete))
+    await engine.save(qr_list)
+
+
 async def append_qr_list_to_list(appended_qr_list: List[str]):
     qr_list = await get_qr_list()
     qr_list.list += appended_qr_list
