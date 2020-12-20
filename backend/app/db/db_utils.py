@@ -162,7 +162,7 @@ async def get_batch_by_number_or_return_last(batch_number: Optional[int]) -> Pro
 
 
 async def get_packs_queue() -> List[Pack]:
-    packs = await engine.find(Pack, Pack.in_queue == True, sort=query.asc(Pack.id))
+    packs = await engine.find(Pack, Pack.in_queue, sort=query.asc(Pack.id))
     return packs
 
 
@@ -173,6 +173,13 @@ async def get_multipacks_queue() -> List[Multipack]:
 
 async def get_first_exited_pintset_multipack() -> Multipack:
     multipack = await engine.find_one(Multipack, Multipack.status == Status.EXIT_PINTSET,
+                                      sort=query.asc(Multipack.id))
+
+    return multipack
+
+
+async def get_first_wrapping_multipack() -> Multipack:
+    multipack = await engine.find_one(Multipack, Multipack.status == Status.WRAPPING,
                                       sort=query.asc(Multipack.id))
 
     return multipack

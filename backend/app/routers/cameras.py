@@ -6,7 +6,8 @@ from odmantic import query
 from app.db.engine import engine
 from app.db.db_utils import check_qr_unique_or_set_state_warning, check_qr_unique_or_set_state_error, \
     get_last_batch, get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, get_multipacks_queue,\
-    get_first_exited_pintset_multipack, get_all_wrapping_multipacks, get_cubes_queue, delete_qr_list_from_list
+    get_first_exited_pintset_multipack, get_first_wrapping_multipack, get_all_wrapping_multipacks,\
+    get_cubes_queue, delete_qr_list_from_list
 from app.models.pack import Pack, PackCameraInput, PackOutput
 from app.models.multipack import Multipack, MultipackOutput, Status, MultipackIdentificationAuto
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -168,6 +169,30 @@ async def multipack_wrapping_auto():
     await engine.save_all(wrapped_multipacks)
     await engine.save(wrapping_multipack)
     return wrapping_multipack
+
+
+@router.delete('/remove_multipack_from_wrapping', response_model=Multipack)
+@version(1, 0)
+async def remove_multipack_from_wrapping():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    qr_list = []
+    multipack = await get_first_wrapping_multipack()
+    if not multipack:
+        error_msg = 'В очереди нет мультипака в обмотке'
+        await set_column_red(error_msg)
+        raise HTTPException(400, detail=error_msg)
+    qr_list.append(multipack.qr)
+    for id in multipack.pack_ids:
+        pack = await engine.find_one(Pack, Pack.id == id)
+        qr_list.append(pack.qr)
+        await engine.delete(pack)
+
+    await delete_qr_list_from_list(qr_list)
+    await engine.delete(multipack)
+    return multipack
 
 
 @router.patch('/multipack_identification_auto', response_model=Multipack)
