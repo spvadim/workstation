@@ -25,10 +25,6 @@ services:
       depends_on: 
         - docker-fastapi
       container_name: proxy-app
-      environment:
-        CHOKIDAR_USEPOLLING: "true"
-      volumes:
-        - ./frontend:/app
       build: 
           context: ./frontend/
           dockerfile: Dockerfile

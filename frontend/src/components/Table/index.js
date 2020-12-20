@@ -134,7 +134,6 @@ function Table({
                                         columns.map(({ name, Component }) => (
                                             <div key={name}>
                                                 {Component ? <Component index={index}>{row[name]}</Component> : row[name]}
-                                                {row[name]}
                                             </div>
                                         ))
                                     }
