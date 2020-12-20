@@ -150,16 +150,25 @@ async def get_batch_by_number_or_return_last(batch_number: Optional[int]) -> Pro
 
 
 async def get_packs_queue() -> List[Pack]:
-    last_batch = await get_last_batch()
-    packs = await engine.find(Pack, sort=query.asc(Pack.id))
-    return [pack for pack in packs if pack.batch_number == last_batch.number and pack.in_queue]
+    packs = await engine.find(Pack, Pack.in_queue == True, sort=query.asc(Pack.id))
+    return packs
 
 
 async def get_multipacks_queue() -> List[Multipack]:
-    last_batch = await get_last_batch()
-    multipacks = await engine.find(Multipack, sort=query.asc(Multipack.id))
-    return [multipack for multipack in multipacks if multipack.batch_number == last_batch.number
-            and multipack.status != Status.IN_CUBE]
+    multipacks = await engine.find(Multipack, Multipack.status != Status.IN_CUBE, sort=query.asc(Multipack.id))
+    return multipacks
+
+
+async def get_first_exited_pintset_multipack() -> Multipack:
+    multipack = await engine.find_one(Multipack, Multipack.status == Status.EXIT_PINTSET,
+                                      sort=query.asc(Multipack.id))
+
+    return multipack
+
+
+async def get_all_wrapping_multipacks()  -> List[Multipack]:
+    multipacks = await engine.find(Multipack, Multipack.status == Status.WRAPPING)
+    return multipacks
 
 
 async def get_cubes_queue() -> List[Cube]:
