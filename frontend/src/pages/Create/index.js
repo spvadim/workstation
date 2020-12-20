@@ -7,7 +7,7 @@ import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import { Notification, NotificationImage } from "../../components/Notification/index.js";
-import { Text, Paper, InputRadio, Loader, Switch, Button, Link, TextField, NotificationPanel} from 'src/components';
+import { Text, Paper, InputRadio, Loader, Switch, Button, Link, TextField, NotificationPanel } from 'src/components';
 import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
@@ -21,24 +21,35 @@ const useStyles = createUseStyles({
     },
     header: {
         paddingLeft: 49,
+        paddingRight: 49,
         marginTop: 24,
         marginBottom: 24,
+        display: 'flex',
+        justifyContent: 'space-between',
+    },
+    headerInputs: {
+        '& > *:nth-child(odd)': {
+            marginLeft: 50,
+        },
+        '& > *:nth-child(even)': {
+            marginLeft: 10,
+        },
+        display: 'flex',
+        alignItems: 'center',
     },
     tableContainer: {
         '& > div': {
             marginLeft: 12,
             flexBasis: 0,
-            flexGrow: 0,
+            flexGrow: 1,
             height: 662,
         },
         flexGrow: 1,
         display: 'flex',
+        paddingTop: 65,
         paddingRight: 22,
         paddingLeft: 36,
         position: 'relative',
-    },
-    tableTitle: {
-        marginLeft: 12,
     },
     footer: {
         display: 'flex',
@@ -68,16 +79,9 @@ const useStyles = createUseStyles({
         gridAutoFlow: 'column',
         gridAutoColumns: '1fr',
         columnGap: 10,
-        marginTop: -19,
-        paddingRight: 14,
-        height: 54,
     },
     buttonSubmit: {
         borderColor: color.yellow,
-    },
-    titleContent: {
-        display: 'block',
-        marginTop: 65,
     },
     tableContent: {
         height: 600,
@@ -94,36 +98,111 @@ const useStyles = createUseStyles({
         borderStyle: 'none',
         outline: 'none',
     },
+    tableTitleContainer: {
+        paddingLeft: 12,
+        display: 'grid',
+        gridAutoFlow: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        columnGap: 10,
+        height: 50,
+    },
+    form: {
+        marginTop: 100,
+        display: 'grid',
+        gridAutoRows: 54,
+        rowGap: '12px',
+
+    },
 });
 
-const getTableProps = (type, extended) => ({
+const CtxCurrentMultipack = React.createContext({
+    currentMultipack: null,
+    setCurrentMultipack: () => console.warn,
+});
+
+
+const RadioCurrentMultipack = ({ index }) => {
+    const { currentMultipack, setCurrentMultipack } = React.useContext(CtxCurrentMultipack);
+    return (
+        <InputRadio name="multipacksChoose"
+            htmlFor={index}
+            key={index}
+            checked={index === currentMultipack}
+            onChange={() => setCurrentMultipack(index)}>
+        </InputRadio>
+    )
+}
+
+const tableProps = {
     multipacksTable: {
         name: "multipacksTable",
         columns: [
-            { name: "radioButton", title: "", width: 48 },
-            { name: "number", title: "№", width: 64 },
+            {
+                name: "radioButton",
+                title: "",
+                width: 48,
+                Component: RadioCurrentMultipack,
+            },
+            { name: "number", title: "№", width: 'auto' },
         ],
         buttonDelete: "/delete",
     },
     packsTable: {
         name: "packsTable",
         columns: [
-            { name: "number", title: "№", width: 64},
-            { name: "qr", title: "QR", width: 300 },
+            { name: "number", title: "№", width: 64 },
+            { name: "qr", title: "QR", width: 'auto' },
         ],
         buttonDelete: "/delete",
     }
 
-});
+};
 
+const multipacksTableMock = [
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+    { radioButton: true, number: 777 },
+];
+
+const packsTableMock = [
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+    { number: 777, qr: 'tn.ru/qr_try05_000005' },
+];
 
 function Create({ description, type, extended }) {
     const classes = useStyles();
-    const tableProps = getTableProps();
     const [page, setPage] = useState('');
     const [batchNumber, setBatchNumber] = useState('');
     const [params, setParams] = useState([]);
-    const [settings, setSettings] = useState({}); 
+    const [settings, setSettings] = useState({});
     const [cubeQr, setCubeQr] = useState('');
     const [packQr, setPackQr] = useState('');
     const [modalCancel, setModalCancel] = useState(false);
@@ -135,9 +214,10 @@ function Create({ description, type, extended }) {
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/batches_params")
-        .then(res => setParams(res.data))
-        .catch(e => setNotificationErrorText(e.response.detail))
+            .then(res => setParams(res.data))
+            .catch(e => setNotificationErrorText(e.response.detail))
     }, [])
+
 
     // const deleteRow = (row, from) => {
     //     console.log(row, from)
@@ -196,16 +276,16 @@ function Create({ description, type, extended }) {
     }
 
     const checkExist = () => {
-        if (!settings.id) {setNotificationErrorText("Параметры партии не заданы!"); return false}
-        else if (!batchNumber) {setNotificationErrorText("Номер партии не задан!"); return false}
-        else if (!cubeQr) {setNotificationErrorText("QR куба не задан!"); return false}
-        else if (multipacksTableData.length === 0) {setNotificationErrorText("Очередь мультипаков пуста!"); return false}
+        if (!settings.id) { setNotificationErrorText("Параметры партии не заданы!"); return false }
+        else if (!batchNumber) { setNotificationErrorText("Номер партии не задан!"); return false }
+        else if (!cubeQr) { setNotificationErrorText("QR куба не задан!"); return false }
+        else if (multipacksTableData.length === 0) { setNotificationErrorText("Очередь мультипаков пуста!"); return false }
 
         return true;
     }
 
     const submitChanges = () => {
-        if (!checkExist()) return false; 
+        if (!checkExist()) return false;
 
         let body = {
             params_id: settings.id,
@@ -216,9 +296,9 @@ function Create({ description, type, extended }) {
         }
 
         axios.put(address + "/api/v1_0/cube_with_new_content", body)
-        .then(() => setPage("/main"))
-        .catch(e => console.log(e.response))
-        
+            .then(() => setPage("/main"))
+            .catch(e => console.log(e.response))
+
     }
 
     const closeChanges = () => {
@@ -245,22 +325,22 @@ function Create({ description, type, extended }) {
 
         if (packs.length >= settings.packs) {
             addEmptyMultipack();
-            setCurrentMultipack(multipacksTableData.length);  
-            packs = []; 
-            packs.push({qr: qr});
+            setCurrentMultipack(multipacksTableData.length);
+            packs = [];
+            packs.push({ qr: qr });
             temp[multipacksTableData.length] = packs;
 
             setMultipacksTableData(temp);
         } else {
-            packs.push({qr: qr});
+            packs.push({ qr: qr });
             temp[indexMultipack] = packs;
 
             setMultipacksTableData(temp);
-        } 
+        }
 
         setPackQr("");
     }
-    
+
     if (page === "/main") return <Redirect to="/main" />
 
     return (
@@ -304,7 +384,7 @@ function Create({ description, type, extended }) {
 
             <div className={classes.header}>
                 <Text type="title">Создание</Text>
-                <div>
+                <div className={classes.headerInputs}>
                     <span className={classes.inputLabel}>Номер партии ГП: </span>
                     <TextField
                         placeholder="0000"
@@ -331,26 +411,24 @@ function Create({ description, type, extended }) {
                         value={barcode}
                         onChange={e => setBarcode(e.target.value)}
                     />
-                    
-                </div>
 
-                <div style={{width: "max-content"}}>
+                </div>
+            </div>
+
+            <div className={classes.tableContainer}>
+                <div className={classes.form}>
                     {params.map((obj, index) => (
-                            <InputRadio name="param_batch"
-                                htmlFor={obj.id}
-                                key={index}
-                                onClick={() => setSettings(obj)}>
-                                <span className={classes.radioLabel}>
-                                    Куб: {obj.multipacks} мультипаков, мультипак: {obj.packs} пачек,
+                        <InputRadio name="param_batch"
+                            htmlFor={obj.id}
+                            key={index}
+                            onClick={() => setSettings(obj)}>
+                            <span className={classes.radioLabel}>
+                                Куб: {obj.multipacks} мультипаков, мультипак: {obj.packs} пачек,
                                     <br />
                                     пинцет: {obj.multipacks_after_pintset} мультипак
                                 </span>
-                            </InputRadio>
+                        </InputRadio>
                     ))}
-                </div>
-                <div style={{width: "max-content"}}>
-                    <br />
-                    <br />
                     <div className={classes.buttonContainer}>
                         <Button onClick={() => setModalSubmit([submitChanges])} className={classes.buttonSubmit}>
                             <img src={imgOk} /><span>Принять изменения</span>
@@ -360,48 +438,49 @@ function Create({ description, type, extended }) {
                         </Button>
                     </div>
                 </div>
-            </div>
 
-            <div className={classes.tableContainer}>
-                <div style={{width: "max-content"}}>
-                    <Text className={[classes.tableTitle, classes.titleContent].join(' ')} type="title2">Мультипаки</Text>
-                    <Button onClick={() => addEmptyMultipack()}><span>Добавить</span></Button>
-                    <TableData
-                        rows={multipacksTableData.map((_, index) => {
-                            return {
-                                number: index + 1,
-                                radioButton: <InputRadio name="multipacksChoose"
-                                                htmlFor={index}
-                                                key={index}
-                                                checked={index === currentMultipack}
-                                                onClick={() => setCurrentMultipack(index)}>
-                                            </InputRadio>,
-                            }
-                        })}
-                        className={classes.tableContent}
-                        onDelete={obj => deleteMultipack(obj.number - 1)}
-                        hideTracksWhenNotNeeded
-                        {...tableProps.multipacksTable}
-                    />
+                <div>
+                    <div className={classes.tableTitleContainer}>
+                        <Text className={classes.tableTitle} type="title2">Мультипаки</Text>
+                        <Button onClick={() => addEmptyMultipack()}><span>Добавить</span></Button>
+                    </div>
+                    <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>
+                        <TableData
+                            rows={multipacksTableMock}
+                            // rows={multipacksTableData.map((_, index) => {
+                            //     return {
+                            //         number: index + 1,
+                            //         radioButton: null,
+                            //     }
+                            // })}
+                            className={classes.tableContent}
+                            onDelete={obj => deleteMultipack(obj.number - 1)}
+                            hideTracksWhenNotNeeded
+                            {...tableProps.multipacksTable}
+                        />
+                    </CtxCurrentMultipack.Provider>
                 </div>
 
-                <div style={{width: "max-content"}}>
-                    <Text className={[classes.tableTitle, classes.titleContent].join(' ')} type="title2">Пачки</Text>
-                    <TextField
-                        placeholder="0000"
-                        name="pack_qr"
-                        type="text"
-                        value={packQr}
-                        forceFocus
-                        onChange={e => setPackQr(e.target.value)}
-                        onKeyPress={e => (e.charCode === 13) && addPackToMultipack(packQr, currentMultipack)}
-                    />
+                <div>
+                    <div className={classes.tableTitleContainer}>
+                        <Text className={classes.tableTitle} type="title2">Пачки</Text>
+                        <TextField
+                            placeholder="0000"
+                            name="pack_qr"
+                            type="text"
+                            value={packQr}
+                            forceFocus
+                            onChange={e => setPackQr(e.target.value)}
+                            onKeyPress={e => (e.charCode === 13) && addPackToMultipack(packQr, currentMultipack)}
+                        />
+                    </div>
                     <TableData
-                        rows={multipacksTableData[currentMultipack] ? 
-                              multipacksTableData[currentMultipack].map((obj, index) => ({number: index + 1, qr: obj.qr})) :
-                              []}
+                        rows={packsTableMock}
+                        // rows={multipacksTableData[currentMultipack] ?
+                        //     multipacksTableData[currentMultipack].map((obj, index) => ({ number: index + 1, qr: obj.qr })) :
+                        //     []}
                         className={classes.tableContent}
-                        onDelete={obj => deletePack(obj.number-1, currentMultipack)}
+                        onDelete={obj => deletePack(obj.number - 1, currentMultipack)}
                         hideTracksWhenNotNeeded
                         {...tableProps.packsTable}
                     />

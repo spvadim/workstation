@@ -130,7 +130,7 @@ function BatchParams() {
                                 <InputRadio name="param_batch"
                                     htmlFor={obj.id}
                                     key={index}
-                                    onClick={() => setSettings(obj)}>
+                                    onChange={() => setSettings(obj)}>
                                     <span className={classes.radioLabel}>
                                         Куб: {obj.multipacks} мультипаков, мультипак: {obj.packs} пачек,
                                         <br />
