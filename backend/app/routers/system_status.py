@@ -1,10 +1,15 @@
 from fastapi import APIRouter
 from fastapi_versioning import version
+from pydantic import parse_obj_as
+
 from app.models.system_status import Mode, SystemState, SystemStatus
+from app.models.message import TGMessage
 from app.models.report import ReportRequest, ReportResponse
+
 from app.db.db_utils import get_current_status, get_current_workmode, get_current_state, set_column_yellow, \
     set_column_red, flush_state, change_coded_setting, get_report
 from app.db.engine import engine
+from app.utils.io import send_telegram_message
 
 router = APIRouter()
 
@@ -66,3 +71,15 @@ async def set_normal_state():
 @version(1, 0)
 async def get_system_report(report_query: ReportRequest) -> ReportResponse:
     return await get_report(report_query)
+
+
+@router.get("/get_report/", response_model=ReportResponse)
+async def get_system_report(report_begin: str = "01.01.1970 00:00",
+                            report_end: str = "01.01.2050 00:00") -> ReportResponse:
+    report_query = parse_obj_as(ReportRequest, {"report_begin": report_begin, "report_end": report_end})
+    return await get_report(report_query)
+
+
+@router.post("/send_message", response_model=bool)
+async def send_tg_message(msg: TGMessage) -> bool:
+    return await send_telegram_message(msg)

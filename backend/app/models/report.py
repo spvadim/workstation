@@ -29,8 +29,8 @@ class CubeReportItem(BaseModel):
 
 
 class ReportRequest(BaseModel):
-    report_begin: str
-    report_end: str
+    report_begin: Optional[str]
+    report_end: Optional[str]
 
 
 class ReportResponse(ReportRequest):
