@@ -24,6 +24,7 @@ class CubeInput(Model):
 class CubeWithNewContent(Model):
     params_id: ObjectId
     batch_number: int
+    barcode_for_packs: str
     qr: str
     content: List[List[Dict[str, str]]]
 
