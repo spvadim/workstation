@@ -34,6 +34,11 @@ class CubeOutput(Model):
     qr: Optional[str]
 
 
+class CubeIdentificationAuto(Model):
+    qr: str
+    barcode: str
+
+
 class CubePatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]

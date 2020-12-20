@@ -30,6 +30,11 @@ class MultipackOutput(Model):
     status: Status
 
 
+class MultipackIdentificationAuto(Model):
+    qr: str
+    barcode: str
+
+
 class MultipackPatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]

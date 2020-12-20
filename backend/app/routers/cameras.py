@@ -6,10 +6,10 @@ from odmantic import query
 from app.db.engine import engine
 from app.db.db_utils import check_qr_unique_or_set_state_warning, check_qr_unique_or_set_state_error, \
     get_last_batch, get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, get_multipacks_queue,\
-    get_first_exited_pintset_multipack, get_all_wrapping_multipacks
+    get_first_exited_pintset_multipack, get_all_wrapping_multipacks, get_cubes_queue
 from app.models.pack import Pack, PackCameraInput, PackOutput
-from app.models.multipack import Multipack, MultipackOutput, Status
-from app.models.cube import Cube
+from app.models.multipack import Multipack, MultipackOutput, Status, MultipackIdentificationAuto
+from app.models.cube import Cube, CubeIdentificationAuto
 
 router = APIRouter()
 
@@ -127,11 +127,9 @@ async def pintset_finish():
     return new_multipacks
 
 
-
-
 def find_first_without_qr(items):
     for item in items:
-        if item.qr:
+        if not item.qr:
             return item
     return None
 
@@ -157,11 +155,13 @@ async def multipack_wrapping_auto():
 
 @router.patch('/multipack_identification_auto', response_model=Multipack)
 @version(1, 0)
-async def multipack_identification_auto(qr: str, barcode: str):
+async def multipack_identification_auto(identification: MultipackIdentificationAuto):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400, detail='В данный момент используется ручной режим')
 
+    qr = identification.qr
+    barcode = identification.barcode
     multipacks_queue = await get_multipacks_queue()
     multipack_to_update = find_first_without_qr(multipacks_queue)
 
@@ -183,12 +183,14 @@ async def multipack_identification_auto(qr: str, barcode: str):
 
 @router.patch('/cube_identification_auto', response_model=Cube)
 @version(1, 0)
-async def cube_identification_auto(qr: str, barcode: str):
+async def cube_identification_auto(identification: CubeIdentificationAuto):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400, detail='В данный момент используется ручной режим')
 
-    cube_queue = await engine.find(Cube, sort=query.asc(Cube.id))
+    qr = identification.qr
+    barcode = identification.barcode
+    cube_queue = await get_cubes_queue()
     cube_to_update = find_first_without_qr(cube_queue)
 
     if not cube_to_update:
