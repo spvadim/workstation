@@ -162,7 +162,7 @@ async def get_batch_by_number_or_return_last(batch_number: Optional[int]) -> Pro
 
 
 async def get_packs_queue() -> List[Pack]:
-    packs = await engine.find(Pack, Pack.in_queue, sort=query.asc(Pack.id))
+    packs = await engine.find(Pack, Pack.in_queue == True, sort=query.asc(Pack.id))
     return packs
 
 
