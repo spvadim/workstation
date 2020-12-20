@@ -20,18 +20,16 @@ import address from "../../address.js";
 import { createUseStyles } from "react-jss";
 import { HeaderInfo } from './HeaderInfo';
 
-const QrLink = ({ children }) => <Link href={children}>{children}</Link>;
-
 const getTableProps = (extended) => ({
     cube: {
         columns: extended ?
             [
                 { name: "created_at", title: "Создано", width: 123 },
-                { name: "qr", title: "qr", Component: QrLink },
+                { name: "qr", title: "qr" },
                 { name: "id", title: "id", width: 200 },
             ] : [
                 { name: "created_at", title: "Создано", width: 123 },
-                { name: "qr", title: "qr", Component: QrLink },
+                { name: "qr", title: "qr" },
             ],
     },
 
@@ -44,7 +42,7 @@ const getTableProps = (extended) => ({
                 { name: "id", title: "id", width: 200 },
             ] : [
                 { name: "created_at", title: "Создано", width: 123 },
-                { name: "qr", title: "qr", Component: QrLink },
+                { name: "qr", title: "qr" },
                 { name: "status", title: "Статус" },
             ],
     },
@@ -53,11 +51,11 @@ const getTableProps = (extended) => ({
         columns: extended ?
             [
                 { name: "created_at", title: "Создано", width: 123 },
-                { name: "qr", title: "qr", Component: QrLink },
+                { name: "qr", title: "qr" },
                 { name: "id", title: "id", width: 200 },
             ] : [
                 { name: "created_at", title: "Создано", width: 123 },
-                { name: "qr", title: "qr", Component: QrLink },
+                { name: "qr", title: "qr" },
             ],
     },
 
@@ -177,16 +175,16 @@ function Main() {
             .then(res => {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
-                                                   "Сосканируйте QR мультипака/пачки для идентификации куба" :
-                                                   "Сосканируйте QR куба для редактирования")
+                    "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                    "Сосканируйте QR куба для редактирования")
             })
             .catch(e => setNotificationErrorText(e.response.detail[0].msg))
 
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => res.data.state !== "normal" ?
-                                               setNotificationColumnErrorText(res.data.error_msg) :
-                                               setNotificationColumnErrorText(""))
+                setNotificationColumnErrorText(res.data.error_msg) :
+                setNotificationColumnErrorText(""))
             request.catch(e => setNotificationErrorText(e.response.detail[0].msg))
         };
         request();
@@ -210,8 +208,8 @@ function Main() {
             .then(res => {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
-                                                            "Сосканируйте QR мультипака/пачки для идентификации куба" :
-                                                            "Сосканируйте QR куба для редактирования")
+                    "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                    "Сосканируйте QR куба для редактирования")
             })
             .catch(e => {
                 // TOD0: handle error
@@ -221,20 +219,20 @@ function Main() {
 
     const flushStateColumn = () => {
         axios.patch(address + "/api/v1_0/flush_state")
-        .catch(e => setNotificationErrorText(e.response.detail[0].msg))
+            .catch(e => setNotificationErrorText(e.response.detail[0].msg))
     }
 
     const createIncompleteCube = () => {
         axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + valueQrCube.replace("/", "%2F"))
-        .then(() => {
-            setNotificationText("Неполный куб успешно сформирован");
-            setTimeout(() => {
-                setNotificationText("");
-            }, 2000);
-        })
-        .catch(e => {
-            setNotificationErrorText(e.response.data.detail)
-        })
+            .then(() => {
+                setNotificationText("Неполный куб успешно сформирован");
+                setTimeout(() => {
+                    setNotificationText("");
+                }, 2000);
+            })
+            .catch(e => {
+                setNotificationErrorText(e.response.data.detail)
+            })
     }
 
     return (
@@ -270,7 +268,7 @@ function Main() {
                     title="Формирование неполного куба"
                     description="Вы действительно хотите создать неполный куб?"
                 >
-                    <div style={{display: "grid", gap: "2rem"}}> 
+                    <div style={{ display: "grid", gap: "2rem" }}>
                         <div>
                             <TextField
                                 placeholder="QR..."
@@ -283,7 +281,7 @@ function Main() {
                                 autoFocus
                             />
                         </div>
-                        <div style={{display: "flex", gap: "2rem"}}>
+                        <div style={{ display: "flex", gap: "2rem" }}>
                             <Button onClick={() => {
                                 if (valueQrCube) {
                                     setModalCube(false);
@@ -315,22 +313,22 @@ function Main() {
                 </div>
 
                 <div className={classes.headerCenter}>
-                    <Button onClick={() => {setPage("/")}} >Новая партия</Button>
+                    <Button onClick={() => { setPage("/") }} >Новая партия</Button>
 
-                    <Button onClick={() => {setModalCube([createIncompleteCube])}} >Сформировать неполный куб</Button>
+                    <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
                 <Button onClick={() => setPage("/create")}>Новый куб</Button>
                 <InputTextQr
-                        setNotification={setNotificationText}
-                        setNotificationError={setNotificationErrorText}
-                        mode={mode}
-                        forceFocus={!modalCube}
-                        extended={extended}
-                        className={classes.qrInput}
-                    />
-                
+                    setNotification={setNotificationText}
+                    setNotificationError={setNotificationErrorText}
+                    mode={mode}
+                    forceFocus={!modalCube}
+                    extended={extended}
+                    className={classes.qrInput}
+                />
+
             </div>
 
             <div className={classes.tableContainer}>
@@ -375,22 +373,22 @@ function Main() {
             </div>
 
             <NotificationPanel
-                    notifications={
-                        notificationText && (
-                            <Notification
-                                title="Уведомление"
-                                description={notificationText}
-                                onClose={() => setNotificationText("")}
-                            />
-                        )
-                    }
-                />
+                notifications={
+                    notificationText && (
+                        <Notification
+                            title="Уведомление"
+                            description={notificationText}
+                            onClose={() => setNotificationText("")}
+                        />
+                    )
+                }
+            />
 
             {/* 
             <ColumnError /> */}
 
             <div className={classes.footer}>
-                <div style={{display: "flex"}}>
+                <div style={{ display: "flex" }}>
                     <div>
                         <div className={classes.switchTitle}>
                             Режим управления:
@@ -423,13 +421,13 @@ function Main() {
                                 )
                             ]
 
-                            
+
                         }
                     />
 
                 </div>
 
-                
+
 
                 <div>
                     <div className={classes.switchTitle} style={{ textAlign: 'right' }}>
