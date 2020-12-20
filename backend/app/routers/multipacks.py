@@ -72,7 +72,7 @@ async def update_pack_by_id(id: ObjectId, patch: MultipackPatchSchema):
 
     if patch.qr:
         if await check_qr_unique(patch.qr):
-            add_qr_to_list(patch.qr)
+            await add_qr_to_list(patch.qr)
         multipack.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     patch_dict = patch.dict(exclude_unset=True)

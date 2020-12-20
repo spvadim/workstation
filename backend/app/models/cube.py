@@ -24,6 +24,7 @@ class CubeInput(Model):
 class CubeWithNewContent(Model):
     params_id: ObjectId
     batch_number: int
+    barcode_for_packs: str
     qr: str
     content: List[List[Dict[str, str]]]
 
@@ -31,6 +32,11 @@ class CubeWithNewContent(Model):
 class CubeOutput(Model):
     created_at: str
     qr: Optional[str]
+
+
+class CubeIdentificationAuto(Model):
+    qr: str
+    barcode: str
 
 
 class CubePatchSchema(BaseModel):

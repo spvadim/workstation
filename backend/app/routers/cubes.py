@@ -60,12 +60,24 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     params = await get_by_id_or_404(ProductionBatchParams, cube_input.params_id)
     packs_in_multipacks = params.packs
     multipacks_in_cubes = params.multipacks
+    barcode = cube_input.barcode_for_packs
     current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
     qr_list = []
-
+    # проверка на уникальность qr-ов, переполнение и пустоту
     if await check_qr_unique(cube_input.qr):
         qr_list.append(cube_input.qr)
+
+        if not cube_input.content:
+            raise HTTPException(400, f'Пустой куб')
+
+        if len(cube_input.content) > multipacks_in_cubes:
+            raise HTTPException(400, f'Мультипаков должно быть не больше {multipacks_in_cubes}')
+
         for multipack in cube_input.content:
+
+            if len(multipack) > packs_in_multipacks:
+                raise HTTPException(400, f'Пачек должно быть не больше {packs_in_multipacks}')
+
             for pack in multipack:
                 if await check_qr_unique(pack['qr']):
                     qr_list.append(pack['qr'])
@@ -77,7 +89,7 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     for multipack in cube_input.content:
         pack_ids = []
         for pack in multipack:
-            new_pack = Pack(qr=pack['qr'], barcode=pack['barcode'], batch_number=batch_number, in_queue=False,
+            new_pack = Pack(qr=pack['qr'], barcode=barcode, batch_number=batch_number, in_queue=False,
                             created_at=current_time)
             await engine.save(new_pack)
             pack_ids.append(new_pack.id)
