@@ -107,7 +107,7 @@ const useStyles = createUseStyles({
             marginLeft: 12,
             flexBasis: 0,
             flexGrow: 1,
-            height: 662,
+            height: 600,
         },
         flexGrow: 1,
         display: 'flex',

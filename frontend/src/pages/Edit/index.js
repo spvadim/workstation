@@ -179,7 +179,8 @@ function Edit({ description, type, extended }) {
         if (valueFlag) {
             clearTimeout(timer);
             timer = setTimeout(() => {
-                if (tableSwitch) deleteRow({qr: valueQr}, "containTable")
+                let finded = containTableData.find(obj => obj.qr === valueQr);
+                if (tableSwitch) deleteRow(finded, "containTable")
                 else addPack(valueQr);
                 setValueQr("")
             }, 500);
@@ -264,36 +265,31 @@ function Edit({ description, type, extended }) {
     }
 
     const addPack = (qr) => {
-        let temp = addTableData.slice();
-        temp.push({ barcode: barcode, qr: qr})
-        setAddTableData(temp);
+        let finded = addTableData.find(obj => obj.qr === qr)
+        if (!finded) {
+            let temp = addTableData.slice();
+            temp.push({ barcode: barcode, qr: qr});
+            setAddTableData(temp);
+        }
     }
 
     const submitChanges = () => {
-        if (containTableData.length === 0) {
-            axios.delete(address + "/api/v1_0/" + type + "/" + description.id)
-                .then(() => setPage("/main"))
-
-        } else if (containTableData !== "/loader") {
-            let packs = containTableData.map((obj) => obj.id);
-            let temp = { pack_ids: packs };
-            axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
-                .then(() => {
-                    setModalSubmit(false);
-                    setPage("/main");
-                })
-
+        if (containTableData !== "/loader") {
+            // let packs = containTableData.map((obj) => obj.id);
+            // let temp = { pack_ids: packs };
+            // axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
+            //     .then(() => {
+            //         setModalSubmit(false);
+            //         setPage("/main");
+            //     })
+            setPage("/main")
         } else {
             setPage("/main")
         }
     }
 
     const closeChanges = () => {
-        if (removeTableData.length === 0 && addTableData.length === 0) {
-            setPage("/main");
-        } else {
-            setModalCancel([setPage, "/main"]);
-        }
+         setPage("/main");
     }
 
     if (page === "/main") return <Redirect to="/main" />
@@ -368,10 +364,17 @@ function Edit({ description, type, extended }) {
                     />
 
                     <div className={classes.buttonContainer}>
-                        <Button onClick={submitChanges} className={classes.buttonSubmit}>
+                        <Button onClick={() => {
+                            console.log(removeTableData.length, addTableData.length)
+                            if (removeTableData.length === 0 && addTableData.length === 0) closeChanges()
+                            else setModalSubmit([submitChanges])
+                        }} className={classes.buttonSubmit}>
                             <img src={imgOk} /><span>Принять изменения</span>
                         </Button>
-                        <Button onClick={closeChanges} theme="secondary">
+                        <Button onClick={() => {
+                            if (removeTableData.length === 0 && addTableData.length === 0) closeChanges()
+                            else setModalCancel([closeChanges])
+                        }} theme="secondary">
                             <img src={imgCross} style={{ filter: 'invert(1)' }} /><span>Отменить изменения</span>
                         </Button>
                     </div>

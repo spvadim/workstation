@@ -6,6 +6,7 @@ import { Redirect } from "react-router-dom";
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
+import { Notification, NotificationImage } from "../../components/Notification/index.js";
 import { Text, Paper, InputRadio, Loader, Switch, Button, Link, TextField, NotificationPanel} from 'src/components';
 import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
@@ -79,7 +80,7 @@ const useStyles = createUseStyles({
         marginTop: 65,
     },
     tableContent: {
-        height: 397,
+        height: 600,
     },
     switchTable: {
         '& .switch_thumb': {
@@ -128,14 +129,14 @@ function Create({ description, type, extended }) {
     const [modalCancel, setModalCancel] = useState(false);
     const [modalSubmit, setModalSubmit] = useState(false);
     const [barcode, setBarcode] = useState('');
-    const [notificationTextError, setNotificationTextError] = useState('');
+    const [notificationErrorText, setNotificationErrorText] = useState('');
     const [multipacksTableData, setMultipacksTableData] = useState([]);
     const [currentMultipack, setCurrentMultipack] = useState('');
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/batches_params")
         .then(res => setParams(res.data))
-        .catch(e => setNotificationTextError(e.response.detail))
+        .catch(e => setNotificationErrorText(e.response.detail))
     }, [])
 
     // const deleteRow = (row, from) => {
@@ -194,9 +195,30 @@ function Create({ description, type, extended }) {
         setMultipacksTableData(temp);
     }
 
+    const checkExist = () => {
+        if (!settings.id) {setNotificationErrorText("Параметры партии не заданы!"); return false}
+        else if (!batchNumber) {setNotificationErrorText("Номер партии не задан!"); return false}
+        else if (!cubeQr) {setNotificationErrorText("QR куба не задан!"); return false}
+        else if (multipacksTableData.length === 0) {setNotificationErrorText("Очередь мультипаков пуста!"); return false}
+
+        return true;
+    }
+
     const submitChanges = () => {
-        setModalCancel([setPage, "/main"]);
-        setPage("/main")
+        if (!checkExist()) return false; 
+
+        let body = {
+            params_id: settings.id,
+            batch_number: batchNumber,
+            qr: cubeQr,
+            barcode_for_packs: barcode,
+            content: multipacksTableData,
+        }
+
+        axios.put(address + "/api/v1_0/cube_with_new_content", body)
+        .then(() => setPage("/main"))
+        .catch(e => console.log(e.response))
+        
     }
 
     const closeChanges = () => {
@@ -208,23 +230,35 @@ function Create({ description, type, extended }) {
         let temp = multipacksTableData.slice();
         temp.push([]);
         setMultipacksTableData(temp);
+        return temp;
     }
 
-    const addPackToMultipack = (qr, indexMultipack) => {
+    const addPackToMultipack = (qr, indexMultipack_) => {
+        let indexMultipack = indexMultipack_;
         let temp = multipacksTableData.slice();
+        if (!indexMultipack_ && indexMultipack_ !== 0) {
+            temp = addEmptyMultipack();
+            setCurrentMultipack(0);
+            indexMultipack = 0;
+        }
         let packs = temp[indexMultipack];
 
-        if (!packs) return false;
+        if (packs.length >= settings.packs) {
+            addEmptyMultipack();
+            setCurrentMultipack(multipacksTableData.length);  
+            packs = []; 
+            packs.push({qr: qr});
+            temp[multipacksTableData.length] = packs;
 
-        if (packs.length < settings.packs) {
+            setMultipacksTableData(temp);
+        } else {
             packs.push({qr: qr});
             temp[indexMultipack] = packs;
 
             setMultipacksTableData(temp);
-        } else {
-            addEmptyMultipack();
-            setCurrentMultipack(multipacksTableData.length);
-        }
+        } 
+
+        setPackQr("");
     }
     
     if (page === "/main") return <Redirect to="/main" />
@@ -373,6 +407,19 @@ function Create({ description, type, extended }) {
                     />
                 </div>
             </div>
+
+            <NotificationPanel
+                errors={
+                    notificationErrorText && (
+                        <Notification
+                            title="Ошибка"
+                            description={notificationErrorText}
+                            onClose={() => setNotificationErrorText("")}
+                            error
+                        />
+                    )
+                }
+            />
 
             {/* <div className={classes.footer}>
                 <div>
