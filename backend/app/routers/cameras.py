@@ -5,10 +5,12 @@ from fastapi_versioning import version
 from odmantic import query
 from app.db.engine import engine
 from app.db.db_utils import check_qr_unique_or_set_state_warning, check_qr_unique_or_set_state_error, \
-    get_last_batch, get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, get_multipacks_queue
+    get_last_batch, get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, get_multipacks_queue,\
+    get_first_exited_pintset_multipack, get_first_wrapping_multipack, get_all_wrapping_multipacks,\
+    get_cubes_queue, delete_qr_list_from_list
 from app.models.pack import Pack, PackCameraInput, PackOutput
-from app.models.multipack import Multipack, MultipackOutput, Status
-from app.models.cube import Cube
+from app.models.multipack import Multipack, MultipackOutput, Status, MultipackIdentificationAuto
+from app.models.cube import Cube, CubeIdentificationAuto
 
 router = APIRouter()
 
@@ -86,6 +88,23 @@ async def pintset_reverse():
     return await get_packs_queue()
 
 
+@router.delete('/remove_packs_from_pintset', response_model=List[PackOutput])
+@version(1, 0)
+async def remove_packs_from_pintset():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    qr_list = []
+    packs = await get_packs_queue()
+    for pack in packs:
+        qr_list.append(pack.qr)
+        await engine.delete(pack)
+
+    await delete_qr_list_from_list(qr_list)
+    return packs
+
+
 @router.put('/pintset_finish', response_model=List[MultipackOutput])
 @version(1, 0)
 async def pintset_finish():
@@ -128,18 +147,63 @@ async def pintset_finish():
 
 def find_first_without_qr(items):
     for item in items:
-        if item.qr:
+        if not item.qr:
             return item
     return None
 
 
-@router.patch('/multipack_identification_auto', response_model=Multipack)
+@router.patch('/multipack_wrapping_auto', response_model=Multipack)
 @version(1, 0)
-async def multipack_identification_auto(qr: str, barcode: str):
+async def multipack_wrapping_auto():
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400, detail='В данный момент используется ручной режим')
 
+    wrapped_multipacks = await get_all_wrapping_multipacks()
+    for i in range(len(wrapped_multipacks)):
+        wrapped_multipacks[i].status = Status.WRAPPED
+
+    wrapping_multipack = await get_first_exited_pintset_multipack()
+    wrapping_multipack.status = Status.WRAPPING
+
+    await engine.save_all(wrapped_multipacks)
+    await engine.save(wrapping_multipack)
+    return wrapping_multipack
+
+
+@router.delete('/remove_multipack_from_wrapping', response_model=Multipack)
+@version(1, 0)
+async def remove_multipack_from_wrapping():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    qr_list = []
+    multipack = await get_first_wrapping_multipack()
+    if not multipack:
+        error_msg = 'В очереди нет мультипака в обмотке'
+        await set_column_red(error_msg)
+        raise HTTPException(400, detail=error_msg)
+    qr_list.append(multipack.qr)
+    for id in multipack.pack_ids:
+        pack = await engine.find_one(Pack, Pack.id == id)
+        qr_list.append(pack.qr)
+        await engine.delete(pack)
+
+    await delete_qr_list_from_list(qr_list)
+    await engine.delete(multipack)
+    return multipack
+
+
+@router.patch('/multipack_identification_auto', response_model=Multipack)
+@version(1, 0)
+async def multipack_identification_auto(identification: MultipackIdentificationAuto):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    qr = identification.qr
+    barcode = identification.barcode
     multipacks_queue = await get_multipacks_queue()
     multipack_to_update = find_first_without_qr(multipacks_queue)
 
@@ -161,12 +225,14 @@ async def multipack_identification_auto(qr: str, barcode: str):
 
 @router.patch('/cube_identification_auto', response_model=Cube)
 @version(1, 0)
-async def cube_identification_auto(qr: str, barcode: str):
+async def cube_identification_auto(identification: CubeIdentificationAuto):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400, detail='В данный момент используется ручной режим')
 
-    cube_queue = await engine.find(Cube, sort=query.asc(Cube.id))
+    qr = identification.qr
+    barcode = identification.barcode
+    cube_queue = await get_cubes_queue()
     cube_to_update = find_first_without_qr(cube_queue)
 
     if not cube_to_update:

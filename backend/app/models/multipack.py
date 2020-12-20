@@ -6,7 +6,8 @@ from odmantic import Model, ObjectId
 
 class Status(str, Enum):
     EXIT_PINTSET = 'вышел из пинцета'
-    WRAPPED = 'вышел из обмотки'
+    WRAPPING = 'в обмотке'
+    WRAPPED = 'обмотан'
     ADDED_QR = 'нанесен QR'
     ENTER_PITCHFORK = 'зашел на вилы'
     IN_UNFINISHED_CUBE = 'в незавершенном кубе'
@@ -27,6 +28,11 @@ class MultipackOutput(Model):
     created_at: str
     qr: Optional[str]
     status: Status
+
+
+class MultipackIdentificationAuto(Model):
+    qr: str
+    barcode: str
 
 
 class MultipackPatchSchema(BaseModel):

@@ -24,7 +24,7 @@ async def create_params(params: ProductionBatchParams):
     return params
 
 
-@router.put("/batches", response_model=ProductionBatch, response_model_exclude_unset=True)
+@router.put("/batches", response_model=ProductionBatch)
 @version(1, 0)
 async def create_batch(batch: ProductionBatchInput):
     params = await get_by_id_or_404(ProductionBatchParams, batch.params_id)
@@ -51,4 +51,11 @@ async def get_all_batches():
 @version(1, 0)
 async def get_batch_by_id(id: ObjectId):
     batch = await get_by_id_or_404(ProductionBatch, id)
+    return batch
+
+
+@router.get("/current_batch", response_model=ProductionBatch)
+@version(1, 0)
+async def get_current_batch():
+    batch = await get_last_batch()
     return batch

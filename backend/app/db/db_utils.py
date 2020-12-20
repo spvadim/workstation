@@ -1,13 +1,22 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from fastapi import HTTPException
 from odmantic import query, ObjectId, Model
+from pydantic.tools import parse_obj_as
+from datetime import datetime
+
 from .engine import engine
+
 from app.models.pack import Pack
 from app.models.multipack import Multipack, Status
 from app.models.cube import Cube
 from app.models.production_batch import ProductionBatch
 from app.models.qr_list import QrList
 from app.models.system_status import SystemStatus, Mode, SystemState, State
+from app.models.system_settings import SystemSettings, SystemSettingsResponse
+from app.models.report import ReportRequest, ReportResponse, \
+    CubeReportItem, MPackReportItem, PackReportItem
+
+from app.config import default_settings, get_apply_settings_url
 
 
 async def get_by_id_or_404(model, id: ObjectId) -> Model:
@@ -53,6 +62,7 @@ async def change_coded_setting(coded: bool) -> SystemStatus:
     await engine.save(system_status)
     return system_status
 
+
 async def set_column_yellow(error_msg: str) -> SystemState:
     current_status = await get_current_status()
     current_status.system_state = SystemState(state=State.WARNING, error_msg=error_msg)
@@ -85,13 +95,35 @@ async def create_qr_list_if_not_exists():
         await engine.save(qr_list)
 
 
-async def check_qr_unique(qr: str):
+async def check_qr_unique(qr: str) -> bool:
     qr_list = await get_qr_list()
     if qr in qr_list.list:
         raise HTTPException(400, detail='qr не уникален!')
-    else:
-        qr_list.list += [qr]
-        await engine.save(qr_list)
+    return True
+
+
+async def add_qr_to_list(qr: str):
+    qr_list = await get_qr_list()
+    qr_list.list += [qr]
+    await engine.save(qr_list)
+
+
+async def delete_qr_from_list(qr: str):
+    qr_list = await get_qr_list()
+    qr_list.list.remove(qr)
+    await engine.save(qr_list)
+
+
+async def delete_qr_list_from_list(to_delete: List[str]):
+    qr_list = await get_qr_list()
+    qr_list.list = list(set(qr_list.list) - set(to_delete))
+    await engine.save(qr_list)
+
+
+async def append_qr_list_to_list(appended_qr_list: List[str]):
+    qr_list = await get_qr_list()
+    qr_list.list += appended_qr_list
+    await engine.save(qr_list)
 
 
 async def check_qr_unique_or_set_state_warning(qr: str):
@@ -131,16 +163,32 @@ async def get_batch_by_number_or_return_last(batch_number: Optional[int]) -> Pro
 
 
 async def get_packs_queue() -> List[Pack]:
-    last_batch = await get_last_batch()
-    packs = await engine.find(Pack, sort=query.asc(Pack.id))
-    return [pack for pack in packs if pack.batch_number == last_batch.number and pack.in_queue]
+    packs = await engine.find(Pack, Pack.in_queue == True, sort=query.asc(Pack.id))
+    return packs
 
 
 async def get_multipacks_queue() -> List[Multipack]:
-    last_batch = await get_last_batch()
-    multipacks = await engine.find(Multipack, sort=query.asc(Multipack.id))
-    return [multipack for multipack in multipacks if multipack.batch_number == last_batch.number
-            and multipack.status != Status.IN_CUBE]
+    multipacks = await engine.find(Multipack, Multipack.status != Status.IN_CUBE, sort=query.asc(Multipack.id))
+    return multipacks
+
+
+async def get_first_exited_pintset_multipack() -> Multipack:
+    multipack = await engine.find_one(Multipack, Multipack.status == Status.EXIT_PINTSET,
+                                      sort=query.asc(Multipack.id))
+
+    return multipack
+
+
+async def get_first_wrapping_multipack() -> Multipack:
+    multipack = await engine.find_one(Multipack, Multipack.status == Status.WRAPPING,
+                                      sort=query.asc(Multipack.id))
+
+    return multipack
+
+
+async def get_all_wrapping_multipacks()  -> List[Multipack]:
+    multipacks = await engine.find(Multipack, Multipack.status == Status.WRAPPING)
+    return multipacks
 
 
 async def get_cubes_queue() -> List[Cube]:
@@ -148,6 +196,54 @@ async def get_cubes_queue() -> List[Cube]:
     return await engine.find(Cube, Cube.batch_number == last_batch.number)
 
 
+async def get_current_system_settings() -> Union[SystemSettings, None]:
+    current_settings = await engine.find_one(SystemSettings, sort=query.desc(SystemSettings.id))
+    return current_settings
 
 
+async def get_system_settings_with_apply_url() -> Union[SystemSettingsResponse, None]:
+    current_settings = await get_current_system_settings()
+    if current_settings is None:
+        return None
+    setup_url = get_apply_settings_url(current_settings)
+    return SystemSettingsResponse(**current_settings.dict(), setupUrl=setup_url)
 
+
+async def create_system_settings_if_not_exists():
+    system_settings = await get_system_settings_with_apply_url()
+    if system_settings is None:
+        system_settings = default_settings
+        await engine.save(system_settings)
+
+
+async def get_report(q: ReportRequest) -> ReportResponse:
+    last_batch = await get_last_batch()
+    dtf = datetime.strptime
+    tf = '%d.%m.%Y %H:%M'
+
+    dt_begin = dtf(q.report_begin, tf)
+    dt_end = dtf(q.report_end, tf)
+
+    cubes = await engine.find(Cube, query.and_(Cube.batch_number != last_batch.number))
+
+    cubes = [cube for cube in cubes if dt_begin <= dtf(cube.created_at, tf) <= dt_end]
+
+    cubes = sorted(cubes, key=lambda c: dtf(c.created_at, tf))
+
+    cubes_report = [parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes]
+
+    for i, cube in enumerate(cubes):
+        list_of_ids = [ObjectId(i) for i in cube.multipack_ids_with_pack_ids]
+        multipacks = await engine.find(Multipack, Multipack.id.in_(list_of_ids), sort=query.asc(Multipack.created_at))
+        mpacks_report = [parse_obj_as(MPackReportItem, mpack.dict()) for mpack in multipacks]
+
+        cubes_report[i].multipacks = mpacks_report
+
+        for j, multipack in enumerate(multipacks):
+            packs = await engine.find(Pack, Pack.id.in_(multipack.pack_ids), sort=query.asc(Pack.created_at))
+            packs_report = [parse_obj_as(PackReportItem, pack.dict()) for pack in packs]
+            mpacks_report[j].packs = packs_report
+
+    report = ReportResponse(**q.dict(), cubes=cubes_report)
+
+    return report

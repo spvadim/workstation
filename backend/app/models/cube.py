@@ -21,12 +21,25 @@ class CubeInput(Model):
     multipack_ids: List[ObjectId]
 
 
+class CubeWithNewContent(Model):
+    params_id: ObjectId
+    batch_number: int
+    barcode_for_packs: str
+    qr: str
+    content: List[List[Dict[str, str]]]
+
+
 class CubeOutput(Model):
     created_at: str
     qr: Optional[str]
 
 
+class CubeIdentificationAuto(Model):
+    qr: str
+    barcode: str
+
+
 class CubePatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
-    multipack_ids_with_pack_ids: Dict[str, List[ObjectId]]
+    multipack_ids_with_pack_ids: Optional[Dict[str, List[ObjectId]]]
