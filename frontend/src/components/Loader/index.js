@@ -1,9 +1,19 @@
 import React from 'react';
-import './index.css';
+import { createUseStyles } from 'react-jss';
 
-function Loader() {
+const useStyles = createUseStyles({
+    root: {
+        margin: 'auto',
+        width: '3rem',
+        height: '3rem',
+    },
+});
+
+function Loader({ className, ...restProps }) {
+    const classes = useStyles();
+
     return (
-        <img className="loader" src="./loader.gif" alt="loader" />
+        <img className={['loader', classes.root, className].join(' ')} src="./loader.gif" alt="loader" {...restProps} />
     );
 }
 
