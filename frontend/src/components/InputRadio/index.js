@@ -51,7 +51,7 @@ function InputRadio({ name, htmlFor, children, checked, onChange, className, ...
                 type="radio"
                 onChange={onChange} />
 
-            <div className={classes.mark} />
+            <div className={['input-radio_mark', classes.mark].join(' ')} />
 
         </label>
 

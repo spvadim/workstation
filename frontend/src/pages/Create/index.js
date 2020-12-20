@@ -108,11 +108,25 @@ const useStyles = createUseStyles({
         height: 50,
     },
     form: {
+        '& .input-radio': {
+            flexDirection: 'row-reverse',
+        },
         marginTop: 100,
         display: 'grid',
         gridAutoRows: 54,
         rowGap: '12px',
 
+    },
+    radioLabel: {
+        flexGrow: 1,
+        marginLeft: 12,
+    },
+    radioMultipack: {
+        '& .input-radio_mark': {
+            marginRight: 12,
+        },
+        flexDirection: 'row-reverse',
+        justifyContent: 'flex-end',
     },
 });
 
@@ -124,13 +138,18 @@ const CtxCurrentMultipack = React.createContext({
 
 const RadioCurrentMultipack = ({ index }) => {
     const { currentMultipack, setCurrentMultipack } = React.useContext(CtxCurrentMultipack);
+    const classes = useStyles();
     return (
-        <InputRadio name="multipacksChoose"
-            htmlFor={index}
-            key={index}
-            checked={index === currentMultipack}
-            onChange={() => setCurrentMultipack(index)}>
-        </InputRadio>
+        <>
+            <InputRadio name="multipacksChoose"
+                htmlFor={index}
+                key={index}
+                checked={index === currentMultipack}
+                onChange={() => setCurrentMultipack(index)}
+                className={classes.radioMultipack}>
+                {index + 1}
+            </InputRadio>
+        </>
     )
 }
 
@@ -140,11 +159,9 @@ const tableProps = {
         columns: [
             {
                 name: "radioButton",
-                title: "",
-                width: 48,
+                title: "№",
                 Component: RadioCurrentMultipack,
             },
-            { name: "number", title: "№", width: 'auto' },
         ],
         buttonDelete: "/delete",
     },
@@ -158,44 +175,6 @@ const tableProps = {
     }
 
 };
-
-const multipacksTableMock = [
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-    { radioButton: true, number: 777 },
-];
-
-const packsTableMock = [
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-    { number: 777, qr: 'tn.ru/qr_try05_000005' },
-];
 
 function Create({ description, type, extended }) {
     const classes = useStyles();
@@ -426,7 +405,7 @@ function Create({ description, type, extended }) {
                                 Куб: {obj.multipacks} мультипаков, мультипак: {obj.packs} пачек,
                                     <br />
                                     пинцет: {obj.multipacks_after_pintset} мультипак
-                                </span>
+                            </span>
                         </InputRadio>
                     ))}
                     <div className={classes.buttonContainer}>
@@ -446,13 +425,7 @@ function Create({ description, type, extended }) {
                     </div>
                     <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>
                         <TableData
-                            rows={multipacksTableMock}
-                            // rows={multipacksTableData.map((_, index) => {
-                            //     return {
-                            //         number: index + 1,
-                            //         radioButton: null,
-                            //     }
-                            // })}
+                            rows={multipacksTableData}
                             className={classes.tableContent}
                             onDelete={obj => deleteMultipack(obj.number - 1)}
                             hideTracksWhenNotNeeded
@@ -475,10 +448,9 @@ function Create({ description, type, extended }) {
                         />
                     </div>
                     <TableData
-                        rows={packsTableMock}
-                        // rows={multipacksTableData[currentMultipack] ?
-                        //     multipacksTableData[currentMultipack].map((obj, index) => ({ number: index + 1, qr: obj.qr })) :
-                        //     []}
+                        rows={multipacksTableData[currentMultipack] ?
+                            multipacksTableData[currentMultipack].map((obj, index) => ({ number: index + 1, qr: obj.qr })) :
+                            []}
                         className={classes.tableContent}
                         onDelete={obj => deletePack(obj.number - 1, currentMultipack)}
                         hideTracksWhenNotNeeded
