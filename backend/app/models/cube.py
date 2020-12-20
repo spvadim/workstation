@@ -21,6 +21,13 @@ class CubeInput(Model):
     multipack_ids: List[ObjectId]
 
 
+class CubeWithNewContent(Model):
+    params_id: ObjectId
+    batch_number: int
+    qr: str
+    content: List[List[Dict[str, str]]]
+
+
 class CubeOutput(Model):
     created_at: str
     qr: Optional[str]
