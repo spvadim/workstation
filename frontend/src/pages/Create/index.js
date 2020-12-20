@@ -249,6 +249,7 @@ function Create({ description, type, extended }) {
     }
 
     const deleteMultipack = (index) => {
+        if (index === -1) return false;
         let temp = multipacksTableData.slice();
         temp.splice(index, 1);
         setMultipacksTableData(temp);
@@ -293,14 +294,21 @@ function Create({ description, type, extended }) {
     }
 
     const addPackToMultipack = (qr, indexMultipack_) => {
+        if (!settings.id) {
+            setNotificationErrorText("Сначала выберите параметры партии!");
+            return false;
+        }
+
         let indexMultipack = indexMultipack_;
         let temp = multipacksTableData.slice();
-        if (!indexMultipack_ && indexMultipack_ !== 0) {
-            temp = addEmptyMultipack();
+        let packs = temp[indexMultipack];
+
+        if (!packs) {
+            addEmptyMultipack();
             setCurrentMultipack(0);
+            packs = [];
             indexMultipack = 0;
         }
-        let packs = temp[indexMultipack];
 
         if (packs.length >= settings.packs) {
             addEmptyMultipack();
@@ -316,6 +324,14 @@ function Create({ description, type, extended }) {
 
             setMultipacksTableData(temp);
         }
+
+        if (!indexMultipack_ && indexMultipack_ !== 0) {
+            temp = addEmptyMultipack();
+            setCurrentMultipack(0);
+            indexMultipack = 0;
+        }
+
+        
 
         setPackQr("");
     }
@@ -427,7 +443,9 @@ function Create({ description, type, extended }) {
                         <TableData
                             rows={multipacksTableData}
                             className={classes.tableContent}
-                            onDelete={obj => deleteMultipack(obj.number - 1)}
+                            onDelete={obj => {
+                                deleteMultipack(multipacksTableData.indexOf(obj))
+                            }}
                             hideTracksWhenNotNeeded
                             {...tableProps.multipacksTable}
                         />

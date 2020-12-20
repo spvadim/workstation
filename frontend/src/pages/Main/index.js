@@ -378,7 +378,6 @@ function Main() {
                         <Notification
                             title="Уведомление"
                             description={notificationText}
-                            onClose={() => setNotificationText("")}
                         />
                     )
                 }

@@ -18,7 +18,7 @@ const useStyles = createUseStyles({
         gridAutoFlow: 'column',
         columnGap: 26,
         left: 36,
-        bottom: verticalPadding,
+        bottom: verticalPadding - 12,
     },
     column: {
         display: 'grid',
@@ -37,7 +37,7 @@ const useStyles = createUseStyles({
 function NotificationPanel({ notifications, errors }) {
     const classes = useStyles();
     return (
-        <div className={['notification-panel', classes.root].join(' ')}>
+        <div className={['notification-panel', classes.root].join(' ')} style={{}}>
             <div className={classes.container}>
                 <div className={classes.column}>
                     {/* <Paper className={classes.icon} style={{ backgroundImage: `url(${imgNotification})` }} /> */}
