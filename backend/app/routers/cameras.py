@@ -5,7 +5,8 @@ from fastapi_versioning import version
 from odmantic import query
 from app.db.engine import engine
 from app.db.db_utils import check_qr_unique_or_set_state_warning, check_qr_unique_or_set_state_error, \
-    get_last_batch, get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, get_multipacks_queue
+    get_last_batch, get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, get_multipacks_queue,\
+    get_first_exited_pintset_multipack, get_all_wrapping_multipacks
 from app.models.pack import Pack, PackCameraInput, PackOutput
 from app.models.multipack import Multipack, MultipackOutput, Status
 from app.models.cube import Cube
@@ -126,11 +127,32 @@ async def pintset_finish():
     return new_multipacks
 
 
+
+
 def find_first_without_qr(items):
     for item in items:
         if item.qr:
             return item
     return None
+
+
+@router.patch('/multipack_wrapping_auto', response_model=Multipack)
+@version(1, 0)
+async def multipack_wrapping_auto():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400, detail='В данный момент используется ручной режим')
+
+    wrapped_multipacks = await get_all_wrapping_multipacks()
+    for i in range(len(wrapped_multipacks)):
+        wrapped_multipacks[i].status = Status.WRAPPED
+
+    wrapping_multipack = await get_first_exited_pintset_multipack()
+    wrapping_multipack.status = Status.WRAPPING
+
+    await engine.save_all(wrapped_multipacks)
+    await engine.save(wrapping_multipack)
+    return wrapping_multipack
 
 
 @router.patch('/multipack_identification_auto', response_model=Multipack)
