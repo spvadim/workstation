@@ -4,11 +4,13 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
 from app.db.engine import engine
-from app.db.db_utils import check_qr_unique, get_last_batch, get_batch_by_number_or_return_last, get_by_id_or_404, \
-    get_by_qr_or_404, get_cubes_queue, get_packs_queue, get_multipacks_queue
+from app.db.db_utils import check_qr_unique, add_qr_to_list, append_qr_list_to_list,\
+    get_last_batch, get_batch_by_number_or_return_last, get_by_id_or_404, get_by_qr_or_404, get_cubes_queue,\
+    get_packs_queue, get_multipacks_queue
 from app.models.pack import Pack
 from app.models.multipack import Status, Multipack
-from app.models.cube import Cube, CubeInput, CubeOutput, CubePatchSchema
+from app.models.cube import Cube, CubeInput, CubeOutput, CubePatchSchema, CubeWithNewContent
+from app.models.production_batch import ProductionBatch, ProductionBatchParams
 
 router = APIRouter()
 
@@ -35,12 +37,59 @@ async def create_cube(cube_input: CubeInput):
                 multipacks_in_cubes=multipacks_in_cubes, packs_in_multipacks=packs_in_multipacks, created_at=created_at)
 
     if cube_input.qr:
-        await check_qr_unique(cube_input.qr)
+        if await check_qr_unique(cube_input.qr):
+            await add_qr_to_list(cube_input.qr)
         cube.qr = cube_input.qr
         cube.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     if cube_input.barcode:
         cube.barcode = cube_input.barcode
+
+    await engine.save(cube)
+    return cube
+
+
+@router.put('/cube_with_new_content', response_model=Cube)
+@version(1, 0)
+async def create_cube_with_new_content(cube_input: CubeWithNewContent):
+    batch_number = cube_input.batch_number
+    batch = await engine.find_one(ProductionBatch, ProductionBatch.number == batch_number)
+    if not batch:
+        raise HTTPException(404, detail='Такой партии не существует!')
+
+    params = await get_by_id_or_404(ProductionBatchParams, cube_input.params_id)
+    packs_in_multipacks = params.packs
+    multipacks_in_cubes = params.multipacks
+    current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    qr_list = []
+
+    if await check_qr_unique(cube_input.qr):
+        qr_list.append(cube_input.qr)
+        for multipack in cube_input.content:
+            for pack in multipack:
+                if await check_qr_unique(pack['qr']):
+                    qr_list.append(pack['qr'])
+
+    await append_qr_list_to_list(qr_list)
+
+    multipack_ids_with_pack_ids = {}
+
+    for multipack in cube_input.content:
+        pack_ids = []
+        for pack in multipack:
+            new_pack = Pack(qr=pack['qr'], barcode=pack['barcode'], batch_number=batch_number, in_queue=False,
+                            created_at=current_time)
+            await engine.save(new_pack)
+            pack_ids.append(new_pack.id)
+
+        new_multipack = Multipack(pack_ids=pack_ids, batch_number=batch_number, created_at=current_time,
+                                  status=Status.IN_CUBE)
+        await engine.save(new_multipack)
+        multipack_ids_with_pack_ids[str(new_multipack.id)] = pack_ids
+
+    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids, qr=cube_input.qr, batch_number=batch_number,
+                created_at=current_time, packs_in_multipacks=packs_in_multipacks,
+                multipacks_in_cubes=multipacks_in_cubes)
 
     await engine.save(cube)
     return cube
@@ -58,7 +107,8 @@ async def finish_cube(qr: str):
     if not (multipacks_queue or packs_queue):
         raise HTTPException(400, detail='Невозможно сформировать неполный куб')
 
-    await check_qr_unique(qr)
+    if await check_qr_unique(qr):
+        await add_qr_to_list(qr)
 
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
@@ -160,7 +210,8 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
     cube = await get_by_id_or_404(Cube, id)
 
     if patch.qr:
-        await check_qr_unique(patch.qr)
+        if await check_qr_unique(patch.qr):
+            await add_qr_to_list(patch.qr)
         cube.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     patch_dict = patch.dict(exclude_unset=True)
