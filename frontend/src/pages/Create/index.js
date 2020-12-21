@@ -194,7 +194,7 @@ function Create({ description, type, extended }) {
     useEffect(() => {
         axios.get(address + "/api/v1_0/batches_params")
             .then(res => setParams(res.data))
-            .catch(e => setNotificationErrorText(e.response.detail))
+            .catch(e => console.log(e.response))
     }, [])
 
 
@@ -277,8 +277,7 @@ function Create({ description, type, extended }) {
 
         axios.put(address + "/api/v1_0/cube_with_new_content", body)
             .then(() => setPage("/main"))
-            .catch(e => console.log(e.response))
-
+            .catch(e => setNotificationErrorText(e.response.data.detail))
     }
 
     const closeChanges = () => {
@@ -479,12 +478,14 @@ function Create({ description, type, extended }) {
             <NotificationPanel
                 errors={
                     notificationErrorText && (
-                        <Notification
-                            title="Ошибка"
-                            description={notificationErrorText}
-                            onClose={() => setNotificationErrorText("")}
-                            error
-                        />
+                        [
+                            <Notification
+                                title="Ошибка"
+                                description={notificationErrorText}
+                                onClose={() => setNotificationErrorText("")}
+                                error
+                            />
+                        ]
                     )
                 }
             />
