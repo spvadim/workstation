@@ -287,6 +287,11 @@ function Create({ description, type, extended }) {
     }
 
     const addEmptyMultipack = () => {
+        if (multipacksTableData.length >= settings.multipacks) {
+            setNotificationErrorText("Превышен предел мульпаков");
+            return false;
+        }
+
         let temp = multipacksTableData.slice();
         temp.push([]);
         setMultipacksTableData(temp);
@@ -296,12 +301,14 @@ function Create({ description, type, extended }) {
     const addPackToMultipack = (qr, indexMultipack_) => {
         if (!settings.id) {
             setNotificationErrorText("Сначала выберите параметры партии!");
+            setPackQr("");
             return false;
         }
 
         let indexMultipack = indexMultipack_;
         let temp = multipacksTableData.slice();
         let packs = temp[indexMultipack];
+
 
         if (!packs) {
             addEmptyMultipack();
@@ -311,7 +318,7 @@ function Create({ description, type, extended }) {
         }
 
         if (packs.length >= settings.packs) {
-            addEmptyMultipack();
+            if (!addEmptyMultipack()) return false;
             setCurrentMultipack(multipacksTableData.length);
             packs = [];
             packs.push({ qr: qr });
@@ -324,14 +331,6 @@ function Create({ description, type, extended }) {
 
             setMultipacksTableData(temp);
         }
-
-        if (!indexMultipack_ && indexMultipack_ !== 0) {
-            temp = addEmptyMultipack();
-            setCurrentMultipack(0);
-            indexMultipack = 0;
-        }
-
-        
 
         setPackQr("");
     }
