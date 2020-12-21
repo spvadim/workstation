@@ -285,6 +285,14 @@ function Create({ description, type, extended }) {
         setPage("/main")
     }
 
+    const checkQrUnique = (qr) => {
+        let finded = multipacksTableData.find(arr => {
+            return arr.find(pack => pack.qr === qr)
+        })
+
+        return finded ? false : true
+    }
+
     const addEmptyMultipack = () => {
         if (multipacksTableData.length >= settings.multipacks) {
             setNotificationErrorText("Превышен предел мульпаков");
@@ -303,6 +311,10 @@ function Create({ description, type, extended }) {
             setPackQr("");
             return false;
         }
+
+        if (!qr) return false;
+
+        if (!checkQrUnique(qr)) return false; 
 
         let indexMultipack = indexMultipack_;
         let temp = multipacksTableData.slice();
