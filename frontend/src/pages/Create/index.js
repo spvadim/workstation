@@ -259,6 +259,7 @@ function Create({ description, type, extended }) {
         if (!settings.id) { setNotificationErrorText("Параметры партии не заданы!"); return false }
         else if (!batchNumber) { setNotificationErrorText("Номер партии не задан!"); return false }
         else if (!cubeQr) { setNotificationErrorText("QR куба не задан!"); return false }
+        else if (!barcode) { setNotificationErrorText("Штрихкод не задан!"); return false }
         else if (multipacksTableData.length === 0) { setNotificationErrorText("Очередь мультипаков пуста!"); return false }
 
         return true;
