@@ -194,7 +194,7 @@ function Create({ description, type, extended }) {
     useEffect(() => {
         axios.get(address + "/api/v1_0/batches_params")
             .then(res => setParams(res.data))
-            .catch(e => setNotificationErrorText(e.response.detail))
+            .catch(e => console.log(e.response))
     }, [])
 
 
@@ -249,6 +249,7 @@ function Create({ description, type, extended }) {
     }
 
     const deleteMultipack = (index) => {
+        if (index === -1) return false;
         let temp = multipacksTableData.slice();
         temp.splice(index, 1);
         setMultipacksTableData(temp);
@@ -258,6 +259,7 @@ function Create({ description, type, extended }) {
         if (!settings.id) { setNotificationErrorText("Параметры партии не заданы!"); return false }
         else if (!batchNumber) { setNotificationErrorText("Номер партии не задан!"); return false }
         else if (!cubeQr) { setNotificationErrorText("QR куба не задан!"); return false }
+        else if (!barcode) { setNotificationErrorText("Штрихкод не задан!"); return false }
         else if (multipacksTableData.length === 0) { setNotificationErrorText("Очередь мультипаков пуста!"); return false }
 
         return true;
@@ -276,8 +278,7 @@ function Create({ description, type, extended }) {
 
         axios.put(address + "/api/v1_0/cube_with_new_content", body)
             .then(() => setPage("/main"))
-            .catch(e => console.log(e.response))
-
+            .catch(e => setNotificationErrorText(e.response.data.detail))
     }
 
     const closeChanges = () => {
@@ -285,7 +286,20 @@ function Create({ description, type, extended }) {
         setPage("/main")
     }
 
+    const checkQrUnique = (qr) => {
+        let finded = multipacksTableData.find(arr => {
+            return arr.find(pack => pack.qr === qr)
+        })
+
+        return finded ? false : true
+    }
+
     const addEmptyMultipack = () => {
+        if (multipacksTableData.length >= settings.multipacks) {
+            setNotificationErrorText("Превышен предел мульпаков");
+            return false;
+        }
+
         let temp = multipacksTableData.slice();
         temp.push([]);
         setMultipacksTableData(temp);
@@ -293,17 +307,30 @@ function Create({ description, type, extended }) {
     }
 
     const addPackToMultipack = (qr, indexMultipack_) => {
+        if (!settings.id) {
+            setNotificationErrorText("Сначала выберите параметры партии!");
+            setPackQr("");
+            return false;
+        }
+
+        if (!qr) return false;
+
+        if (!checkQrUnique(qr)) return false; 
+
         let indexMultipack = indexMultipack_;
         let temp = multipacksTableData.slice();
-        if (!indexMultipack_ && indexMultipack_ !== 0) {
-            temp = addEmptyMultipack();
-            setCurrentMultipack(0);
-            indexMultipack = 0;
-        }
         let packs = temp[indexMultipack];
 
-        if (packs.length >= settings.packs) {
+
+        if (!packs) {
             addEmptyMultipack();
+            setCurrentMultipack(0);
+            packs = [];
+            indexMultipack = 0;
+        }
+
+        if (packs.length >= settings.packs) {
+            if (!addEmptyMultipack()) return false;
             setCurrentMultipack(multipacksTableData.length);
             packs = [];
             packs.push({ qr: qr });
@@ -427,7 +454,9 @@ function Create({ description, type, extended }) {
                         <TableData
                             rows={multipacksTableData}
                             className={classes.tableContent}
-                            onDelete={obj => deleteMultipack(obj.number - 1)}
+                            onDelete={obj => {
+                                deleteMultipack(multipacksTableData.indexOf(obj))
+                            }}
                             hideTracksWhenNotNeeded
                             {...tableProps.multipacksTable}
                         />
@@ -462,12 +491,14 @@ function Create({ description, type, extended }) {
             <NotificationPanel
                 errors={
                     notificationErrorText && (
-                        <Notification
-                            title="Ошибка"
-                            description={notificationErrorText}
-                            onClose={() => setNotificationErrorText("")}
-                            error
-                        />
+                        [
+                            <Notification
+                                title="Ошибка"
+                                description={notificationErrorText}
+                                onClose={() => setNotificationErrorText("")}
+                                error
+                            />
+                        ]
                     )
                 }
             />

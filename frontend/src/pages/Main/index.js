@@ -178,14 +178,14 @@ function Main() {
                     "Сосканируйте QR мультипака/пачки для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
-            .catch(e => setNotificationErrorText(e.response.detail[0].msg))
+            .catch(e => setNotificationErrorText(e.response.data.detail))
 
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => res.data.state !== "normal" ?
                 setNotificationColumnErrorText(res.data.error_msg) :
                 setNotificationColumnErrorText(""))
-            request.catch(e => setNotificationErrorText(e.response.detail[0].msg))
+            request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
         request();
         const interval = setInterval(request, 1000);
@@ -378,7 +378,6 @@ function Main() {
                         <Notification
                             title="Уведомление"
                             description={notificationText}
-                            onClose={() => setNotificationText("")}
                         />
                     )
                 }

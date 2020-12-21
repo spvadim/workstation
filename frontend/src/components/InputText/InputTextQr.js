@@ -54,7 +54,7 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, e
                 setFlagSetQr(false);
                 setNotification("Куб успешно идентифицирован");
                 setTimeout(() => {
-                    setNotification("")
+                    setNotification("Сосканируйте QR мультипака/пачки для идентификации куба")
                 }, 2000);
             })
             .catch(res => {
@@ -73,6 +73,7 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, e
             .then(res => {
                 if (res.data.qr) {
                     setNotificationError("Куб уже идентифицирован")
+                    setValue("");
                 } else {
                     setNotification("Куб найден, введите QR для идентификации")
                     setIdCube(res.data.id);

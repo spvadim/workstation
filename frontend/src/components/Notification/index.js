@@ -54,7 +54,7 @@ export function Notification({ title, description, error, className, children, o
             <div className={classes.header}>
                 <img src={error ? imgError : imgNotification} />
                 <Text type="title2">{title}</Text>
-                {/* {onClose && <img src={imgCross} onClick={onClose} style={{ marginLeft: 'auto' }} />} */}
+                {onClose && <img src={imgCross} onClick={onClose} style={{ marginLeft: 'auto' }} />}
             </div>
             <div className={classes.description}>
                 {description}
