@@ -192,11 +192,11 @@ function Main() {
         return () => clearInterval(interval);
     }, [notificationColumnErrorText]);
 
-    if (page === "/") {
+    if (page === "batch_params") {
         return (
-            <Redirect to="/" />
+            <Redirect to="/batch_params" />
         );
-    } else if (page === "/create") {
+    } else if (page === "create") {
         return (
             <Redirect to="/create" />
         );
@@ -313,13 +313,13 @@ function Main() {
                 </div>
 
                 <div className={classes.headerCenter}>
-                    <Button onClick={() => { setPage("/") }} >Новая партия</Button>
+                    <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
 
                     <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
-                <Button onClick={() => setPage("/create")}>Новый куб</Button>
+                <Button onClick={() => setPage("create")}>Новый куб</Button>
                 <InputTextQr
                     setNotification={setNotificationText}
                     setNotificationError={setNotificationErrorText}

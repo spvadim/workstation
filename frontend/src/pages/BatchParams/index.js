@@ -101,7 +101,7 @@ function BatchParams() {
         setCookie("packs", settings.packs, { path: "/" });
         setCookie("multipacksAfterPintset", settings.multipacks_after_pintset, { path: "/" })
 
-        return <Redirect to="/main" />
+        return <Redirect to="/" />
     }
     return (
         <div className={classes.BatchParams}>

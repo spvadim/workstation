@@ -226,7 +226,7 @@ function Create({ description, type, extended }) {
     // const submitChanges = () => {
     //     if (containTableData.length === 0) {
     //         axios.delete(address + "/api/v1_0/" + type + "/" + description.id)
-    //             .then(() => setPage("/main"))
+    //             .then(() => setPage("/"))
 
     //     } else if (containTableData !== "/loader") {
     //         let packs = containTableData.map((obj) => obj.id);
@@ -234,11 +234,11 @@ function Create({ description, type, extended }) {
     //         axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
     //             .then(() => {
     //                 setModalSubmit(false);
-    //                 setPage("/main");
+    //                 setPage("/");
     //             })
 
     //     } else {
-    //         setPage("/main")
+    //         setPage("/")
     //     }
     // }
 
@@ -277,13 +277,13 @@ function Create({ description, type, extended }) {
         }
 
         axios.put(address + "/api/v1_0/cube_with_new_content", body)
-            .then(() => setPage("/main"))
+            .then(() => setPage("/"))
             .catch(e => setNotificationErrorText(e.response.data.detail))
     }
 
     const closeChanges = () => {
-        setModalCancel([setPage, "/main"]);
-        setPage("/main")
+        setModalCancel([setPage, "/"]);
+        setPage("/")
     }
 
     const checkQrUnique = (qr) => {
@@ -347,7 +347,7 @@ function Create({ description, type, extended }) {
         setPackQr("");
     }
 
-    if (page === "/main") return <Redirect to="/main" />
+    if (page === "/") return <Redirect to="/" />
 
     return (
         <div className={classes.Edit}>

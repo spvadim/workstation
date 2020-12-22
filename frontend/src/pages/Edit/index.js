@@ -280,19 +280,19 @@ function Edit({ description, type, extended }) {
             // axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
             //     .then(() => {
             //         setModalSubmit(false);
-            //         setPage("/main");
+            //         setPage("/");
             //     })
-            setPage("/main")
+            setPage("/")
         } else {
-            setPage("/main")
+            setPage("/")
         }
     }
 
     const closeChanges = () => {
-         setPage("/main");
+         setPage("/");
     }
 
-    if (page === "/main") return <Redirect to="/main" />
+    if (page === "/") return <Redirect to="/" />
 
     return (
         <div className={classes.Edit}>
