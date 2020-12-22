@@ -6,7 +6,7 @@ import { Redirect } from "react-router-dom";
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
-import { Text, Switch, Button, Link, TextField} from 'src/components';
+import { Text, Switch, Button, Loader, TextField} from 'src/components';
 import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
@@ -246,7 +246,7 @@ function Edit({ description, type, extended }) {
     }
 
     const deleteRow = (row, from) => {
-        console.log(row, from)
+        if (!row) return false;
         if (from === "addTable") {
             let temp = addTableData.filter((obj) => obj.qr !== row.qr);
             setAddTableData(temp);
@@ -380,13 +380,14 @@ function Edit({ description, type, extended }) {
                     </div>
 
                     <Text className={[classes.tableTitle, classes.titleContent].join(' ')} type="title2">Содержимое</Text>
+                    {containTableData === "/loader" ? <Loader /> : 
                     <TableData
                         rows={typeof containTableData === 'string' ? [] : containTableData}
                         className={classes.tableContent}
                         onDelete={row => deleteRow(row, "containTable")}
                         hideTracksWhenNotNeeded
                         {...tableProps.containTable}
-                    />
+                    />}
                 </div>
 
                 <div style={{ opacity: tableSwitch ? 0.4 : 1 }}>
