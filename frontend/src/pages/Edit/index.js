@@ -147,11 +147,13 @@ const getTableProps = (type, extended) => ({
         type: type,
         columns: extended ? 
         [
+            { name: "index", title: "№", width: 48 }, 
             { name: "created_at", title: "Создано", width: 123 },
             { name: "qr", title: "qr"},
             { name: "id", title: "id", width: 200 },
         ] : 
         [
+            { name: "index", title: "№", width: 48 }, 
             { name: "created_at", title: "Создано", width: 123 },
             { name: "qr", title: "qr"},
         ],
@@ -380,7 +382,7 @@ function Edit({ description, type, extended }) {
                     <Text className={[classes.tableTitle, classes.titleContent].join(' ')} type="title2">Содержимое</Text>
                     {containTableData === "/loader" ? <Loader /> : 
                     <TableData
-                        rows={typeof containTableData === 'string' ? [] : containTableData}
+                        rows={containTableData.map((obj, index) => {obj.index = index + 1; return obj})}
                         className={classes.tableContent}
                         onDelete={row => deleteRow(row, "containTable")}
                         hideTracksWhenNotNeeded

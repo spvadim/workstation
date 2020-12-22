@@ -17,7 +17,13 @@ const TableAddress = React.memo(({
         const request = () => {
             let request = axios.get(baseAddress + address);
             request.then(res => {
-                setTableData(res.data);
+                let data;
+                if (type === "packs") {
+                    data = res.data.map((obj, index) => {obj.index = index + 1; return obj});
+                } else {
+                    data = res.data
+                }
+                setTableData(data);
             })
             request.catch(e => {console.log(e)})
             request.finally(() => setLoading(false));

@@ -50,10 +50,12 @@ const getTableProps = (extended) => ({
     pack: {
         columns: extended ?
             [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
                 { name: "id", title: "id", width: 200 },
             ] : [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
             ],
