@@ -166,14 +166,13 @@ function Edit({ description, type, extended }) {
     const [tableSwitch, setTableSwitch] = useState(false);
     const [valueQr, setValueQr] = useState('');
     const [valueFlag, setValueFlag] = useState(false);
+    const [barcode, setBarcode] = useState("placeholder");
     const [addTableData, setAddTableData] = useState([]);
     const [removeTableData, setRemoveTableData] = useState([]);
     const [page, setPage] = useState('');
     const [containTableData, setContainTableData] = useState("/loader");
     const [modalCancel, setModalCancel] = useState(false);
     const [modalSubmit, setModalSubmit] = useState(false);
-
-    const barcode = "placeholder";
 
     useEffect(() => {
         if (valueFlag) {
@@ -190,14 +189,13 @@ function Edit({ description, type, extended }) {
     }, [valueFlag])
 
     useEffect(() => {
-        
-
         axios.get(address + "/api/v1_0/" + type + "/" + description.id)
             .then(async res => {
                 if (type === "multipacks") {
                     setContainTableData(await getPacks(res.data.pack_ids));
                 } else if (type === "cubes") {
                     setContainTableData(await getPacksFromMultipacks(Object.keys(res.data.multipack_ids_with_pack_ids)));
+                    setBarcode(res.data.barcode)
                 }
             })
     }, [])
