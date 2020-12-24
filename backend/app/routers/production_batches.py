@@ -5,7 +5,8 @@ from fastapi import APIRouter
 from fastapi_versioning import version
 from app.db.engine import engine
 from app.db.db_utils import get_last_batch, get_by_id_or_404
-from app.models.production_batch import ProductionBatchParams, ProductionBatchInput, ProductionBatch
+from app.models.production_batch import ProductionBatchParams, \
+    ProductionBatchInput, ProductionBatch
 
 router = APIRouter()
 
@@ -21,6 +22,14 @@ async def get_all_params():
 @version(1, 0)
 async def create_params(params: ProductionBatchParams):
     await engine.save(params)
+    return params
+
+
+@router.delete("/batches_params/{id}", response_model=ProductionBatchParams)
+@version(1, 0)
+async def delete_params_by_id(id: ObjectId):
+    params = await get_by_id_or_404(ProductionBatchParams, id)
+    await engine.delete(params)
     return params
 
 
