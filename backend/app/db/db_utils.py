@@ -95,7 +95,8 @@ async def get_last_batch() -> ProductionBatch:
     return last_batch
 
 
-async def get_batch_by_number_or_return_last(batch_number: Optional[int]) -> ProductionBatch:
+async def get_batch_by_number_or_return_last(
+        batch_number: Optional[int]) -> ProductionBatch:
     if batch_number:
         batch = await engine.find_one(ProductionBatch,
                                       ProductionBatch.number == batch_number)
@@ -109,7 +110,8 @@ async def get_batch_by_number_or_return_last(batch_number: Optional[int]) -> Pro
 
 
 async def get_packs_queue() -> List[Pack]:
-    packs = await engine.find(Pack, Pack.in_queue == True,
+    packs = await engine.find(Pack,
+                              Pack.in_queue == True,
                               sort=query.asc(Pack.id))
     return packs
 
@@ -137,7 +139,7 @@ async def get_first_wrapping_multipack() -> Multipack:
     return multipack
 
 
-async def get_all_wrapping_multipacks()  -> List[Multipack]:
+async def get_all_wrapping_multipacks() -> List[Multipack]:
     multipacks = await engine.find(Multipack,
                                    Multipack.status == Status.WRAPPING)
     return multipacks
@@ -150,12 +152,13 @@ async def get_cubes_queue() -> List[Cube]:
 
 async def get_current_system_settings() -> Union[SystemSettings, None]:
     current_settings = await engine.find_one(SystemSettings,
-                                             sort=query.desc(SystemSettings.id))
+                                             sort=query.desc(
+                                                 SystemSettings.id))
     return current_settings
 
 
-async def get_system_settings_with_apply_url() -> Union[SystemSettingsResponse,
-                                                        None]:
+async def get_system_settings_with_apply_url(
+) -> Union[SystemSettingsResponse, None]:
     current_settings = await get_current_system_settings()
     if current_settings is None:
         return None
@@ -179,27 +182,38 @@ async def get_report(q: ReportRequest) -> ReportResponse:
     dt_begin = dtf(q.report_begin, tf)
     dt_end = dtf(q.report_end, tf)
 
-    cubes = await engine.find(Cube,
-                              query.and_(Cube.batch_number != last_batch.number))
+    cubes = await engine.find(
+        Cube, query.and_(Cube.batch_number != last_batch.number))
 
-    cubes = [cube for cube in cubes if dt_begin <= dtf(cube.created_at, tf) <= dt_end]
+    cubes = [
+        cube for cube in cubes
+        if dt_begin <= dtf(cube.created_at, tf) <= dt_end
+    ]
 
     cubes = sorted(cubes, key=lambda c: dtf(c.created_at, tf))
 
-    cubes_report = [parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes]
+    cubes_report = [
+        parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes
+    ]
 
     for i, cube in enumerate(cubes):
         list_of_ids = [ObjectId(i) for i in cube.multipack_ids_with_pack_ids]
-        multipacks = await engine.find(Multipack, Multipack.id.in_(list_of_ids),
+        multipacks = await engine.find(Multipack,
+                                       Multipack.id.in_(list_of_ids),
                                        sort=query.asc(Multipack.created_at))
-        mpacks_report = [parse_obj_as(MPackReportItem, mpack.dict()) for mpack in multipacks]
+        mpacks_report = [
+            parse_obj_as(MPackReportItem, mpack.dict()) for mpack in multipacks
+        ]
 
         cubes_report[i].multipacks = mpacks_report
 
         for j, multipack in enumerate(multipacks):
-            packs = await engine.find(Pack, Pack.id.in_(multipack.pack_ids),
+            packs = await engine.find(Pack,
+                                      Pack.id.in_(multipack.pack_ids),
                                       sort=query.asc(Pack.created_at))
-            packs_report = [parse_obj_as(PackReportItem, pack.dict()) for pack in packs]
+            packs_report = [
+                parse_obj_as(PackReportItem, pack.dict()) for pack in packs
+            ]
             mpacks_report[j].packs = packs_report
 
     report = ReportResponse(**q.dict(), cubes=cubes_report)

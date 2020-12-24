@@ -18,7 +18,8 @@ router = APIRouter()
 @router.put('/cubes', response_model=Cube)
 @version(1, 0)
 async def create_cube(cube_input: CubeInput):
-    batch = await get_batch_by_number_or_return_last(batch_number=cube_input.batch_number)
+    batch = await get_batch_by_number_or_return_last(
+        batch_number=cube_input.batch_number)
 
     multipack_ids_with_pack_ids = {}
     multipacks_to_update = []
@@ -32,15 +33,22 @@ async def create_cube(cube_input: CubeInput):
     batch_number = batch.number
     packs_in_multipacks = batch.params.packs
     multipacks_in_cubes = batch.params.multipacks
-    created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
-    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids, batch_number=batch_number,
-                multipacks_in_cubes=multipacks_in_cubes, packs_in_multipacks=packs_in_multipacks, created_at=created_at)
+    created_at = (datetime.utcnow() +
+                  timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
+                batch_number=batch_number,
+                multipacks_in_cubes=multipacks_in_cubes,
+                packs_in_multipacks=packs_in_multipacks,
+                created_at=created_at)
 
     if cube_input.qr:
         if not await check_qr_unique(Cube, cube_input.qr):
-            raise HTTPException(400, detail=f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
+            raise HTTPException(
+                400,
+                detail=f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
         cube.qr = cube_input.qr
-        cube.added_qr_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+        cube.added_qr_at = (datetime.utcnow() +
+                            timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     if cube_input.barcode:
         cube.barcode = cube_input.barcode
@@ -53,34 +61,43 @@ async def create_cube(cube_input: CubeInput):
 @version(1, 0)
 async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     batch_number = cube_input.batch_number
-    batch = await engine.find_one(ProductionBatch, ProductionBatch.number == batch_number)
+    batch = await engine.find_one(ProductionBatch,
+                                  ProductionBatch.number == batch_number)
     if not batch:
         raise HTTPException(404, detail='Такой партии не существует!')
 
-    params = await get_by_id_or_404(ProductionBatchParams, cube_input.params_id)
+    params = await get_by_id_or_404(ProductionBatchParams,
+                                    cube_input.params_id)
     packs_in_multipacks = params.packs
     multipacks_in_cubes = params.multipacks
     barcode = cube_input.barcode_for_packs
-    current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_time = (datetime.utcnow() +
+                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
     # проверка на уникальность qr-ов, переполнение и пустоту
     if await check_qr_unique(Cube, cube_input.qr):
 
         if not cube_input.content:
-            raise HTTPException(400, f'Пустой куб')
+            raise HTTPException(400, 'Пустой куб')
 
         if len(cube_input.content) > multipacks_in_cubes:
-            raise HTTPException(400, f'Мультипаков должно быть не больше {multipacks_in_cubes}')
+            raise HTTPException(
+                400,
+                f'Мультипаков должно быть не больше {multipacks_in_cubes}')
 
         for multipack in cube_input.content:
 
             if len(multipack) > packs_in_multipacks:
-                raise HTTPException(400, f'Пачек должно быть не больше {packs_in_multipacks}')
+                raise HTTPException(
+                    400, f'Пачек должно быть не больше {packs_in_multipacks}')
 
             for pack in multipack:
                 if not await check_qr_unique(Pack, pack['qr']):
-                    raise HTTPException(400, detail=f'Пачка с QR-кодом {pack["qr"]} уже есть в системе')
+                    raise HTTPException(
+                        400,
+                        detail=f'Пачка с QR-кодом {pack["qr"]} уже есть в системе')
     else:
-        raise HTTPException(400, detail=f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
+        raise HTTPException(
+            400, detail=f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
 
     multipack_ids_with_pack_ids = {}
 
@@ -95,7 +112,8 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
             await engine.save(new_pack)
             pack_ids.append(new_pack.id)
 
-        new_multipack = Multipack(pack_ids=pack_ids, batch_number=batch_number,
+        new_multipack = Multipack(pack_ids=pack_ids,
+                                  batch_number=batch_number,
                                   created_at=current_time,
                                   status=Status.IN_CUBE)
         await engine.save(new_multipack)
@@ -116,7 +134,8 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
 @version(1, 0)
 async def finish_cube(qr: str):
     batch = await get_last_batch()
-    current_time = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_time = (datetime.utcnow() +
+                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     multipacks_queue = await get_multipacks_queue()
     packs_queue = await get_packs_queue()
@@ -125,7 +144,8 @@ async def finish_cube(qr: str):
         raise HTTPException(400, detail='Невозможно сформировать неполный куб')
 
     if not await check_qr_unique(Cube, qr):
-        raise HTTPException(400, detail='Куб с QR-кодом {qr} уже есть в системе')
+        raise HTTPException(400,
+                            detail='Куб с QR-кодом {qr} уже есть в системе')
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
     needed_packs = batch.params.packs
@@ -133,8 +153,10 @@ async def finish_cube(qr: str):
     delta = needed_multipacks - len(multipacks_queue)
 
     if delta > 0:
-        chunked_packs = [packs_queue[i:i + needed_packs] for i in
-                         range(0, len(packs_queue), needed_packs)]
+        chunked_packs = [
+            packs_queue[i:i + needed_packs]
+            for i in range(0, len(packs_queue), needed_packs)
+        ]
 
         for chunk in chunked_packs:
 
@@ -147,7 +169,8 @@ async def finish_cube(qr: str):
                 pack_ids.append(chunk[i].id)
             await engine.save_all(chunk)
 
-            multipack = Multipack(batch_number=batch.number, pack_ids=pack_ids,
+            multipack = Multipack(batch_number=batch.number,
+                                  pack_ids=pack_ids,
                                   created_at=current_time)
             await engine.save(multipack)
             multipacks_queue.append(multipack)
@@ -159,11 +182,16 @@ async def finish_cube(qr: str):
 
     for i in range(len(multipacks_for_cube)):
         multipacks_for_cube[i].status = Status.IN_CUBE
-        multipack_ids_with_pack_ids[str(multipacks_for_cube[i].id)] = multipacks_for_cube[i].pack_ids
+        multipack_ids_with_pack_ids[str(
+            multipacks_for_cube[i].id)] = multipacks_for_cube[i].pack_ids
     await engine.save_all(multipacks_for_cube)
 
-    cube = Cube(qr=qr, multipack_ids_with_pack_ids=multipack_ids_with_pack_ids, batch_number=batch_number,
-                multipacks_in_cubes=needed_multipacks, packs_in_multipacks=needed_packs, created_at=current_time)
+    cube = Cube(qr=qr,
+                multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
+                batch_number=batch_number,
+                multipacks_in_cubes=needed_multipacks,
+                packs_in_multipacks=needed_packs,
+                created_at=current_time)
 
     await engine.save(cube)
     return cube
@@ -229,7 +257,9 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
 
     if patch.qr:
         if not await check_qr_unique(Cube, patch.qr):
-            raise HTTPException(400, detail=f'Куб с QR-кодом {patch.qr} уже существует в системе')
+            raise HTTPException(
+                400,
+                detail=f'Куб с QR-кодом {patch.qr} уже существует в системе')
         cube.added_qr_at = (datetime.utcnow() +
                             timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 

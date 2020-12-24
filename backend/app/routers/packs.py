@@ -8,7 +8,6 @@ from app.db.db_utils import get_batch_by_number_or_return_last, \
     check_qr_unique, get_packs_queue, get_by_id_or_404, get_by_qr_or_404
 from app.models.pack import Pack, PackOutput, PackPatchSchema
 
-
 router = APIRouter()
 
 
@@ -36,10 +35,12 @@ async def get_pack_by_qr(qr: str = Query(None)):
 @router.put('/packs', response_model=Pack)
 @version(1, 0)
 async def create_pack(pack: Pack):
-    batch = await get_batch_by_number_or_return_last(batch_number=pack.batch_number)
+    batch = await get_batch_by_number_or_return_last(
+        batch_number=pack.batch_number)
 
     if not await check_qr_unique(Pack, pack.qr):
-        raise HTTPException(400, detail=f'Пачка с QR-кодом {pack.qr} уже есть в системе')
+        raise HTTPException(
+            400, detail=f'Пачка с QR-кодом {pack.qr} уже есть в системе')
 
     pack.batch_number = batch.number
     pack.created_at = (datetime.utcnow() +
@@ -63,7 +64,8 @@ async def update_pack_by_id(id: ObjectId, patch: PackPatchSchema):
 
     if patch.qr:
         if not await check_qr_unique(Pack, patch.qr):
-            raise HTTPException(400, detail=f'Пачка с QR-кодом {patch.qr} уже есть в системе')
+            raise HTTPException(
+                400, detail=f'Пачка с QR-кодом {patch.qr} уже есть в системе')
     patch_dict = patch.dict(exclude_unset=True)
     for name, value in patch_dict.items():
         setattr(pack, name, value)

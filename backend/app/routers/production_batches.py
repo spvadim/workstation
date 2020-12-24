@@ -29,11 +29,13 @@ async def create_params(params: ProductionBatchParams):
 async def create_batch(batch: ProductionBatchInput):
     params = await get_by_id_or_404(ProductionBatchParams, batch.params_id)
     batch = ProductionBatch(number=batch.number, params=params)
-    batch.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    batch.created_at = (datetime.utcnow() +
+                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     last_batch = await get_last_batch()
     if last_batch:
-        last_batch.closed_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+        last_batch.closed_at = (datetime.utcnow() +
+                                timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
         await engine.save(last_batch)
 
     await engine.save(batch)

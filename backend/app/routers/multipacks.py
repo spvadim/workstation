@@ -13,14 +13,17 @@ from app.models.multipack import Multipack, MultipackOutput, \
 router = APIRouter()
 
 
-@router.put('/multipacks', response_model=Multipack,
+@router.put('/multipacks',
+            response_model=Multipack,
             response_model_exclude_unset=True)
 @version(1, 0)
 async def create_multipack(multipack: Multipack):
-    batch = await get_batch_by_number_or_return_last(batch_number=multipack.batch_number)
+    batch = await get_batch_by_number_or_return_last(
+        batch_number=multipack.batch_number)
 
     multipack.batch_number = batch.number
-    multipack.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    multipack.created_at = (datetime.utcnow() +
+                            timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     packs_to_update = []
     for id in multipack.pack_ids:
@@ -31,7 +34,10 @@ async def create_multipack(multipack: Multipack):
 
     if multipack.qr:
         if not await check_qr_unique(Multipack, multipack.qr):
-            raise HTTPException(400, detail=f'Мультипак с QR-кодом {multipack.qr} уже есть в системе')
+            raise HTTPException(
+                400,
+                detail=f'Мультипак с QR-кодом {multipack.qr} уже есть в системе'
+            )
         multipack.added_qr_at = (datetime.utcnow() +
                                  timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
@@ -75,7 +81,9 @@ async def update_pack_by_id(id: ObjectId, patch: MultipackPatchSchema):
 
     if patch.qr:
         if not await check_qr_unique(Multipack, patch.qr):
-            raise HTTPException(400, detail=f'Мультипак с QR-кодом {patch.qr} уже есть в системе')
+            raise HTTPException(
+                400,
+                detail=f'Мультипак с QR-кодом {patch.qr} уже есть в системе')
         multipack.added_qr_at = (datetime.utcnow() +
                                  timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
