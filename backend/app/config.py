@@ -7,14 +7,14 @@ from app.utils.io import msg_templates_by_subject
 
 CURRENT_API_VERSION = '1_0'
 
-initial_pintset_device_params = {
-    'precision': Precision.LOW
-}
+initial_pintset_device_params = {'precision': Precision.LOW}
 
 initial_pintset_client_params = {
     'local_device_ip': '172.15.0.1',
     'device_id': 'dd0c40db-2229-4ec4-b1d8-2a50ee83d6ff',
-    'device_params': {'precision': Precision.LOW}
+    'device_params': {
+        'precision': Precision.LOW
+    }
 }
 
 packing_sizes = json.loads(os.environ['DEFAULT_PACKING_SIZES'])
@@ -34,9 +34,10 @@ initial_system_settings = {
 def get_settings_as_url_params(settings: dict):
     # настройки клиента либы по работе с пинцетами редактируем только через .env
     settings.pop('pintset_client_params')
-    config_as_url_params = '?' + '&'.join(
-        [f'{k}={str(v) if type(v) == str else str(v).replace(" ", "")}' for k, v in settings.items()]
-    )
+    config_as_url_params = '?' + '&'.join([
+        f'{k}={str(v) if type(v) == str else str(v).replace(" ", "")}'
+        for k, v in settings.items()
+    ])
     return config_as_url_params
 
 
@@ -53,9 +54,11 @@ def get_apply_settings_url(system_settings: SystemSettings) -> str:
 
 default_settings = SystemSettings(**initial_system_settings)
 
-default_settings_response = SystemSettingsResponse(**default_settings.dict(),
-                                                   setupUrl=get_apply_settings_url(default_settings))
+default_settings_response = SystemSettingsResponse(
+    **default_settings.dict(),
+    setupUrl=get_apply_settings_url(default_settings))
 
 
-def is_settings_default(settings: SystemSettings, default: SystemSettings = default_settings) -> bool:
+def is_settings_default(settings: SystemSettings,
+                        default: SystemSettings = default_settings) -> bool:
     return settings.dict(exclude={'id'}) == default.dict(exclude={'id'})

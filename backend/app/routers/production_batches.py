@@ -5,7 +5,8 @@ from fastapi import APIRouter
 from fastapi_versioning import version
 from app.db.engine import engine
 from app.db.db_utils import get_last_batch, get_by_id_or_404
-from app.models.production_batch import ProductionBatchParams, ProductionBatchInput, ProductionBatch
+from app.models.production_batch import ProductionBatchParams, \
+    ProductionBatchInput, ProductionBatch
 
 router = APIRouter()
 
@@ -24,16 +25,26 @@ async def create_params(params: ProductionBatchParams):
     return params
 
 
+@router.delete("/batches_params/{id}", response_model=ProductionBatchParams)
+@version(1, 0)
+async def delete_params_by_id(id: ObjectId):
+    params = await get_by_id_or_404(ProductionBatchParams, id)
+    await engine.delete(params)
+    return params
+
+
 @router.put("/batches", response_model=ProductionBatch)
 @version(1, 0)
 async def create_batch(batch: ProductionBatchInput):
     params = await get_by_id_or_404(ProductionBatchParams, batch.params_id)
     batch = ProductionBatch(number=batch.number, params=params)
-    batch.created_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    batch.created_at = (datetime.utcnow() +
+                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     last_batch = await get_last_batch()
     if last_batch:
-        last_batch.closed_at = (datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+        last_batch.closed_at = (datetime.utcnow() +
+                                timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
         await engine.save(last_batch)
 
     await engine.save(batch)

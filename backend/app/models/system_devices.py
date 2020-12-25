@@ -1,6 +1,6 @@
 from abc import ABC
 from enum import Enum
-from odmantic import EmbeddedModel, Model
+from odmantic import EmbeddedModel
 
 
 class Precision(str, Enum):

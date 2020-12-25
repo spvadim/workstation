@@ -6,14 +6,18 @@ authors = ["Maksim Zayakin <maksim.zaiakin@urfu.me>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fastapi = "^0.63.0"
 orjson = "^3.4.1"
-uvicorn = "^0.13.2"
-fastapi-versioning = "^0.5.0"
+ing = "^0.5.0"
 odmantic = "^0.3.2"
+fastapi = "^0.63.0"
+uvicorn = "^0.13.2"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.1.1"
+pytest = "^6.2.1"
+flake8 = "^3.8.4"
+yapf = "^0.30.0"
+python-language-server = "^0.36.2"
+isort = "^5.6.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

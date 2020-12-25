@@ -8,5 +8,6 @@ username = os.environ['DB_USER']
 password = os.environ['DB_PASSWORD']
 db = os.environ['DB_NAME']
 
-client = AsyncIOMotorClient(f"mongodb://{username}:{password}@mongo:27017/{db}")
+client = AsyncIOMotorClient(
+    f"mongodb://{username}:{password}@mongo:27017/{db}")
 engine = AIOEngine(motor_client=client, database=db)
