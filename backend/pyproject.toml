@@ -7,7 +7,7 @@ authors = ["Maksim Zayakin <maksim.zaiakin@urfu.me>"]
 [tool.poetry.dependencies]
 python = "^3.8"
 orjson = "^3.4.1"
-ing = "^0.5.0"
+fastapi_versioning = "^0.5.0"
 odmantic = "^0.3.2"
 fastapi = "^0.63.0"
 uvicorn = "^0.13.2"
