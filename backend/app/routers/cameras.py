@@ -7,7 +7,7 @@ from app.db.db_utils import check_qr_unique, get_last_batch, \
     get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, \
     get_multipacks_queue, get_first_exited_pintset_multipack, \
     get_first_wrapping_multipack, get_all_wrapping_multipacks, \
-    get_cubes_queue
+    get_first_cube_without_qr, get_first_multipack_without_qr
 from app.models.pack import Pack, PackCameraInput, PackOutput
 from app.models.multipack import Multipack, MultipackOutput, \
     Status, MultipackIdentificationAuto
@@ -25,14 +25,29 @@ async def new_pack_after_applikator(pack: PackCameraInput):
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
-    # TODO: детализировать ошибку
-    if not pack.qr or not pack.barcode:
-        error_msg = 'Нет qr кода или штрих кода!'
-        await set_column_yellow(error_msg)
-        raise HTTPException(400, detail=error_msg)
+
+    current_datetime = (datetime.utcnow() +
+                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
+    error_msg = None
+    if not pack.qr and not pack.barcode:
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с которой не смогли считать ни одного кода!'
+
+    elif not pack.qr:
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с ШК={pack.barcode}, но QR не считался'
+
+    elif not pack.barcode:
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
+
     # TODO: пока что нужно убрать проверку на уникальность
     # TODO: дописать код для ERD контроллера
-    # if not await check_qr_unique(Pack, pack.qr)
+    # TODO: tg
+    # elif not await check_qr_unique(Pack, pack.qr):
+    #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
+
+    if error_msg:
+        await set_column_yellow(error_msg)
+        raise HTTPException(400, detail=error_msg)
 
     return pack
 
@@ -44,21 +59,34 @@ async def new_pack_after_pintset(pack: PackCameraInput):
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
-    # TODO детализировать ошибку
-    if not pack.qr or not pack.barcode:
-        error_msg = 'Нет qr кода или штрих кода!'
+    current_datetime = (datetime.utcnow() +
+                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
+    error_msg = None
+    if not pack.qr and not pack.barcode:
+        error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с которой не смогли считать ни одного кода!'
+
+    elif not pack.qr:
+        error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с ШК={pack.barcode}, но QR не считался'
+
+    elif not pack.barcode:
+        error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался'
+
+    # TODO: пока что нужно убрать проверку на уникальность
+    # TODO: дописать код для ERD контроллера
+    # TODO: tg
+    # elif not await check_qr_unique(Pack, pack.qr):
+    #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+
+    if error_msg:
         await set_column_red(error_msg)
         raise HTTPException(400, detail=error_msg)
-    # TODO: дописать код для ERD котроллерa
-    # пока что нужно убрать проверку на уникальность
-    # if not await check_qr_unique(Pack, pack.qr)
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
 
     batch = await get_last_batch()
     pack.batch_number = batch.number
-    pack.created_at = (datetime.utcnow() +
-                       timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    pack.created_at = current_datetime
     await engine.save(pack)
     return pack
 
@@ -74,10 +102,14 @@ async def pintset_reverse():
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
 
+    current_datetime = (datetime.utcnow() +
+                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
     packs_queue = await get_packs_queue()
     if len(packs_queue) < multipacks_after_pintset:
-        raise HTTPException(
-            400, detail=f'Меньше {multipacks_after_pintset} пачек в очереди!')
+        error_msg = f'{current_datetime} пинцет положил пачку с переворотом, но пачек в очереди меньше чем {multipacks_after_pintset}'
+        await set_column_red(error_msg)
+        raise HTTPException(400, detail=error_msg)
 
     last_packs = packs_queue[-multipacks_after_pintset:]
 
@@ -129,9 +161,11 @@ async def pintset_finish():
     number = batch.number
 
     packs_queue = await get_packs_queue()
+    current_time = (datetime.utcnow() +
+                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
     if len(packs_queue) < needed_packs:
-        error_msg = 'Недостаточно пачек'
+        error_msg = f'{current_time} пинцет начал формирование {multipacks_after_pintset} мультипаков, но пачек в очереди меньше чем {needed_packs}'
         await set_column_red(error_msg)
         raise HTTPException(400, detail=error_msg)
 
@@ -143,9 +177,6 @@ async def pintset_finish():
 
     await engine.save_all(packs_queue)
 
-    current_time = (datetime.utcnow() +
-                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
-
     new_multipacks = []
     for pack_ids in all_pack_ids:
         multipack = Multipack(pack_ids=pack_ids)
@@ -155,13 +186,6 @@ async def pintset_finish():
     await engine.save_all(new_multipacks)
 
     return new_multipacks
-
-
-def find_first_without_qr(items):
-    for item in items:
-        if not item.qr:
-            return item
-    return None
 
 
 @router.patch('/multipack_wrapping_auto', response_model=Multipack)
@@ -192,9 +216,11 @@ async def remove_multipack_from_wrapping():
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
 
+    current_datetime = (datetime.utcnow() +
+                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
     multipack = await get_first_wrapping_multipack()
     if not multipack:
-        error_msg = 'В очереди нет мультипака в обмотке'
+        error_msg = f'{current_datetime} при попытке изъятия мультипака из обмотки он не был обнаружен в системе'
         await set_column_red(error_msg)
         raise HTTPException(400, detail=error_msg)
     for id in multipack.pack_ids:
@@ -217,16 +243,27 @@ async def multipack_identification_auto(
                         timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
     qr = identification.qr
     barcode = identification.barcode
-    multipacks_queue = await get_multipacks_queue()
-    multipack_to_update = find_first_without_qr(multipacks_queue)
-    # TODO: детализировать ошибку, ERD котроллер
+    multipack_to_update = await get_first_multipack_without_qr()
+
+    error_msg = None
     if not multipack_to_update:
-        error_msg = 'В очереди нет мультипаков без идентификатора'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
-    # TODO: детализировать ошибку, ERD контроллер
-    if not await check_qr_unique(Multipack, qr):
-        error_msg = 'Мультипак с QR-кодом {qr} уже есть в системе'
+        error_msg = f'{current_datetime} при попытке присвоения внешнего кода мультипаку в системе не обнаружено мультипаков без него'
+
+    if not qr and not barcode:
+        error_msg = f'{current_datetime} при присвоении внешнего кода мультипаку с него не смогли считать ни одного кода!'
+
+    elif not qr:
+        error_msg = f'{current_datetime} при присвоении внешнего кода мультипаку с ШК={barcode} QR не считался'
+
+    elif not barcode:
+        error_msg = f'{current_datetime} при присвоении внешнего кода мультипаку с QR={qr} ШК не считался'
+
+    # TODO: дописать код для ERD контроллера
+    # TODO: tg
+    elif not await check_qr_unique(Multipack, qr):
+        error_msg = f'{current_datetime} при попытке присвоения внешнего кода мультипаку использован QR={qr} и он не уникален в системе'
+
+    if error_msg:
         await set_column_red(error_msg)
         raise HTTPException(400, detail=error_msg)
 
@@ -249,24 +286,34 @@ async def cube_identification_auto(identification: CubeIdentificationAuto):
 
     qr = identification.qr
     barcode = identification.barcode
-    cube_queue = await get_cubes_queue()
-    cube_to_update = find_first_without_qr(cube_queue)
+    cube_to_update = await get_first_cube_without_qr()
+    current_datetime = (datetime.utcnow() +
+                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
 
+    error_msg = None
     if not cube_to_update:
-        error_msg = 'В очереди нет кубов без идентификатора'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу в системе не обнаружено мультипаков без него'
 
+    if not qr and not barcode:
+        error_msg = f'{current_datetime} при присвоении внешнего кода кубу с него не смогли считать ни одного кода!'
 
-# TODO: детализировать ошибку, ERD контроллер
-    if not await check_qr_unique(Cube, qr):
-        error_msg = 'Куб с QR-кодом {qr} уже есть в системе'
+    elif not qr:
+        error_msg = f'{current_datetime} при присвоении внешнего кода кубу с ШК={barcode} QR не считался'
+
+    elif not barcode:
+        error_msg = f'{current_datetime} при присвоении внешнего кода кубу с QR={qr} ШК не считался'
+
+    # TODO: дописать код для ERD контроллера
+    # TODO: tg
+    elif not await check_qr_unique(Cube, qr):
+        error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и он не уникален в системе'
+
+    if error_msg:
         await set_column_red(error_msg)
         raise HTTPException(400, detail=error_msg)
 
     cube_to_update.qr = qr
-    cube_to_update.added_qr_at = (
-        datetime.utcnow() + timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    cube_to_update.added_qr_at = current_datetime
     cube_to_update.barcode = barcode
     await engine.save(cube_to_update)
 
@@ -288,8 +335,10 @@ async def cube_finish_auto():
 
     multipacks_queue = await get_multipacks_queue()
 
+    current_time = (datetime.utcnow() +
+                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
     if len(multipacks_queue) < needed_multipacks:
-        error_msg = 'В очереди недостаточно мультипаков'
+        error_msg = f'{current_time} попытка формирования куба, когда в очереди меньше {needed_multipacks} мультипаков'
         await set_column_red(error_msg)
         raise HTTPException(400, detail=error_msg)
 
@@ -300,8 +349,6 @@ async def cube_finish_auto():
             multipacks_queue[i].id)] = multipacks_queue[i].pack_ids
     await engine.save_all(multipacks_queue)
 
-    current_time = (datetime.utcnow() +
-                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
     cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
                 batch_number=number,
                 created_at=current_time,

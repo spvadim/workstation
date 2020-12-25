@@ -139,6 +139,23 @@ async def get_first_wrapping_multipack() -> Multipack:
     return multipack
 
 
+async def get_first_multipack_without_qr() -> Union[Multipack, None]:
+    multipack = await engine.find_one(Multipack,
+                                      Multipack.status != Status.IN_CUBE,
+                                      Multipack.qr == None,
+                                      sort=query.asc(Multipack.id))
+    return multipack
+
+
+async def get_first_cube_without_qr() -> Union[Cube, None]:
+    last_batch = await get_last_batch()
+    cube = await engine.find_one(Cube,
+                                 Cube.batch_number == last_batch.number,
+                                 Cube.qr == None,
+                                 sort=query.asc(Cube.id))
+    return cube
+
+
 async def get_all_wrapping_multipacks() -> List[Multipack]:
     multipacks = await engine.find(Multipack,
                                    Multipack.status == Status.WRAPPING)
