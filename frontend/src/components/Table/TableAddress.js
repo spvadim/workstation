@@ -17,13 +17,22 @@ const TableAddress = React.memo(({
         const request = () => {
             let request = axios.get(baseAddress + address);
             request.then(res => {
-                let data;
-                if (type === "packs") {
-                    data = res.data.map((obj, index) => {obj.index = index + 1; return obj});
-                } else {
-                    data = res.data
+                let rows = [];
+                for (let i = res.data.length - 1; i > 0; i--) {
+                    let row = {};
+                    Object.assign(row, res.data[i]);
+                    row.index = i;
+                    rows.push(row);
                 }
-                setTableData(data);
+
+                // if (type === "packs") {
+                //     // data = res.data.map((obj, index) => {obj.index = index + 1; return obj});
+                //     data = getTableDataReversed(res.data);
+                // } else {
+                //     data = res.data
+                // }
+
+                setTableData(rows);
             })
             request.catch(e => {console.log(e)})
             request.finally(() => setLoading(false));

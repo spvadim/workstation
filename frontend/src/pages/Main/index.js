@@ -24,10 +24,12 @@ const getTableProps = (extended) => ({
     cube: {
         columns: extended ?
             [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
                 { name: "id", title: "id", width: 200 },
             ] : [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
             ],
@@ -36,11 +38,13 @@ const getTableProps = (extended) => ({
     multipack: {
         columns: extended ?
             [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr", width: 48, Component: () => <>...</> },
                 { name: "status", title: "Статус" },
                 { name: "id", title: "id", width: 200 },
             ] : [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
                 { name: "status", title: "Статус" },
@@ -177,7 +181,8 @@ function Main() {
             .then(res => {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
-                    "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                    // "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                    "Сосканируйте QR для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
             .catch(e => setNotificationErrorText(e.response.data.detail))
