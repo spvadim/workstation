@@ -275,14 +275,15 @@ function Edit({ description, type, extended }) {
 
     const submitChanges = () => {
         if (containTableData !== "/loader") {
-            // let packs = containTableData.map((obj) => obj.id);
-            // let temp = { pack_ids: packs };
-            // axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
-            //     .then(() => {
-            //         setModalSubmit(false);
-            //         setPage("/");
-            //     })
-            setPage("/")
+            axios.patch(address + "/api/v1_0/edit_cube/" + description.id, {
+                pack_ids_to_delete: removeTableData.map(row => row.id),
+                packs_barcode: "placeholder",
+                pack_qrs: addTableData.map(row => row.qr),
+            })
+            .then(() => setPage("/"))
+            .catch(e => console.log(e.response.data))
+
+            
         } else {
             setPage("/")
         }

@@ -52,7 +52,7 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, e
     }, [valueFlag])
 
     const setQrCube = () => {
-        axios.patch(address + "/api/v1_0/add_qr_to_first_unidentified_cube/", {qr: value})
+        axios.patch(address + "/api/v1_0/add_qr_to_first_unidentified_cube/?qr=" + value)
         .then(() => {
             setFlagSetQr(false);
             setValue("");

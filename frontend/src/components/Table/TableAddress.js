@@ -18,12 +18,10 @@ const TableAddress = React.memo(({
             let request = axios.get(baseAddress + address);
             request.then(res => {
                 let rows = [];
-                console.log(res)
                 for (let i = res.data.length - 1; i >= 0; i--) {
                     let row = {};
                     Object.assign(row, res.data[i]);
                     row.index = i + 1;
-                    if (type === "cubes") console.log(row)
                     rows.push(row);
                 }
 
