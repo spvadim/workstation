@@ -10,6 +10,6 @@ RUN pip install poetry
 RUN poetry config virtualenvs.create false
 
 # install dependencies
-RUN poetry install
+RUN poetry install --no-dev
 
 ENV PORT=8080

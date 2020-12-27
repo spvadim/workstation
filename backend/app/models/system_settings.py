@@ -1,6 +1,5 @@
-from typing import Optional, List, Tuple
-from enum import Enum
-from odmantic import EmbeddedModel, Model
+from typing import Optional, List
+from odmantic import Model
 from .system_devices import PintsetClientParams
 
 
