@@ -327,8 +327,6 @@ async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
     packs_to_add = []
     multipacks_to_update = []
     for k, v in multipack_ids_with_pack_ids.items():
-        if not pack_qrs:
-            break
         free_space = packs_in_multipacks - len(v)
         qrs = pack_qrs[:free_space]
         for qr in qrs:
@@ -342,7 +340,9 @@ async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
                         created_at=current_time)
             packs_to_add.append(pack)
             multipack_ids_with_pack_ids[k].append(pack.id)
-        multipack_to_update = await get_by_id_or_404(Multipack, ObjectId(k))
+
+        multipack_id = ObjectId(k)
+        multipack_to_update = await get_by_id_or_404(Multipack, multipack_id)
         multipack_to_update.pack_ids = multipack_ids_with_pack_ids[k]
         multipacks_to_update.append(multipack_to_update)
         pack_qrs = pack_qrs[free_space:]
