@@ -43,3 +43,9 @@ class CubePatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
     multipack_ids_with_pack_ids: Optional[Dict[str, List[ObjectId]]]
+
+
+class CubeEditSchema(Model):
+    pack_ids_to_delete: List[ObjectId]
+    packs_barcode: str
+    pack_qrs: List[str]
