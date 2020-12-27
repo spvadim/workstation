@@ -6,7 +6,7 @@ import { Redirect } from "react-router-dom";
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
-import { Text, Switch, Button, Link, TextField} from 'src/components';
+import { Text, Switch, Button, Loader, TextField} from 'src/components';
 import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
@@ -147,11 +147,13 @@ const getTableProps = (type, extended) => ({
         type: type,
         columns: extended ? 
         [
+            { name: "index", title: "№", width: 48 }, 
             { name: "created_at", title: "Создано", width: 123 },
             { name: "qr", title: "qr"},
             { name: "id", title: "id", width: 200 },
         ] : 
         [
+            { name: "index", title: "№", width: 48 }, 
             { name: "created_at", title: "Создано", width: 123 },
             { name: "qr", title: "qr"},
         ],
@@ -166,14 +168,13 @@ function Edit({ description, type, extended }) {
     const [tableSwitch, setTableSwitch] = useState(false);
     const [valueQr, setValueQr] = useState('');
     const [valueFlag, setValueFlag] = useState(false);
+    const [barcode, setBarcode] = useState("placeholder");
     const [addTableData, setAddTableData] = useState([]);
     const [removeTableData, setRemoveTableData] = useState([]);
     const [page, setPage] = useState('');
     const [containTableData, setContainTableData] = useState("/loader");
     const [modalCancel, setModalCancel] = useState(false);
     const [modalSubmit, setModalSubmit] = useState(false);
-
-    const barcode = "placeholder";
 
     useEffect(() => {
         if (valueFlag) {
@@ -190,14 +191,13 @@ function Edit({ description, type, extended }) {
     }, [valueFlag])
 
     useEffect(() => {
-        
-
         axios.get(address + "/api/v1_0/" + type + "/" + description.id)
             .then(async res => {
                 if (type === "multipacks") {
                     setContainTableData(await getPacks(res.data.pack_ids));
                 } else if (type === "cubes") {
                     setContainTableData(await getPacksFromMultipacks(Object.keys(res.data.multipack_ids_with_pack_ids)));
+                    setBarcode(res.data.barcode)
                 }
             })
     }, [])
@@ -246,7 +246,7 @@ function Edit({ description, type, extended }) {
     }
 
     const deleteRow = (row, from) => {
-        console.log(row, from)
+        if (!row) return false;
         if (from === "addTable") {
             let temp = addTableData.filter((obj) => obj.qr !== row.qr);
             setAddTableData(temp);
@@ -275,24 +275,25 @@ function Edit({ description, type, extended }) {
 
     const submitChanges = () => {
         if (containTableData !== "/loader") {
-            // let packs = containTableData.map((obj) => obj.id);
-            // let temp = { pack_ids: packs };
-            // axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
-            //     .then(() => {
-            //         setModalSubmit(false);
-            //         setPage("/main");
-            //     })
-            setPage("/main")
+            axios.patch(address + "/api/v1_0/edit_cube/" + description.id, {
+                pack_ids_to_delete: removeTableData.map(row => row.id),
+                packs_barcode: "placeholder",
+                pack_qrs: addTableData.map(row => row.qr),
+            })
+            .then(() => setPage("/"))
+            .catch(e => console.log(e.response.data))
+
+            
         } else {
-            setPage("/main")
+            setPage("/")
         }
     }
 
     const closeChanges = () => {
-         setPage("/main");
+         setPage("/");
     }
 
-    if (page === "/main") return <Redirect to="/main" />
+    if (page === "/") return <Redirect to="/" />
 
     return (
         <div className={classes.Edit}>
@@ -380,13 +381,14 @@ function Edit({ description, type, extended }) {
                     </div>
 
                     <Text className={[classes.tableTitle, classes.titleContent].join(' ')} type="title2">Содержимое</Text>
+                    {containTableData === "/loader" ? <Loader /> : 
                     <TableData
-                        rows={typeof containTableData === 'string' ? [] : containTableData}
+                        rows={containTableData.map((obj, index) => {obj.index = index + 1; return obj})}
                         className={classes.tableContent}
                         onDelete={row => deleteRow(row, "containTable")}
                         hideTracksWhenNotNeeded
                         {...tableProps.containTable}
-                    />
+                    />}
                 </div>
 
                 <div style={{ opacity: tableSwitch ? 0.4 : 1 }}>

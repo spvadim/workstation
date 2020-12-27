@@ -24,10 +24,12 @@ const getTableProps = (extended) => ({
     cube: {
         columns: extended ?
             [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
                 { name: "id", title: "id", width: 200 },
             ] : [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
             ],
@@ -36,11 +38,13 @@ const getTableProps = (extended) => ({
     multipack: {
         columns: extended ?
             [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr", width: 48, Component: () => <>...</> },
                 { name: "status", title: "Статус" },
                 { name: "id", title: "id", width: 200 },
             ] : [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
                 { name: "status", title: "Статус" },
@@ -50,10 +54,12 @@ const getTableProps = (extended) => ({
     pack: {
         columns: extended ?
             [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
                 { name: "id", title: "id", width: 200 },
             ] : [
+                { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
             ],
@@ -175,7 +181,8 @@ function Main() {
             .then(res => {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
-                    "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                    // "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                    "Сосканируйте QR для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
             .catch(e => setNotificationErrorText(e.response.data.detail))
@@ -192,11 +199,11 @@ function Main() {
         return () => clearInterval(interval);
     }, [notificationColumnErrorText]);
 
-    if (page === "/") {
+    if (page === "batch_params") {
         return (
-            <Redirect to="/" />
+            <Redirect to="/batch_params" />
         );
-    } else if (page === "/create") {
+    } else if (page === "create") {
         return (
             <Redirect to="/create" />
         );
@@ -313,13 +320,13 @@ function Main() {
                 </div>
 
                 <div className={classes.headerCenter}>
-                    <Button onClick={() => { setPage("/") }} >Новая партия</Button>
+                    <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
 
                     <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
-                <Button onClick={() => setPage("/create")}>Новый куб</Button>
+                <Button onClick={() => setPage("create")}>Новый куб</Button>
                 <InputTextQr
                     setNotification={setNotificationText}
                     setNotificationError={setNotificationErrorText}
