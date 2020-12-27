@@ -11,7 +11,7 @@ from app.db.db_utils import check_qr_unique, get_last_batch, \
 from app.models.pack import Pack
 from app.models.multipack import Status, Multipack
 from app.models.cube import Cube, CubeInput, CubeOutput, CubePatchSchema, \
-    CubeWithNewContent
+    CubeWithNewContent, CubeEditSchema
 from app.models.production_batch import ProductionBatch, ProductionBatchParams
 
 router = APIRouter()
@@ -90,16 +90,18 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
 
             if len(multipack) > packs_in_multipacks:
                 raise HTTPException(
-                    400, f'Пачек должно быть не больше {packs_in_multipacks}')
+                    400,
+                    f'Пачек в мультипаке должно быть не больше {packs_in_multipacks}'
+                )
 
             for pack in multipack:
                 if not await check_qr_unique(Pack, pack['qr']):
                     raise HTTPException(
                         400,
-                        detail=f'Пачка с QR-кодом {pack["qr"]} уже есть в системе')
+                        f'Пачка с QR-кодом {pack["qr"]} уже есть в системе')
     else:
         raise HTTPException(
-            400, detail=f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
+            400, f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
 
     multipack_ids_with_pack_ids = {}
 
@@ -282,4 +284,74 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
     for name, value in patch_dict.items():
         setattr(cube, name, value)
     await engine.save(cube)
+    return cube
+
+
+@router.patch('/edit_cube/{id}', response_model=Cube)
+@version(1, 0)
+async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
+    cube = await get_by_id_or_404(Cube, id)
+    batch_number = cube.batch_number
+
+    packs_in_multipacks = cube.packs_in_multipacks
+    multipacks_in_cubes = cube.multipacks_in_cubes
+    max_packs_amount = packs_in_multipacks * multipacks_in_cubes
+    pack_ids_to_delete = set(edit_schema.pack_ids_to_delete)
+    pack_qrs = edit_schema.pack_qrs
+    packs_barcode = edit_schema.packs_barcode
+    multipack_ids_with_pack_ids = cube.multipack_ids_with_pack_ids
+    current_time = (datetime.utcnow() +
+                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+
+    removing_pack_ids = []
+    current_packs_amount = 0
+    for k, v in multipack_ids_with_pack_ids.items():
+        deliting_packs = set(v).intersection(pack_ids_to_delete)
+        updated_multipack = list(set(v) - deliting_packs)
+        current_packs_amount += len(updated_multipack)
+        multipack_ids_with_pack_ids[k] = updated_multipack
+        pack_ids_to_delete -= deliting_packs
+        removing_pack_ids += list(deliting_packs)
+    packs_to_delete = await engine.find(Pack, Pack.id.in_(removing_pack_ids))
+
+    if pack_ids_to_delete:
+        raise HTTPException(
+            404,
+            f'В данном кубе не обнаружено пачек с такими id: {pack_ids_to_delete}'
+        )
+
+    if current_packs_amount + len(pack_qrs) > max_packs_amount:
+        raise HTTPException(
+            400, f'Переполнение куба: пачек более чем {max_packs_amount}')
+
+    packs_to_add = []
+    multipacks_to_update = []
+    for k, v in multipack_ids_with_pack_ids.items():
+        free_space = packs_in_multipacks - len(v)
+        qrs = pack_qrs[:free_space]
+        for qr in qrs:
+            if not await check_qr_unique(Pack, qr):
+                raise HTTPException(
+                    400, f'В системе уже существует пачка с QR={qr}')
+            pack = Pack(qr=qr,
+                        barcode=packs_barcode,
+                        batch_number=batch_number,
+                        in_queue=False,
+                        created_at=current_time)
+            packs_to_add.append(pack)
+            multipack_ids_with_pack_ids[k].append(pack.id)
+
+        multipack_id = ObjectId(k)
+        multipack_to_update = await get_by_id_or_404(Multipack, multipack_id)
+        multipack_to_update.pack_ids = multipack_ids_with_pack_ids[k]
+        multipacks_to_update.append(multipack_to_update)
+        pack_qrs = pack_qrs[free_space:]
+
+    cube.multipack_ids_with_pack_ids = multipack_ids_with_pack_ids
+    await engine.save_all(packs_to_add)
+    await engine.save_all(multipacks_to_update)
+    for pack in packs_to_delete:
+        await engine.delete(pack)
+    await engine.save(cube)
+
     return cube
