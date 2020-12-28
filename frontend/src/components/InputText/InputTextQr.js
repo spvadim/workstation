@@ -22,9 +22,9 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, e
             //     timer = setTimeout(checkCubeByQr, 1000);
             // }
 
-            timer = setTimeout(() => {
-                setQrCube()
-            }, 500);
+            // timer = setTimeout(() => {
+            //     setQrCube()
+            // }, 500);
 
             setValueFlag(false);
         } else if (mode === "manual") {
@@ -127,6 +127,7 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, e
                 setValueFlag(true);
                 setValue(e.target.value);
             }}
+            onKeyPress={e => (e.charCode === 13) && setQrCube()}
             hidden={!extended}
             value={value}
             outlined
