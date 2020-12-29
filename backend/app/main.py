@@ -6,9 +6,10 @@ from .db.db_utils import create_status_if_not_exists, \
     create_system_settings_if_not_exists
 
 from fastapi.middleware.cors import CORSMiddleware
+from .logger import init_logging 
 
-app = FastAPI(docs_url="/docs", redoc_url=None, openapi_url="/openapi.json")
-
+app = FastAPI(docs_url="/docs", redoc_url=None, openapi_url="/openapi.json",
+              debug=True)
 app.include_router(production_batches.router, tags=['batches_frontend'])
 app.include_router(packs.router, tags=['packs_frontend'])
 app.include_router(multipacks.router, tags=['multipacks_frontend'])
@@ -30,5 +31,6 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
+    init_logging()
     await create_status_if_not_exists()
     await create_system_settings_if_not_exists()
