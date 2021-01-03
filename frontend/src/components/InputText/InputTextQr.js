@@ -13,43 +13,43 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, e
     const [valueFlag, setValueFlag] = useState(false);
     const [flagSetQr, setFlagSetQr] = useState(false);
 
-    useEffect(() => { // это чтобы checkCudeQr выполнился только после 2 секунд бездействия
-        if (mode === "auto" && valueFlag) {
-            clearTimeout(timer);
-            // if (flagSetQr) {
-            //     timer = setTimeout(setQrCube, 1000);
-            // } else {
-            //     timer = setTimeout(checkCubeByQr, 1000);
-            // }
+    // useEffect(() => { // это чтобы checkCudeQr выполнился только после 2 секунд бездействия
+    //     if (mode === "auto" && valueFlag) {
+    //         clearTimeout(timer);
+    //         // if (flagSetQr) {
+    //         //     timer = setTimeout(setQrCube, 1000);
+    //         // } else {
+    //         //     timer = setTimeout(checkCubeByQr, 1000);
+    //         // }
 
-            // timer = setTimeout(() => {
-            //     setQrCube()
-            // }, 500);
+    //         // timer = setTimeout(() => {
+    //         //     setQrCube()
+    //         // }, 500);
 
-            setValueFlag(false);
-        } else if (mode === "manual") {
+    //         setValueFlag(false);
+    //     } else if (mode === "manual") {
 
-            const func = () => {
-                axios.get(address + "/api/v1_0/cubes_queue")
-                .then(res => {
-                    let finded = res.data.find(row => row.qr === value);
-                    if (finded) {
-                        setCubeData(finded);
-                        setPage("edit");
-                    } else {
-                        setNotificationError("Нет куба с таким QR");
-                        setValue("");
-                    }
-                })
-                .catch(e => setNotification(e.detail))
-            }
+    //         const func = () => {
+    //             axios.get(address + "/api/v1_0/cubes_queue")
+    //             .then(res => {
+    //                 let finded = res.data.find(row => row.qr === value);
+    //                 if (finded) {
+    //                     setCubeData(finded);
+    //                     setPage("edit");
+    //                 } else {
+    //                     setNotificationError("Нет куба с таким QR");
+    //                     setValue("");
+    //                 }
+    //             })
+    //             .catch(e => setNotification(e.detail))
+    //         }
 
-            clearTimeout(timer);
-            setTimeout(func, 1000)
-            setValueFlag(false)
-        }
+    //         clearTimeout(timer);
+    //         setTimeout(func, 1000)
+    //         setValueFlag(false)
+    //     }
 
-    }, [valueFlag])
+    // }, [valueFlag])
 
     const setQrCube = () => {
         axios.patch(address + "/api/v1_0/add_qr_to_first_unidentified_cube/?qr=" + value)
@@ -127,7 +127,25 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, e
                 setValueFlag(true);
                 setValue(e.target.value);
             }}
-            onKeyPress={e => (e.charCode === 13) && setQrCube()}
+            onKeyPress={e => {
+                if ((e.charCode === 13) && mode === "manual") {
+                    axios.get(address + "/api/v1_0/cubes_queue")
+                        .then(res => {
+                            let finded = res.data.find(row => row.qr === value);
+                            if (finded) {
+                                setCubeData(finded);
+                                setPage("edit");
+                            } else {
+                                setNotificationError("Нет куба с таким QR");
+                                setValue("");
+                            }
+                        })
+                        .catch(e => setNotification(e.detail))
+                    } else if (e.charCode === 13) {
+                        setQrCube()
+                    }
+                }
+            }
             hidden={!extended}
             value={value}
             outlined
