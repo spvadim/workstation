@@ -132,9 +132,9 @@ function BatchParams() {
                                     key={index}
                                     onChange={() => setSettings(obj)}>
                                     <span className={classes.radioLabel}>
-                                        Куб: {obj.multipacks} мультипаков, мультипак: {obj.packs} пачек,
+                                        Куб: {obj.multipacks} паллет, паллета: {obj.packs} пачек,
                                         <br />
-                                        пинцет: {obj.multipacks_after_pintset} мультипак
+                                        пинцет: {obj.multipacks_after_pintset} паллет
                                     </span>
                                 </InputRadio>
                             ))}

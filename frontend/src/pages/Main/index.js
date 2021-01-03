@@ -182,7 +182,7 @@ function Main() {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
                     // "Сосканируйте QR мультипака/пачки для идентификации куба" :
-                    "Сосканируйте QR для идентификации куба" :
+                    "Сосканируйте QR паллеты/пачки для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
             .catch(e => setNotificationErrorText(e.response.data.detail))
@@ -215,7 +215,7 @@ function Main() {
             .then(res => {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
-                    "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                    "Сосканируйте QR паллеты/пачки для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
             .catch(e => {
@@ -314,9 +314,9 @@ function Main() {
             <div className={classes.header}>
                 <div className={classes.headerInfo}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
-                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="мультипака" />
-                    <HeaderInfo title="Мультипак:" amount={batchSettings.packs} suffix="пачки" />
-                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="мультипак" />
+                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
+                    <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
+                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
                 </div>
 
                 <div className={classes.headerCenter}>
@@ -354,7 +354,7 @@ function Main() {
                 </div>
 
                 <div>
-                    <Text className={classes.tableTitle} type="title2">Очередь мультипаков</Text>
+                    <Text className={classes.tableTitle} type="title2">Очередь паллет</Text>
                     <TableAddress
                         columns={tableProps.multipack.columns}
                         setError={() => setModalError(true)}
