@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from fastapi_versioning import version
 from pydantic import parse_obj_as
 
@@ -10,6 +10,7 @@ from app.db.db_utils import get_current_status, get_current_workmode, get_curren
     set_column_red, flush_state, change_coded_setting, get_report
 from app.db.engine import engine
 from app.utils.io import send_telegram_message
+from app.utils.background_tasks import send_error, send_warning, flush_to_normal
 
 router = APIRouter()
 
@@ -53,19 +54,22 @@ async def get_multipack_coded_by_qr_setting(coded: bool):
 
 @router.patch("/set_column_yellow", response_model=SystemState)
 @version(1, 0)
-async def set_warning_state(error_msg: str):
+async def set_warning_state(error_msg: str, background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_warning)
     return await set_column_yellow(error_msg)
 
 
 @router.patch("/set_column_red", response_model=SystemState)
 @version(1, 0)
-async def set_error_state(error_msg: str):
+async def set_error_state(error_msg: str, background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_error)
     return await set_column_red(error_msg)
 
 
 @router.patch("/flush_state", response_model=SystemState)
 @version(1, 0)
-async def set_normal_state():
+async def set_normal_state(background_tasks: BackgroundTasks):
+    background_tasks.add_task(flush_to_normal)
     return await flush_state()
 
 

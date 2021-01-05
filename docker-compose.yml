@@ -18,7 +18,9 @@ services:
           context: ./backend/
           dockerfile: Dockerfile
       depends_on:
-          - mongo    
+          - mongo
+      volumes:
+        - ./logs:/app/logs
       restart: always
 
     nginx:

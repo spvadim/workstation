@@ -1,4 +1,4 @@
-import requests
+import httpx
 from datetime import datetime as dt
 
 from app.db.engine import engine
@@ -7,7 +7,7 @@ from app.models.system_settings import SystemSettings
 from app.models.message import TGMessage
 
 from odmantic import query
-
+from loguru import logger
 msg_templates_by_subject = {
     'special':
     'operation X was done.',
@@ -23,6 +23,7 @@ async def send_telegram_message(msg: TGMessage) -> bool:
     функция отправки сообщения в телеграмм канал
     """
 
+    logger.info('Отправка сообщения в телеграмм')
     cs = await engine.find_one(SystemSettings,
                                sort=query.desc(SystemSettings.id))
 
@@ -37,9 +38,10 @@ async def send_telegram_message(msg: TGMessage) -> bool:
         timestamp = dt.now().strftime('%c')
         message += f' Время на сервере: {timestamp}.'
 
-    r = requests.get(
-        'https://api.telegram.org/bot{}/sendMessage'.format(tg_token),
-        params=dict(chat_id=tg_channel_id, text=message))
+    async with httpx.AsyncClient() as client:
+        r = await client.get(
+            'https://api.telegram.org/bot{}/sendMessage'.format(tg_token),
+            params=dict(chat_id=tg_channel_id, text=message))
     if r.status_code != 200:
         return False
 

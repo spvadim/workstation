@@ -1,17 +1,22 @@
+import sys
 from typing import List
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from fastapi_versioning import version
 from app.db.engine import engine
 from app.db.db_utils import check_qr_unique, get_last_batch, \
     get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, \
     get_multipacks_queue, get_first_exited_pintset_multipack, \
     get_first_wrapping_multipack, get_all_wrapping_multipacks, \
-    get_first_cube_without_qr, get_first_multipack_without_qr
+    get_first_cube_without_qr, get_first_multipack_without_qr, \
+    get_current_state, flush_state
+from app.utils.background_tasks import send_error_and_back_to_normal
 from app.models.pack import Pack, PackCameraInput, PackOutput
 from app.models.multipack import Multipack, MultipackOutput, \
     Status, MultipackIdentificationAuto
 from app.models.cube import Cube, CubeIdentificationAuto
+from loguru import logger
 
 router = APIRouter()
 
@@ -20,7 +25,8 @@ router = APIRouter()
             response_model=PackCameraInput,
             response_model_exclude={"id"})
 @version(1, 0)
-async def new_pack_after_applikator(pack: PackCameraInput):
+async def new_pack_after_applikator(pack: PackCameraInput,
+                                    background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -40,15 +46,13 @@ async def new_pack_after_applikator(pack: PackCameraInput):
         error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
 
     # TODO: пока что нужно убрать проверку на уникальность
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
     # elif not await check_qr_unique(Pack, pack.qr):
     #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        await set_column_yellow(error_msg)
-        raise HTTPException(400, detail=error_msg)
-
+        logger.warning(error_msg)
+        background_tasks.add_task(send_error_and_back_to_normal, 'yellow', error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
     return pack
 
 
