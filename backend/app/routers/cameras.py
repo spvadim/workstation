@@ -45,9 +45,8 @@ async def new_pack_after_applikator(pack: PackCameraInput,
     elif not pack.barcode:
         error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
 
-    # TODO: пока что нужно убрать проверку на уникальность
-    # elif not await check_qr_unique(Pack, pack.qr):
-    #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
+    elif not await check_qr_unique(Pack, pack.qr):
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
         logger.warning(error_msg)
@@ -76,11 +75,8 @@ async def new_pack_after_pintset(pack: PackCameraInput):
     elif not pack.barcode:
         error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался'
 
-    # TODO: пока что нужно убрать проверку на уникальность
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
-    # elif not await check_qr_unique(Pack, pack.qr):
-    #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+    elif not await check_qr_unique(Pack, pack.qr):
+        error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
         await set_column_red(error_msg)
