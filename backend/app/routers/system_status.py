@@ -1,16 +1,18 @@
+from app.db.db_utils import (change_coded_setting, flush_packing_table,
+                             flush_pintset, flush_state, get_current_state,
+                             get_current_status, get_current_workmode,
+                             get_report, packing_table_error, pintset_error,
+                             set_column_red, set_column_yellow)
+from app.db.engine import engine
+from app.models.message import TGMessage
+from app.models.report import ReportRequest, ReportResponse
+from app.models.system_status import Mode, SystemState, SystemStatus
+from app.utils.background_tasks import (flush_to_normal, send_error,
+                                        send_warning)
+from app.utils.io import send_telegram_message
 from fastapi import APIRouter, BackgroundTasks
 from fastapi_versioning import version
 from pydantic import parse_obj_as
-
-from app.models.system_status import Mode, SystemState, SystemStatus
-from app.models.message import TGMessage
-from app.models.report import ReportRequest, ReportResponse
-
-from app.db.db_utils import get_current_status, get_current_workmode, get_current_state, set_column_yellow, \
-    set_column_red, flush_state, change_coded_setting, get_report
-from app.db.engine import engine
-from app.utils.io import send_telegram_message
-from app.utils.background_tasks import send_error, send_warning, flush_to_normal
 
 router = APIRouter()
 
@@ -48,7 +50,7 @@ async def get_multipack_coded_by_qr_setting():
               response_model=SystemStatus,
               response_model_exclude={"id", "mode", "system_state"})
 @version(1, 0)
-async def get_multipack_coded_by_qr_setting(coded: bool):
+async def set_multipack_coded_by_qr_setting(coded: bool):
     return await change_coded_setting(coded)
 
 
@@ -73,6 +75,35 @@ async def set_normal_state(background_tasks: BackgroundTasks):
     return await flush_state()
 
 
+@router.patch("/set_pintset_error", response_model=SystemState)
+@version(1, 0)
+async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_error)
+    return await pintset_error(error_msg)
+
+
+@router.patch("/flush_pintset", response_model=SystemState)
+@version(1, 0)
+async def set_pinset_normal(background_tasks: BackgroundTasks):
+    background_tasks.add_task(flush_to_normal)
+    return await flush_pintset()
+
+
+@router.patch("/set_packing_table_error", response_model=SystemState)
+@version(1, 0)
+async def set_packing_table_error(error_msg: str,
+                                  background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_error)
+    return await packing_table_error(error_msg)
+
+
+@router.patch("/flush_packing_table", response_model=SystemState)
+@version(1, 0)
+async def set_packing_table_normal(background_tasks: BackgroundTasks):
+    background_tasks.add_task(flush_to_normal)
+    return await flush_packing_table()
+
+
 @router.post("/get_report", response_model=ReportResponse)
 @version(1, 0)
 async def get_system_report(report_query: ReportRequest) -> ReportResponse:
@@ -80,7 +111,7 @@ async def get_system_report(report_query: ReportRequest) -> ReportResponse:
 
 
 @router.get("/get_report/", response_model=ReportResponse)
-async def get_system_report(
+async def get_system_report_with_query(
         report_begin: str = "01.01.1970 00:00",
         report_end: str = "01.01.2050 00:00") -> ReportResponse:
     report_query = parse_obj_as(ReportRequest, {
