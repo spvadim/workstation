@@ -1,5 +1,6 @@
-from odmantic import Model
 from typing import Optional
+
+from odmantic import Model
 from pydantic import BaseModel
 
 

@@ -1,5 +1,7 @@
-from typing import Optional, List
+from typing import List, Optional
+
 from odmantic import Model
+
 from .system_devices import PintsetClientParams
 
 

@@ -1,21 +1,20 @@
-from typing import List, Optional, Union
-from fastapi import HTTPException
-from odmantic import query, ObjectId, Model
-from pydantic.tools import parse_obj_as
 from datetime import datetime
-
-from .engine import engine
-
-from app.models.pack import Pack
-from app.models.multipack import Multipack, Status
-from app.models.cube import Cube
-from app.models.production_batch import ProductionBatch
-from app.models.system_status import SystemStatus, Mode, SystemState, State
-from app.models.system_settings import SystemSettings, SystemSettingsResponse
-from app.models.report import ReportRequest, ReportResponse, \
-    CubeReportItem, MPackReportItem, PackReportItem
+from typing import List, Optional, Union
 
 from app.config import default_settings, get_apply_settings_url
+from app.models.cube import Cube
+from app.models.multipack import Multipack, Status
+from app.models.pack import Pack
+from app.models.production_batch import ProductionBatch
+from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
+                               ReportRequest, ReportResponse)
+from app.models.system_settings import SystemSettings, SystemSettingsResponse
+from app.models.system_status import Mode, State, SystemState, SystemStatus
+from fastapi import HTTPException
+from odmantic import Model, ObjectId, query
+from pydantic.tools import parse_obj_as
+
+from .engine import engine
 
 
 async def get_by_id_or_404(model, id: ObjectId) -> Model:
@@ -64,23 +63,56 @@ async def change_coded_setting(coded: bool) -> SystemStatus:
 
 async def set_column_yellow(error_msg: str) -> SystemState:
     current_status = await get_current_status()
-    current_status.system_state = SystemState(state=State.WARNING,
-                                              error_msg=error_msg)
+    current_status.system_state.state = State.WARNING
+    current_status.system_state.error_msg = error_msg
     await engine.save(current_status)
     return current_status.system_state
 
 
 async def set_column_red(error_msg: str) -> SystemState:
     current_status = await get_current_status()
-    current_status.system_state = SystemState(state=State.ERROR,
-                                              error_msg=error_msg)
+    current_status.system_state.state = State.ERROR
+    current_status.system_state.error_msg = error_msg
     await engine.save(current_status)
     return current_status.system_state
 
 
 async def flush_state() -> SystemState:
     current_status = await get_current_status()
-    current_status.system_state = SystemState()
+    current_status.system_state.state = State.NORMAL
+    current_status.system_state.error_msg = None
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def pintset_error(error_msg: str) -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.pintset_state = State.ERROR
+    current_status.system_state.pintset_error_msg = error_msg
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def flush_pintset() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.pintset_state = State.NORMAL
+    current_status.system_state.pintset_error_msg = None
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def packing_table_error(error_msg: str) -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.packing_table_state = State.ERROR
+    current_status.system_state.packing_table_error_msg = error_msg
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def flush_packing_table() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.packing_table_state = State.NORMAL
+    current_status.system_state.packing_table_error_msg = None
     await engine.save(current_status)
     return current_status.system_state
 

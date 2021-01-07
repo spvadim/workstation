@@ -1,21 +1,25 @@
-import sys
-from typing import List
 from datetime import datetime, timedelta
-from fastapi.responses import JSONResponse
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from fastapi_versioning import version
+from typing import List
+
+from app.db.db_utils import (check_qr_unique, get_all_wrapping_multipacks,
+                             get_current_workmode, get_first_cube_without_qr,
+                             get_first_exited_pintset_multipack,
+                             get_first_multipack_without_qr,
+                             get_first_wrapping_multipack, get_last_batch,
+                             get_multipacks_queue, get_packs_queue,
+                             pintset_error, set_column_red)
 from app.db.engine import engine
-from app.db.db_utils import check_qr_unique, get_last_batch, \
-    get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, \
-    get_multipacks_queue, get_first_exited_pintset_multipack, \
-    get_first_wrapping_multipack, get_all_wrapping_multipacks, \
-    get_first_cube_without_qr, get_first_multipack_without_qr, \
-    get_current_state, flush_state
-from app.utils.background_tasks import send_error_and_back_to_normal
-from app.models.pack import Pack, PackCameraInput, PackOutput
-from app.models.multipack import Multipack, MultipackOutput, \
-    Status, MultipackIdentificationAuto
 from app.models.cube import Cube, CubeIdentificationAuto
+from app.models.multipack import (Multipack, MultipackIdentificationAuto,
+                                  MultipackOutput, Status)
+from app.models.pack import Pack, PackCameraInput, PackOutput
+from app.utils.background_tasks import (send_error,
+                                        send_error_and_send_tg_message,
+                                        send_warning_and_back_to_normal)
+from app.utils.pintset import off_pintset
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi_versioning import version
 from loguru import logger
 
 router = APIRouter()
@@ -45,20 +49,20 @@ async def new_pack_after_applikator(pack: PackCameraInput,
     elif not pack.barcode:
         error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
 
-    # TODO: пока что нужно убрать проверку на уникальность
-    # elif not await check_qr_unique(Pack, pack.qr):
-    #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
+    elif not await check_qr_unique(Pack, pack.qr):
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
         logger.warning(error_msg)
-        background_tasks.add_task(send_error_and_back_to_normal, 'yellow', error_msg)
+        background_tasks.add_task(send_warning_and_back_to_normal, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
     return pack
 
 
 @router.put('/new_pack_after_pintset', response_model=Pack)
 @version(1, 0)
-async def new_pack_after_pintset(pack: PackCameraInput):
+async def new_pack_after_pintset(pack: PackCameraInput,
+                                 background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -76,15 +80,15 @@ async def new_pack_after_pintset(pack: PackCameraInput):
     elif not pack.barcode:
         error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался'
 
-    # TODO: пока что нужно убрать проверку на уникальность
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
-    # elif not await check_qr_unique(Pack, pack.qr):
-    #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+    elif not await check_qr_unique(Pack, pack.qr):
+        error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        logger.error(error_msg)
+        background_tasks.add_task(off_pintset)
+        background_tasks.add_task(pintset_error, error_msg)
+        background_tasks.add_task(send_error_and_send_tg_message, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
 
@@ -97,7 +101,7 @@ async def new_pack_after_pintset(pack: PackCameraInput):
 
 @router.patch('/pintset_reverse', response_model=List[PackOutput])
 @version(1, 0)
-async def pintset_reverse():
+async def pintset_reverse(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -112,8 +116,9 @@ async def pintset_reverse():
     packs_queue = await get_packs_queue()
     if len(packs_queue) < multipacks_after_pintset:
         error_msg = f'{current_datetime} пинцет положил пачку с переворотом, но пачек в очереди меньше чем {multipacks_after_pintset}'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     last_packs = packs_queue[-multipacks_after_pintset:]
 
@@ -153,7 +158,7 @@ async def remove_packs_from_pintset():
 
 @router.put('/pintset_finish', response_model=List[MultipackOutput])
 @version(1, 0)
-async def pintset_finish():
+async def pintset_finish(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -170,8 +175,9 @@ async def pintset_finish():
 
     if len(packs_queue) < needed_packs:
         error_msg = f'{current_time} пинцет начал формирование {multipacks_after_pintset} мультипаков, но пачек в очереди меньше чем {needed_packs}'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
@@ -214,7 +220,7 @@ async def multipack_wrapping_auto():
 
 @router.delete('/remove_multipack_from_wrapping', response_model=Multipack)
 @version(1, 0)
-async def remove_multipack_from_wrapping():
+async def remove_multipack_from_wrapping(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -225,8 +231,10 @@ async def remove_multipack_from_wrapping():
     multipack = await get_first_wrapping_multipack()
     if not multipack:
         error_msg = f'{current_datetime} при попытке изъятия мультипака из обмотки он не был обнаружен в системе'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
+
     for id in multipack.pack_ids:
         pack = await engine.find_one(Pack, Pack.id == id)
         await engine.delete(pack)
@@ -238,7 +246,8 @@ async def remove_multipack_from_wrapping():
 @router.patch('/multipack_identification_auto', response_model=Multipack)
 @version(1, 0)
 async def multipack_identification_auto(
-        identification: MultipackIdentificationAuto):
+        identification: MultipackIdentificationAuto,
+        background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -262,14 +271,13 @@ async def multipack_identification_auto(
     elif not barcode:
         error_msg = f'{current_datetime} при присвоении внешнего кода мультипаку с QR={qr} ШК не считался'
 
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
     elif not await check_qr_unique(Multipack, qr):
         error_msg = f'{current_datetime} при попытке присвоения внешнего кода мультипаку использован QR={qr} и он не уникален в системе'
 
     if error_msg:
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_to_update.qr = qr
     multipack_to_update.added_qr_at = current_datetime
@@ -282,7 +290,8 @@ async def multipack_identification_auto(
 
 @router.patch('/cube_identification_auto', response_model=Cube)
 @version(1, 0)
-async def cube_identification_auto(identification: CubeIdentificationAuto):
+async def cube_identification_auto(identification: CubeIdentificationAuto,
+                                   background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -307,14 +316,13 @@ async def cube_identification_auto(identification: CubeIdentificationAuto):
     elif not barcode:
         error_msg = f'{current_datetime} при присвоении внешнего кода кубу с QR={qr} ШК не считался'
 
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
     elif not await check_qr_unique(Cube, qr):
         error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и он не уникален в системе'
 
     if error_msg:
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     cube_to_update.qr = qr
     cube_to_update.added_qr_at = current_datetime
@@ -326,7 +334,7 @@ async def cube_identification_auto(identification: CubeIdentificationAuto):
 
 @router.put('/cube_finish_auto', response_model=Cube)
 @version(1, 0)
-async def cube_finish_auto():
+async def cube_finish_auto(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -343,8 +351,9 @@ async def cube_finish_auto():
                     timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
     if len(multipacks_queue) < needed_multipacks:
         error_msg = f'{current_time} попытка формирования куба, когда в очереди меньше {needed_multipacks} мультипаков'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_ids_with_pack_ids = {}
     for i in range(needed_multipacks):

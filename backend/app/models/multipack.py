@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel
+
 from odmantic import Model, ObjectId
+from pydantic import BaseModel
 
 
 class Status(str, Enum):

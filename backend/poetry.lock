@@ -431,6 +431,14 @@ test = ["versioneer", "pylint (>=2.5.0)", "pytest", "mock", "pytest-cov", "cover
 yapf = ["yapf"]
 
 [[package]]
+name = "python-snap7"
+version = "0.11"
+description = "Python wrapper for the snap7 library"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "rfc3986"
 version = "1.4.0"
 description = "Validating URI References per RFC 3986"
@@ -516,7 +524,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "afa017c0512c7f1c3c7261ecfb2ad7e5a2dda8e522c53a5ae9d76142dafe2eef"
+content-hash = "4d7be862ce933d15f61260286c3e3f5734d6966db6d096d8f16af1c1decc202c"
 
 [metadata.files]
 atomicwrites = [
@@ -829,6 +837,9 @@ python-jsonrpc-server = [
 python-language-server = [
     {file = "python-language-server-0.36.2.tar.gz", hash = "sha256:9984c84a67ee2c5102c8e703215f407fcfa5e62b0ae86c9572d0ada8c4b417b0"},
     {file = "python_language_server-0.36.2-py2.py3-none-any.whl", hash = "sha256:a0ad0aca03f4a20c1c40f4f230c6773eac82c9b7cdb026cb09ba10237f4815d5"},
+]
+python-snap7 = [
+    {file = "python-snap7-0.11.tar.gz", hash = "sha256:daf839f25f24bf2d4f13b5fe6e7b8208a0292489cc3e421bb7cc1deaed051110"},
 ]
 rfc3986 = [
     {file = "rfc3986-1.4.0-py2.py3-none-any.whl", hash = "sha256:af9147e9aceda37c91a05f4deb128d4b4b49d6b199775fd2d2927768abdc8f50"},
