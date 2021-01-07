@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Redirect } from "react-router-dom";
 import { useCookies } from "react-cookie";
 import address from "../../address.js";
-import { Paper, Button, InputRadio, TextField, Text, Loader } from "src/components";
+import { Paper, Button, InputRadio, TextField, Text, Loader, TouchPanel } from "src/components";
 
 const useStyles = createUseStyles({
     BatchParams: {
@@ -13,6 +13,8 @@ const useStyles = createUseStyles({
     },
     main: {
         margin: 'auto',
+        display: "flex",
+        gap: "2rem",
     },
     form: {
         '& > .input-radio': {
@@ -62,7 +64,7 @@ const useStyles = createUseStyles({
 
 function BatchParams() {
     const classes = useStyles();
-    const [batchNumber, setPartyNumber] = useState('');
+    const [batchNumber, setBatchNumber] = useState('');
     const [params, setParams] = useState([]);
     const [loading, setLoading] = useState(false);
     const [settings, setSettings] = useState({})
@@ -118,7 +120,7 @@ function BatchParams() {
                                 name="number_party"
                                 type="text"
                                 value={batchNumber}
-                                onChange={event => setPartyNumber(event.target.value)}
+                                onChange={event => setBatchNumber(event.target.value)}
                                 autoFocus
                                 forceFocus
                             />
@@ -144,6 +146,13 @@ function BatchParams() {
 
                     </form>
                 </Paper>
+
+               <TouchPanel addNumber={(number) => {
+                   setBatchNumber(batchNumber + number)
+               }}          
+                           deleteNumber={() => {
+                    setBatchNumber(batchNumber.slice(0, -1))
+                }} /> 
             </div>
         </div>
     );

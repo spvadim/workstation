@@ -157,6 +157,7 @@ function Main() {
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
     const [modalCube, setModalCube] = useState(false);
+    const [modalDeletePallet, setModalDeletePallet]  = useState(false);
     const [valueQrCube, setValueQrCube] = useState('');
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
@@ -323,6 +324,8 @@ function Main() {
                     <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
 
                     <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
+                
+                    <Button onClick={() => console.log()}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}

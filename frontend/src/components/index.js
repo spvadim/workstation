@@ -10,3 +10,4 @@ export { default as Switch } from './Switch';
 export { default as Table } from './Table';
 export { default as Text } from './Text';
 export { default as TextField } from './TextField';
+export { default as TouchPanel } from './TouchPanel'
