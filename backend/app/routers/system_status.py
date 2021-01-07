@@ -10,6 +10,7 @@ from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
                                         send_warning)
 from app.utils.io import send_telegram_message
+from app.utils.pintset import off_pintset, on_pintset
 from fastapi import APIRouter, BackgroundTasks
 from fastapi_versioning import version
 from pydantic import parse_obj_as
@@ -78,6 +79,7 @@ async def set_normal_state(background_tasks: BackgroundTasks):
 @router.patch("/set_pintset_error", response_model=SystemState)
 @version(1, 0)
 async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
+    background_tasks.add_task(off_pintset)
     background_tasks.add_task(send_error)
     return await pintset_error(error_msg)
 
@@ -86,6 +88,7 @@ async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
 @version(1, 0)
 async def set_pinset_normal(background_tasks: BackgroundTasks):
     background_tasks.add_task(flush_to_normal)
+    background_tasks.add_task(on_pintset)
     return await flush_pintset()
 
 
