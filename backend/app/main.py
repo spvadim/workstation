@@ -1,12 +1,12 @@
 from fastapi import FastAPI
-from fastapi_versioning import VersionedFastAPI
-from .routers import production_batches, packs, multipacks, cubes, \
-    system_status, cameras, system_settings
-from .db.db_utils import create_status_if_not_exists, \
-    create_system_settings_if_not_exists
-
 from fastapi.middleware.cors import CORSMiddleware
-from .logger import init_logging 
+from fastapi_versioning import VersionedFastAPI
+
+from .db.db_utils import (create_status_if_not_exists,
+                          create_system_settings_if_not_exists)
+from .logger import init_logging
+from .routers import (cameras, cubes, multipacks, packs, production_batches,
+                      system_settings, system_status)
 
 app = FastAPI(docs_url="/docs", redoc_url=None, openapi_url="/openapi.json",
               debug=True)

@@ -1,5 +1,6 @@
-from typing import Optional
 from enum import Enum
+from typing import Optional
+
 from odmantic import EmbeddedModel, Model
 
 

@@ -1,5 +1,6 @@
 from typing import Optional
-from odmantic import Model, Reference, ObjectId
+
+from odmantic import Model, ObjectId, Reference
 
 
 class ProductionBatchParams(Model):

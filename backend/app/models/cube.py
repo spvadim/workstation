@@ -1,6 +1,7 @@
-from typing import List, Optional, Dict
-from pydantic import BaseModel
+from typing import Dict, List, Optional
+
 from odmantic import Model, ObjectId
+from pydantic import BaseModel
 
 
 class Cube(Model):

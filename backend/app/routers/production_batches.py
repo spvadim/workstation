@@ -1,12 +1,13 @@
-from typing import List
-from odmantic import ObjectId
 from datetime import datetime, timedelta
+from typing import List
+
+from app.db.db_utils import get_by_id_or_404, get_last_batch
+from app.db.engine import engine
+from app.models.production_batch import (ProductionBatch, ProductionBatchInput,
+                                         ProductionBatchParams)
 from fastapi import APIRouter
 from fastapi_versioning import version
-from app.db.engine import engine
-from app.db.db_utils import get_last_batch, get_by_id_or_404
-from app.models.production_batch import ProductionBatchParams, \
-    ProductionBatchInput, ProductionBatch
+from odmantic import ObjectId
 
 router = APIRouter()
 

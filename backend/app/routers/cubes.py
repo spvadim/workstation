@@ -1,18 +1,21 @@
-from typing import List
 from datetime import datetime, timedelta
+from typing import List
+
+from app.db.db_utils import (check_qr_unique,
+                             get_batch_by_number_or_return_last,
+                             get_by_id_or_404, get_by_qr_or_404,
+                             get_cubes_queue, get_first_cube_without_qr,
+                             get_last_batch, get_multipacks_queue,
+                             get_packs_queue)
+from app.db.engine import engine
+from app.models.cube import (Cube, CubeEditSchema, CubeInput, CubeOutput,
+                             CubePatchSchema, CubeWithNewContent)
+from app.models.multipack import Multipack, Status
+from app.models.pack import Pack
+from app.models.production_batch import ProductionBatch, ProductionBatchParams
 from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
-from app.db.engine import engine
-from app.db.db_utils import check_qr_unique, get_last_batch, \
-    get_batch_by_number_or_return_last, get_by_id_or_404, get_by_qr_or_404, \
-    get_cubes_queue, get_packs_queue, get_multipacks_queue, \
-    get_first_cube_without_qr
-from app.models.pack import Pack
-from app.models.multipack import Status, Multipack
-from app.models.cube import Cube, CubeInput, CubeOutput, CubePatchSchema, \
-    CubeWithNewContent, CubeEditSchema
-from app.models.production_batch import ProductionBatch, ProductionBatchParams
 
 router = APIRouter()
 
