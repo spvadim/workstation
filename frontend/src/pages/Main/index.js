@@ -161,7 +161,9 @@ function Main() {
     const [valueQrCube, setValueQrCube] = useState('');
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
+    const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
     const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
+    const [notificationPackingTableErrorText, setNotificationPackingTableErrorText] = useState("");
     const [cookies] = useCookies();
     const classes = useStyles({ mode });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
@@ -190,9 +192,12 @@ function Main() {
 
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
-            request.then(res => res.data.state !== "normal" ?
-                setNotificationColumnErrorText(res.data.error_msg) :
-                setNotificationColumnErrorText(""))
+            request.then(res => {
+                let temp = res.data;
+                if (temp.state !== "normal") setNotificationColumnErrorText(temp.error_msg)
+                else if (temp.pintset_state !== "normal") setNotificationPintsetErrorText(temp.pintset_error_msg)
+                else if (temp.packing_table_state !== "normal") setNotificationPackingTableErrorText(temp.packing_table_error_msg)
+            })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
         request();
@@ -225,9 +230,26 @@ function Main() {
             })
     }
 
+    const setDefaultNotificationText = () => {
+        if (mode === "auto") setNotificationText("Сосканируйте QR паллеты/пачки для идентификации куба")
+        else if (mode === "manual") setNotificationText("Сосканируйте QR куба для редактирования")
+    }
+
     const flushStateColumn = () => {
         axios.patch(address + "/api/v1_0/flush_state")
             .catch(e => setNotificationErrorText(e.response.detail[0].msg))
+    }
+
+    const flushPintsetError = () => {
+        axios.patch(address + "/api/v1_0/flush_pintset")
+            .then(res => {
+                if (res.status === 200) {
+                    setNotificationText("Ошибка с пинцета успешно сброшена");
+                    setNotificationPintsetErrorText("");
+                    setTimeout(() => setDefaultNotificationText(), 2000);
+                }
+            })
+            .catch(res => setNotificationErrorText(res.response.detail[0].msg))
     }
 
     const createIncompleteCube = () => {
@@ -429,8 +451,21 @@ function Main() {
                                     > <Button onClick={() => flushStateColumn()}>Сбросить ошибку</Button>  </Notification>
                                 )
                             ]
+                        }
+                    />
 
-
+                    <NotificationPanel
+                        errors={
+                            [
+                                notificationPintsetErrorText && (
+                                    <Notification
+                                        title="Ошибка"
+                                        description={notificationPintsetErrorText}
+                                        error
+                                    > <Button onClick={() => flushPintsetError()}>Сбросить ошибку</Button>
+                                    </Notification>
+                                ),
+                            ]
                         }
                     />
 
