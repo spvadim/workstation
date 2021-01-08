@@ -260,7 +260,7 @@ function Create({ description, type, extended }) {
         else if (!batchNumber) { setNotificationErrorText("Номер партии не задан!"); return false }
         else if (!cubeQr) { setNotificationErrorText("QR куба не задан!"); return false }
         else if (!barcode) { setNotificationErrorText("Штрихкод не задан!"); return false }
-        else if (multipacksTableData.length === 0) { setNotificationErrorText("Очередь мультипаков пуста!"); return false }
+        else if (multipacksTableData.length === 0) { setNotificationErrorText("Очередь паллет пуста!"); return false }
 
         return true;
     }
@@ -429,9 +429,9 @@ function Create({ description, type, extended }) {
                             key={index}
                             onClick={() => setSettings(obj)}>
                             <span className={classes.radioLabel}>
-                                Куб: {obj.multipacks} мультипаков, мультипак: {obj.packs} пачек,
+                                Куб: {obj.multipacks} паллет, паллета: {obj.packs} пачек,
                                     <br />
-                                    пинцет: {obj.multipacks_after_pintset} мультипак
+                                    пинцет: {obj.multipacks_after_pintset} паллета
                             </span>
                         </InputRadio>
                     ))}
@@ -447,7 +447,7 @@ function Create({ description, type, extended }) {
 
                 <div>
                     <div className={classes.tableTitleContainer}>
-                        <Text className={classes.tableTitle} type="title2">Мультипаки</Text>
+                        <Text className={classes.tableTitle} type="title2">Паллеты</Text>
                         <Button onClick={() => addEmptyMultipack()}><span>Добавить</span></Button>
                     </div>
                     <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>

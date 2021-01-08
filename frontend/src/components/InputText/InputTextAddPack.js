@@ -5,13 +5,13 @@ const InputTextAddPack = React.memo(({ callback }) => {
     const [value, setValue] = useState("");
     const [valueFlag, setValueFlag] = useState(false);
 
-    useEffect(() => {
-        if (valueFlag) {
-            clearTimeout(timer);
-            timer = setTimeout(() => callback({qr: value, barcode: "placeholder"}), 400);
-            setValueFlag(false)
-        }
-    }, [valueFlag])
+    // useEffect(() => {
+    //     if (valueFlag) {
+    //         clearTimeout(timer);
+    //         timer = setTimeout(() => callback({qr: value, barcode: "placeholder"}), 400);
+    //         setValueFlag(false)
+    //     }
+    // }, [valueFlag])
 
     return (
         <div>
@@ -22,6 +22,7 @@ const InputTextAddPack = React.memo(({ callback }) => {
                         setValueFlag(true);
                         setValue(e.target.value);
                     }}
+                    onKeyPress={e => (e.charCode === 13) && callback({qr: value, barcode: "placeholder"})}
                     value={value} />
         </div>
     );

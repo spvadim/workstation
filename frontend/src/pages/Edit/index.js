@@ -176,19 +176,19 @@ function Edit({ description, type, extended }) {
     const [modalCancel, setModalCancel] = useState(false);
     const [modalSubmit, setModalSubmit] = useState(false);
 
-    useEffect(() => {
-        if (valueFlag) {
-            clearTimeout(timer);
-            timer = setTimeout(() => {
-                let finded = containTableData.find(obj => obj.qr === valueQr);
-                if (tableSwitch) deleteRow(finded, "containTable")
-                else addPack(valueQr);
-                setValueQr("")
-            }, 500);
-        }
-        setValueFlag(false);
+    // useEffect(() => {
+    //     if (valueFlag) {
+    //         clearTimeout(timer);
+    //         timer = setTimeout(() => {
+    //             let finded = containTableData.find(obj => obj.qr === valueQr);
+    //             if (tableSwitch) deleteRow(finded, "containTable")
+    //             else addPack(valueQr);
+    //             setValueQr("")
+    //         }, 500);
+    //     }
+    //     setValueFlag(false);
 
-    }, [valueFlag])
+    // }, [valueFlag])
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/" + type + "/" + description.id)
@@ -201,6 +201,14 @@ function Edit({ description, type, extended }) {
                 }
             })
     }, [])
+
+    const deleteOrAddPack = () => {
+        let finded = containTableData.find(obj => obj.qr === valueQr);
+        
+        if (tableSwitch) deleteRow(finded, "containTable")
+        else addPack(valueQr);
+        setValueQr("");
+    }
 
     const getPacksFromMultipacks = async (ids) => {
         let packsIds = [];
@@ -343,6 +351,7 @@ function Edit({ description, type, extended }) {
                         setValueFlag(true);
                         setValueQr(e.target.value);
                     }}
+                    onKeyPress={e => (e.charCode === 13) && deleteOrAddPack()}
                     hidden
                     value={valueQr}
                     forceFocus

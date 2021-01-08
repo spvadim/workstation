@@ -157,10 +157,13 @@ function Main() {
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
     const [modalCube, setModalCube] = useState(false);
+    const [modalDeletePallet, setModalDeletePallet]  = useState(false);
     const [valueQrCube, setValueQrCube] = useState('');
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
+    const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
     const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
+    const [notificationPackingTableErrorText, setNotificationPackingTableErrorText] = useState("");
     const [cookies] = useCookies();
     const classes = useStyles({ mode });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
@@ -182,16 +185,19 @@ function Main() {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
                     // "Сосканируйте QR мультипака/пачки для идентификации куба" :
-                    "Сосканируйте QR для идентификации куба" :
+                    "Сосканируйте QR паллеты/пачки для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
             .catch(e => setNotificationErrorText(e.response.data.detail))
 
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
-            request.then(res => res.data.state !== "normal" ?
-                setNotificationColumnErrorText(res.data.error_msg) :
-                setNotificationColumnErrorText(""))
+            request.then(res => {
+                let temp = res.data;
+                if (temp.state !== "normal") setNotificationColumnErrorText(temp.error_msg)
+                else if (temp.pintset_state !== "normal") setNotificationPintsetErrorText(temp.pintset_error_msg)
+                else if (temp.packing_table_state !== "normal") setNotificationPackingTableErrorText(temp.packing_table_error_msg)
+            })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
         request();
@@ -215,7 +221,7 @@ function Main() {
             .then(res => {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
-                    "Сосканируйте QR мультипака/пачки для идентификации куба" :
+                    "Сосканируйте QR паллеты/пачки для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
             .catch(e => {
@@ -224,9 +230,26 @@ function Main() {
             })
     }
 
+    const setDefaultNotificationText = () => {
+        if (mode === "auto") setNotificationText("Сосканируйте QR паллеты/пачки для идентификации куба")
+        else if (mode === "manual") setNotificationText("Сосканируйте QR куба для редактирования")
+    }
+
     const flushStateColumn = () => {
         axios.patch(address + "/api/v1_0/flush_state")
             .catch(e => setNotificationErrorText(e.response.detail[0].msg))
+    }
+
+    const flushPintsetError = () => {
+        axios.patch(address + "/api/v1_0/flush_pintset")
+            .then(res => {
+                if (res.status === 200) {
+                    setNotificationText("Ошибка с пинцета успешно сброшена");
+                    setNotificationPintsetErrorText("");
+                    setTimeout(() => setDefaultNotificationText(), 2000);
+                }
+            })
+            .catch(res => setNotificationErrorText(res.response.detail[0].msg))
     }
 
     const createIncompleteCube = () => {
@@ -314,15 +337,17 @@ function Main() {
             <div className={classes.header}>
                 <div className={classes.headerInfo}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
-                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="мультипака" />
-                    <HeaderInfo title="Мультипак:" amount={batchSettings.packs} suffix="пачки" />
-                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="мультипак" />
+                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
+                    <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
+                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
                 </div>
 
                 <div className={classes.headerCenter}>
                     <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
 
                     <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
+                
+                    <Button onClick={() => console.log()}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
@@ -354,7 +379,7 @@ function Main() {
                 </div>
 
                 <div>
-                    <Text className={classes.tableTitle} type="title2">Очередь мультипаков</Text>
+                    <Text className={classes.tableTitle} type="title2">Очередь паллет</Text>
                     <TableAddress
                         columns={tableProps.multipack.columns}
                         setError={() => setModalError(true)}
@@ -426,8 +451,21 @@ function Main() {
                                     > <Button onClick={() => flushStateColumn()}>Сбросить ошибку</Button>  </Notification>
                                 )
                             ]
+                        }
+                    />
 
-
+                    <NotificationPanel
+                        errors={
+                            [
+                                notificationPintsetErrorText && (
+                                    <Notification
+                                        title="Ошибка"
+                                        description={notificationPintsetErrorText}
+                                        error
+                                    > <Button onClick={() => flushPintsetError()}>Сбросить ошибку</Button>
+                                    </Notification>
+                                ),
+                            ]
                         }
                     />
 
