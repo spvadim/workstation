@@ -128,6 +128,13 @@ async def get_last_batch() -> ProductionBatch:
     return last_batch
 
 
+async def get_last_packing_table_amount() -> int:
+    last_record = await engine.find_one(PackingTableRecord,
+                                        sort=query.desc(PackingTableRecord.id))
+    multipacks_amount = last_record.multipacks_amount
+    return multipacks_amount
+
+
 async def get_batch_by_number_or_return_last(
         batch_number: Optional[int]) -> ProductionBatch:
     if batch_number:
@@ -198,6 +205,14 @@ async def get_first_cube_without_qr() -> Union[Cube, None]:
                                  Cube.batch_number == last_batch.number,
                                  Cube.qr == None,
                                  sort=query.asc(Cube.id))
+    return cube
+
+
+async def get_last_cube_in_queue() -> Cube:
+    last_batch = await get_last_batch()
+    cube = await engine.find_one(Cube,
+                                 Cube.batch_number == last_batch.number,
+                                 sort=query.desc(Cube.id))
     return cube
 
 
