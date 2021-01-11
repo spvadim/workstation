@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from app.db.db_utils import (check_qr_unique,
+from app.db.db_utils import (check_qr_unique, delete_cube,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
                              get_cubes_queue, get_first_cube_without_qr,
@@ -265,9 +265,7 @@ async def get_cube_by_included_qr(qr: str = Query(None)):
 @router.delete('/cubes/{id}', response_model=Cube)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
-    cube = await get_by_id_or_404(Cube, id)
-    await engine.delete(cube)
-    return cube
+    return await delete_cube(id)
 
 
 @router.patch('/cubes/{id}', response_model=Cube)

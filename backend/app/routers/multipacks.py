@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from app.db.db_utils import (check_qr_unique,
+from app.db.db_utils import (check_qr_unique, delete_multipack,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
                              get_multipacks_queue)
@@ -72,9 +72,7 @@ async def get_multipack_by_qr(qr: str = Query(None)):
 @router.delete('/multipacks/{id}', response_model=Multipack)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
-    multipack = await get_by_id_or_404(Multipack, id)
-    await engine.delete(multipack)
-    return multipack
+    return await delete_multipack(id)
 
 
 @router.patch('/multipacks/{id}', response_model=Multipack)

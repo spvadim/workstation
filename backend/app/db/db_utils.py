@@ -21,8 +21,25 @@ from .engine import engine
 async def get_by_id_or_404(model, id: ObjectId) -> Model:
     instance = await engine.find_one(model, model.id == id)
     if instance is None:
-        raise HTTPException(404)
+        raise HTTPException(404, detail=f'{model} с id={id} не найден')
     return instance
+
+
+async def delete_multipack(id: ObjectId) -> Multipack:
+    multipack = await get_by_id_or_404(Multipack, id=id)
+    for pack_id in multipack.pack_ids:
+        pack = await get_by_id_or_404(Pack, id=pack_id)
+        await engine.delete(pack)
+    await engine.delete(multipack)
+    return multipack
+
+
+async def delete_cube(id: ObjectId) -> Cube:
+    cube = await get_by_id_or_404(Cube, id=id)
+    for multipack_id in cube.multipack_ids_with_pack_ids.keys():
+        await delete_multipack(ObjectId(multipack_id))
+    await engine.delete(cube)
+    return cube
 
 
 async def get_by_qr_or_404(model, qr: str) -> Model:
@@ -102,10 +119,12 @@ async def flush_pintset() -> SystemState:
     return current_status.system_state
 
 
-async def packing_table_error(error_msg: str) -> SystemState:
+async def packing_table_error(error_msg: str,
+                              multipacks_on_error: int) -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.packing_table_state = State.ERROR
     current_status.system_state.packing_table_error_msg = error_msg
+    current_status.system_state.multipacks_on_table_error = multipacks_on_error
     await engine.save(current_status)
     return current_status.system_state
 
@@ -114,6 +133,7 @@ async def flush_packing_table() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.packing_table_state = State.NORMAL
     current_status.system_state.packing_table_error_msg = None
+    current_status.system_state.multipacks_on_table_error = None
     await engine.save(current_status)
     return current_status.system_state
 
