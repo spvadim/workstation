@@ -1,15 +1,16 @@
-from datetime import datetime, timedelta
 from typing import List
 
-from app.db.db_utils import (check_qr_unique, count_multipacks_queue,
-                             get_100_last_packing_records,
+from app.db.db_utils import (check_qr_unique, get_100_last_packing_records,
                              get_all_wrapping_multipacks, get_current_workmode,
                              get_first_cube_without_qr,
                              get_first_exited_pintset_multipack,
                              get_first_multipack_without_qr,
                              get_first_wrapping_multipack, get_last_batch,
+                             get_last_cube_in_queue,
+                             get_last_packing_table_amount,
                              get_multipacks_queue, get_packs_queue,
-                             pintset_error, set_column_red)
+                             packing_table_error, pintset_error,
+                             set_column_red)
 from app.db.engine import engine
 from app.models.cube import Cube, CubeIdentificationAuto
 from app.models.multipack import (Multipack, MultipackIdentificationAuto,
@@ -372,18 +373,52 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
 
 @router.put('/packing_table_records', response_model=PackingTableRecord)
 @version(1, 0)
-async def add_packing_table_record(record: PackingTableRecordInput):
+async def add_packing_table_record(record: PackingTableRecordInput,
+                                   background_tasks: BackgroundTasks):
     current_datetime = await get_string_datetime()
     record = PackingTableRecord(**record.dict(exclude={'id'}),
                                 recorded_at=current_datetime)
+
+    prev_record_amount = await get_last_packing_table_amount()
+    current_amount = record.multipacks_amount
+
+    if current_amount == prev_record_amount:
+        return record
+
     await engine.save(record)
+    error_msg = ''
+    cube = await get_last_cube_in_queue()
+    current_batch = await get_last_batch()
+    needed_multipacks = current_batch.params.multipacks
+
+    if current_amount == 0:
+
+        if not cube:
+            error_msg = f'{current_datetime} нет куба в очереди для вывоза!'
+
+        if current_amount == needed_multipacks and not cube.qr:
+            error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
+
+        multipacks_in_cube = len(cube.multipack_ids_with_pack_ids.keys())
+
+        if multipacks_in_cube == current_amount and not cube.qr:
+            error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
+
+        if multipacks_in_cube != current_amount:
+            error_msg = f'{current_datetime} количество паллет на упаковочной доске и в кубе не совпадают'
+
+        if error_msg:
+            background_tasks.add_task(send_error)
+            background_tasks.add_task(packing_table_error, error_msg)
+            return JSONResponse(status_code=400, content={'detail': error_msg})
+
     return record
 
 
 @router.get('/packing_table_records', response_model=PackingTableRecords)
 @version(1, 0)
 async def get_packing_table_records():
-    multipacks_amount = await count_multipacks_queue()
+    multipacks_amount = await get_last_packing_table_amount()
     records = await get_100_last_packing_records()
     return PackingTableRecords(multipacks_amount=multipacks_amount,
                                records=records)
