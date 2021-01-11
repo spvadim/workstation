@@ -1,6 +1,8 @@
-from app.db.db_utils import (change_coded_setting, flush_packing_table,
+from app.db.db_utils import (change_coded_setting, delete_cube,
+                             delete_multipack, flush_packing_table,
                              flush_pintset, flush_state, get_current_state,
                              get_current_status, get_current_workmode,
+                             get_last_cube_in_queue, get_multipacks_queue,
                              get_report, packing_table_error, pintset_error,
                              set_column_red, set_column_yellow)
 from app.db.engine import engine
@@ -104,6 +106,18 @@ async def set_packing_table_error(error_msg: str, multipacks_on_error: int,
 @version(1, 0)
 async def set_packing_table_normal_with_remove(
         background_tasks: BackgroundTasks):
+    state = await get_current_state()
+    error_msg = state.packing_table_error_msg
+
+    if 'вывозимый куб' in error_msg:
+        cube_to_delete = await get_last_cube_in_queue()
+        await delete_cube(cube_to_delete.id)
+    else:
+        multipacks_on_error = state.multipacks_on_table_error
+        multipacks_to_delete = await get_multipacks_queue(
+        )[:multipacks_on_error]
+        for multipack in multipacks_to_delete:
+            await delete_multipack(multipack.id)
     background_tasks.add_task(flush_to_normal)
     return await flush_packing_table()
 
