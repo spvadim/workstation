@@ -2,16 +2,20 @@ from app.db.db_utils import (change_coded_setting, delete_cube,
                              delete_multipack, flush_packing_table,
                              flush_pintset, flush_state, get_current_state,
                              get_current_status, get_current_workmode,
-                             get_last_cube_in_queue, get_multipacks_queue,
-                             get_report, packing_table_error, pintset_error,
+                             get_last_batch, get_last_cube_in_queue,
+                             get_multipacks_queue, get_report,
+                             packing_table_error, pintset_error,
                              set_column_red, set_column_yellow)
 from app.db.engine import engine
+from app.models.cube import Cube
+from app.models.multipack import Status
 from app.models.message import TGMessage
 from app.models.report import ReportRequest, ReportResponse
 from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
                                         send_warning)
 from app.utils.io import send_telegram_message
+from app.utils.naive_current_datetime import get_string_datetime
 from app.utils.pintset import off_pintset, on_pintset
 from fastapi import APIRouter, BackgroundTasks
 from fastapi_versioning import version
@@ -118,6 +122,51 @@ async def set_packing_table_normal_with_remove(
         )[:multipacks_on_error]
         for multipack in multipacks_to_delete:
             await delete_multipack(multipack.id)
+    background_tasks.add_task(flush_to_normal)
+    return await flush_packing_table()
+
+
+@router.patch("/flush_packing_table_with_identify", response_model=SystemState)
+@version(1, 0)
+async def set_packing_table_normal_with_identify(
+        qr: str, background_tasks: BackgroundTasks):
+    state = await get_current_state()
+    error_msg = state.packing_table_error_msg
+    current_time = await get_string_datetime()
+
+    if 'вывозимый куб' in error_msg:
+        cube_to_update = await get_last_cube_in_queue()
+        cube_to_update.qr = qr
+        cube_to_update.added_qr_at = current_time
+        await engine.save(cube_to_update)
+
+    else:
+        batch = await get_last_batch()
+        batch_number = batch.number
+        needed_multipacks = batch.params.multipacks
+        needed_packs = batch.params.packs
+
+        multipacks_on_error = state.multipacks_on_table_error
+        multipacks_for_cube = await get_multipacks_queue(
+        )[:multipacks_on_error]
+        multipack_ids_with_pack_ids = {}
+
+        for i in range(len(multipacks_for_cube)):
+            multipacks_for_cube[i].status = Status.IN_CUBE
+            multipack_ids_with_pack_ids[str(
+                multipacks_for_cube[i].id)] = multipacks_for_cube[i].pack_ids
+            await engine.save_all(multipacks_for_cube)
+
+            cube = Cube(
+                qr=qr,
+                multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
+                batch_number=batch_number,
+                multipacks_in_cubes=needed_multipacks,
+                packs_in_multipacks=needed_packs,
+                created_at=current_time,
+                added_qr_at=current_time)
+            await engine.save(cube)
+
     background_tasks.add_task(flush_to_normal)
     return await flush_packing_table()
 

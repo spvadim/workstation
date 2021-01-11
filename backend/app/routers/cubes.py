@@ -198,7 +198,8 @@ async def finish_cube(qr: str):
                 batch_number=batch_number,
                 multipacks_in_cubes=needed_multipacks,
                 packs_in_multipacks=needed_packs,
-                created_at=current_time)
+                created_at=current_time,
+                added_qr_at=current_time)
 
     await engine.save(cube)
     return cube
