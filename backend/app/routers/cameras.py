@@ -396,21 +396,21 @@ async def add_packing_table_record(record: PackingTableRecordInput,
         if not cube:
             error_msg = f'{current_datetime} нет куба в очереди для вывоза!'
 
-        if current_amount == needed_multipacks and not cube.qr:
+        if prev_record_amount == needed_multipacks and not cube.qr:
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
 
         multipacks_in_cube = len(cube.multipack_ids_with_pack_ids.keys())
 
-        if multipacks_in_cube == current_amount and not cube.qr:
+        if multipacks_in_cube == prev_record_amount and not cube.qr:
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
 
-        if multipacks_in_cube != current_amount:
+        if multipacks_in_cube != prev_record_amount:
             error_msg = f'{current_datetime} количество паллет на упаковочной доске и в кубе не совпадают'
 
-        if error_msg:
-            background_tasks.add_task(send_error)
-            background_tasks.add_task(packing_table_error, error_msg)
-            return JSONResponse(status_code=400, content={'detail': error_msg})
+    if error_msg:
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(packing_table_error, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     return record
 
