@@ -131,6 +131,8 @@ async def get_last_batch() -> ProductionBatch:
 async def get_last_packing_table_amount() -> int:
     last_record = await engine.find_one(PackingTableRecord,
                                         sort=query.desc(PackingTableRecord.id))
+    if not last_record:
+        return 0
     multipacks_amount = last_record.multipacks_amount
     return multipacks_amount
 
