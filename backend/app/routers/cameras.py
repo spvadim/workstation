@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from app.db.db_utils import (check_qr_unique, get_all_wrapping_multipacks,
-                             get_current_workmode, get_first_cube_without_qr,
+from app.db.db_utils import (check_qr_unique, count_multipacks_queue,
+                             get_100_last_packing_records,
+                             get_all_wrapping_multipacks, get_current_workmode,
+                             get_first_cube_without_qr,
                              get_first_exited_pintset_multipack,
                              get_first_multipack_without_qr,
                              get_first_wrapping_multipack, get_last_batch,
@@ -14,7 +16,8 @@ from app.models.multipack import (Multipack, MultipackIdentificationAuto,
                                   MultipackOutput, Status)
 from app.models.pack import Pack, PackCameraInput, PackOutput
 from app.models.packing_table import (PackingTableRecord,
-                                      PackingTableRecordInput)
+                                      PackingTableRecordInput,
+                                      PackingTableRecords)
 from app.utils.background_tasks import (send_error,
                                         send_error_and_send_tg_message,
                                         send_warning_and_back_to_normal)
@@ -367,7 +370,7 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     return cube
 
 
-@router.put('/add_packing_table_record', response_model=PackingTableRecord)
+@router.put('/packing_table_records', response_model=PackingTableRecord)
 @version(1, 0)
 async def add_packing_table_record(record: PackingTableRecordInput):
     current_datetime = await get_string_datetime()
@@ -375,3 +378,12 @@ async def add_packing_table_record(record: PackingTableRecordInput):
                                 recorded_at=current_datetime)
     await engine.save(record)
     return record
+
+
+@router.get('/packing_table_records', response_model=PackingTableRecords)
+@version(1, 0)
+async def get_packing_table_records():
+    multipacks_amount = await count_multipacks_queue()
+    records = await get_100_last_packing_records()
+    return PackingTableRecords(multipacks_amount=multipacks_amount,
+                               records=records)

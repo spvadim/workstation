@@ -5,6 +5,7 @@ from app.config import default_settings, get_apply_settings_url
 from app.models.cube import Cube
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack
+from app.models.packing_table import PackingTableRecord
 from app.models.production_batch import ProductionBatch
 from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
                                ReportRequest, ReportResponse)
@@ -141,6 +142,13 @@ async def get_batch_by_number_or_return_last(
     return batch
 
 
+async def get_100_last_packing_records() -> List[PackingTableRecord]:
+    records = await engine.find(PackingTableRecord,
+                                sort=query.desc(PackingTableRecord.id),
+                                limit=100)
+    return records
+
+
 async def get_packs_queue() -> List[Pack]:
     packs = await engine.find(Pack,
                               Pack.in_queue == True,
@@ -153,6 +161,11 @@ async def get_multipacks_queue() -> List[Multipack]:
                                    Multipack.status != Status.IN_CUBE,
                                    sort=query.asc(Multipack.id))
     return multipacks
+
+
+async def count_multipacks_queue() -> int:
+    amount = await engine.count(Multipack, Multipack.status != Status.IN_CUBE)
+    return amount
 
 
 async def get_first_exited_pintset_multipack() -> Multipack:
