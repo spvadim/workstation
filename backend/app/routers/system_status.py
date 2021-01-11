@@ -94,15 +94,16 @@ async def set_pinset_normal(background_tasks: BackgroundTasks):
 
 @router.patch("/set_packing_table_error", response_model=SystemState)
 @version(1, 0)
-async def set_packing_table_error(error_msg: str,
+async def set_packing_table_error(error_msg: str, multipacks_on_error: int,
                                   background_tasks: BackgroundTasks):
     background_tasks.add_task(send_error)
-    return await packing_table_error(error_msg)
+    return await packing_table_error(error_msg, multipacks_on_error)
 
 
-@router.patch("/flush_packing_table", response_model=SystemState)
+@router.patch("/flush_packing_table_with_remove", response_model=SystemState)
 @version(1, 0)
-async def set_packing_table_normal(background_tasks: BackgroundTasks):
+async def set_packing_table_normal_with_remove(
+        background_tasks: BackgroundTasks):
     background_tasks.add_task(flush_to_normal)
     return await flush_packing_table()
 
