@@ -118,8 +118,8 @@ async def set_packing_table_normal_with_remove(
         await delete_cube(cube_to_delete.id)
     else:
         multipacks_on_error = state.multipacks_on_table_error
-        multipacks_to_delete = await get_multipacks_queue(
-        )[:multipacks_on_error]
+        multipacks = await get_multipacks_queue()
+        multipacks_to_delete = multipacks[:multipacks_on_error]
         for multipack in multipacks_to_delete:
             await delete_multipack(multipack.id)
     background_tasks.add_task(flush_to_normal)
@@ -147,8 +147,8 @@ async def set_packing_table_normal_with_identify(
         needed_packs = batch.params.packs
 
         multipacks_on_error = state.multipacks_on_table_error
-        multipacks_for_cube = await get_multipacks_queue(
-        )[:multipacks_on_error]
+        multipacks = await get_multipacks_queue()
+        multipacks_for_cube = multipacks[:multipacks_on_error]
         multipack_ids_with_pack_ids = {}
 
         for i in range(len(multipacks_for_cube)):
