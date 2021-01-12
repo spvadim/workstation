@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 from typing import List
 
-from app.db.db_utils import (check_qr_unique,
+from app.db.db_utils import (check_qr_unique, delete_multipack,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
+                             get_last_packing_table_amount,
                              get_multipacks_queue)
 from app.db.engine import engine
 from app.models.multipack import (Multipack, MultipackOutput,
@@ -72,9 +73,25 @@ async def get_multipack_by_qr(qr: str = Query(None)):
 @router.delete('/multipacks/{id}', response_model=Multipack)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
-    multipack = await get_by_id_or_404(Multipack, id)
-    await engine.delete(multipack)
-    return multipack
+    return await delete_multipack(id)
+
+
+@router.delete('/remove_two_multipacks_to_refresh_wrapper',
+               response_model=List[Multipack])
+@version(1, 0)
+async def remove_two_multipacks_to_refresh_wrapper():
+    multipacks_amount = await get_last_packing_table_amount()
+    multipacks_to_delete = await get_multipacks_queue(
+    )[multipacks_amount:multipacks_amount + 2]
+
+    if len(multipacks_to_delete) != 2:
+        error_msg = 'Недостаточно паллет для перезагрузки обмотчика'
+        raise HTTPException(status_code=400, detail=error_msg)
+
+    for multipack in multipacks_to_delete:
+        await delete_multipack(multipack.id)
+
+    return multipacks_to_delete
 
 
 @router.patch('/multipacks/{id}', response_model=Multipack)

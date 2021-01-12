@@ -26,6 +26,7 @@ class SystemState(EmbeddedModel):
     error_msg: Optional[str]
     pintset_error_msg: Optional[str]
     packing_table_error_msg: Optional[str]
+    multipacks_on_table_error: Optional[int]
 
 
 class SystemStatus(Model):
