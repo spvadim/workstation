@@ -17,9 +17,7 @@ from odmantic import ObjectId
 router = APIRouter()
 
 
-@router.put('/multipacks',
-            response_model=Multipack,
-            response_model_exclude_unset=True)
+@router.put('/multipacks', response_model=Multipack)
 @version(1, 0)
 async def create_multipack(multipack: Multipack):
     batch = await get_batch_by_number_or_return_last(
@@ -82,7 +80,8 @@ async def delete_pack_by_id(id: ObjectId):
 async def remove_two_multipacks_to_refresh_wrapper():
     multipacks_amount = await get_last_packing_table_amount()
     multipacks_to_delete = await get_multipacks_queue()
-    multipacks_to_delete = multipacks_to_delete[multipacks_amount:multipacks_amount + 2]
+    multipacks_to_delete = multipacks_to_delete[
+        multipacks_amount:multipacks_amount + 2]
 
     if len(multipacks_to_delete) != 2:
         error_msg = 'Недостаточно паллет для перезагрузки обмотчика'
