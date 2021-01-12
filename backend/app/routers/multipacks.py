@@ -81,8 +81,8 @@ async def delete_pack_by_id(id: ObjectId):
 @version(1, 0)
 async def remove_two_multipacks_to_refresh_wrapper():
     multipacks_amount = await get_last_packing_table_amount()
-    multipacks_to_delete = await get_multipacks_queue(
-    )[multipacks_amount:multipacks_amount + 2]
+    multipacks_to_delete = await get_multipacks_queue()
+    multipacks_to_delete = multipacks_to_delete[multipacks_amount:multipacks_amount + 2]
 
     if len(multipacks_to_delete) != 2:
         error_msg = 'Недостаточно паллет для перезагрузки обмотчика'
