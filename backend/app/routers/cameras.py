@@ -394,7 +394,8 @@ async def add_packing_table_record(record: PackingTableRecordInput,
     if current_amount == 0:
 
         if not cube:
-            error_msg = f'{current_datetime} нет куба в очереди для вывоза!'
+            error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
+            error_msg += 'Чтобы собрать куб, введите его QR.'
 
         if prev_record_amount == needed_multipacks and not cube.qr:
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
@@ -405,7 +406,8 @@ async def add_packing_table_record(record: PackingTableRecordInput,
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
 
         if multipacks_in_cube != prev_record_amount:
-            error_msg = f'{current_datetime} количество паллет на упаковочной доске и в кубе не совпадают'
+            error_msg = f'{current_datetime} количество паллет на упаковочном столе и в последнем кубе не совпадают. '
+            error_msg += 'Чтобы собрать куб, введите его QR.'
 
     if error_msg:
         background_tasks.add_task(send_error)
