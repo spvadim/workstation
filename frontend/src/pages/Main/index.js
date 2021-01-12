@@ -157,7 +157,7 @@ function Main() {
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
     const [modalCube, setModalCube] = useState(false);
-    const [modalDeletePallet, setModalDeletePallet]  = useState(false);
+    const [modalDelete2Pallet, setModalDelete2Pallet]  = useState(false);
     const [modalPackingTableError, setModalPackingTableError] = useState(false);
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrCube, setValueQrCube] = useState('');
@@ -184,7 +184,7 @@ function Main() {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
                     // "Сосканируйте QR мультипака/пачки для идентификации куба" :
-                    "Сосканируйте QR паллеты/пачки для идентификации куба" :
+                    "Сосканируйте QR для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
             .catch(e => setNotificationErrorText(e.response.data.detail))
@@ -194,8 +194,8 @@ function Main() {
             request.then(res => {
                 let temp = res.data;
                 if (temp.state !== "normal") setNotificationColumnErrorText(temp.error_msg)
-                else if (temp.pintset_state !== "normal") setNotificationPintsetErrorText(temp.pintset_error_msg)
-                else if (temp.packing_table_state !== "normal") setModalPackingTableError(temp.packing_table_error_msg)
+                if (temp.pintset_state !== "normal") setNotificationPintsetErrorText(temp.pintset_error_msg)
+                if (temp.packing_table_state !== "normal") setModalPackingTableError(temp.packing_table_error_msg)
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
@@ -220,7 +220,7 @@ function Main() {
             .then(res => {
                 setMode(res.data.work_mode);
                 setNotificationText(res.data.work_mode === "auto" ?
-                    "Сосканируйте QR паллеты/пачки для идентификации куба" :
+                    "Сосканируйте QR для идентификации куба" :
                     "Сосканируйте QR куба для редактирования")
             })
             .catch(e => {
@@ -230,7 +230,7 @@ function Main() {
     }
 
     const setDefaultNotificationText = () => {
-        if (mode === "auto") setNotificationText("Сосканируйте QR паллеты/пачки для идентификации куба")
+        if (mode === "auto") setNotificationText("Сосканируйте QR для идентификации куба")
         else if (mode === "manual") setNotificationText("Сосканируйте QR куба для редактирования")
     }
 
@@ -267,6 +267,26 @@ function Main() {
 
     return (
         <div className={classes.Main}>
+            {modalDelete2Pallet && 
+                <ModalWindow
+                    title="Удаление двух паллет"
+                    description="Вы действительно хотите удалить две паллеты?"
+                >
+                    <Button onClick={() => {
+                        axios.delete(address + "/api/v1_0/remove_two_multipacks_to_refresh_wrapper")
+                        .then(() => setNotificationText("Паллеты успешно удалены"), setTimeout(setDefaultNotificationText, 2000), setModalDelete2Pallet(false))
+                            .catch(e => console.log(e.responce))
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Удалить
+                    </Button>
+                    <Button onClick={() => setModalDelete2Pallet(false)} theme="secondary">
+                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        Отмена
+                    </Button>
+                </ModalWindow>
+            }
+
             {modalPackingTableError  && 
                 <ModalWindow
                     title="Ошибочный вывоз"
@@ -274,14 +294,21 @@ function Main() {
                 >
                     <Button onClick={() => {
                         axios.patch(address + "/api/v1_0/flush_packing_table_with_remove")
-                            .then(() => setModalPackingTableError(false))
+                            .then(() => setModalPackingTableError(false), setValueQrModalPackingTable(""))
                             .catch(e => {
                                 console.log(e.response);
                                 setNotificationErrorText(e.response.data.detail)
                             })
                     }}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
-                        Это брак. Удалить продукцию.
+                        Удалить продукцию
+                    </Button>
+                    <Button onClick={() => {
+                        axios.patch(address + "/api/v1_0/flush_packing_table")
+                            .then(() => setModalPackingTableError(false), setValueQrModalPackingTable(""))
+                            .catch(e => setNotificationErrorText(e.responce.data.detail[0].msg))
+                    }}>
+                        Отмена
                     </Button>
                     <TextField
                         placeholder="QR..."
@@ -293,6 +320,7 @@ function Main() {
                                     axios.patch(address + "/api/v1_0/flush_packing_table_with_identify?qr=" + valueQrModalPackingTable)
                                         .then(() => {
                                             setModalPackingTableError(false);
+                                            setValueQrModalPackingTable("");
                                             setNotificationText("Успешно идентифицировано");
                                             setTimeout(setDefaultNotificationText, 2000);
                                         })
@@ -390,9 +418,8 @@ function Main() {
                     <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
                 
                     <Button onClick={() => {
-                        axios.delete(address + "/api/v1_0/remove_two_multipacks_to_refresh_wrapper")
-                            .then(() => setNotificationText("Паллеты успешно удалены"), setTimeout(setDefaultNotificationText, 2000))
-                            .catch(e => console.log(e.responce))
+                        setModalDelete2Pallet(true);
+                        
                     }}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
                 </div>
 
@@ -477,43 +504,47 @@ function Main() {
                         </div>
                     </div>
 
-                    <NotificationPanel
-                        errors={
-                            [
-                                notificationErrorText && (
-                                    <Notification
-                                        title="Ошибка"
-                                        description={notificationErrorText}
-                                        onClose={() => setNotificationErrorText("")}
-                                        error
-                                    />
-                                ),
+                    <div style={{display: "flex", gap: "321px"}}> 
+                        <NotificationPanel
+                            errors={
+                                [
+                                    notificationPintsetErrorText && (
+                                        <Notification
+                                            title="Ошибка после пинцета"
+                                            description={notificationPintsetErrorText}
+                                            error
+                                        > <Button onClick={() => flushPintsetError()}>Сбросить ошибку</Button>
+                                        </Notification>
+                                    ),
+                                ]
+                            }
+                        />
 
-                                notificationColumnErrorText && (
-                                    <Notification
-                                        title="Ошибка"
-                                        description={notificationColumnErrorText}
-                                        error
-                                    > <Button onClick={() => flushStateColumn()}>Сбросить ошибку</Button>  </Notification>
-                                )
-                            ]
-                        }
-                    />
+                        <NotificationPanel
+                            errors={
+                                [
+                                    notificationErrorText && (
+                                        <Notification
+                                            title="Ошибка"
+                                            description={notificationErrorText}
+                                            onClose={() => setNotificationErrorText("")}
+                                            error
+                                        />
+                                    ),
 
-                    <NotificationPanel
-                        errors={
-                            [
-                                notificationPintsetErrorText && (
-                                    <Notification
-                                        title="Ошибка"
-                                        description={notificationPintsetErrorText}
-                                        error
-                                    > <Button onClick={() => flushPintsetError()}>Сбросить ошибку</Button>
-                                    </Notification>
-                                ),
-                            ]
-                        }
-                    />
+                                    notificationColumnErrorText && (
+                                        <Notification
+                                            title="Ошибка колонны"
+                                            description={notificationColumnErrorText}
+                                            error
+                                        > <Button onClick={() => flushStateColumn()}>Сбросить ошибку</Button>  </Notification>
+                                    )
+                                ]
+                            }
+                        />
+                    </div>
+
+                    
 
                 </div>
 
