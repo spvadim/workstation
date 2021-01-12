@@ -104,6 +104,13 @@ async def set_packing_table_error(error_msg: str, multipacks_on_error: int,
     return await packing_table_error(error_msg, multipacks_on_error)
 
 
+@router.patch("/flush_packing_table", response_model=SystemState)
+@version(1, 0)
+async def set_packing_table_normal(background_tasks: BackgroundTasks):
+    background_tasks.add_task(flush_to_normal)
+    return await flush_packing_table()
+
+
 @router.patch("/flush_packing_table_with_remove", response_model=SystemState)
 @version(1, 0)
 async def set_packing_table_normal_with_remove(
