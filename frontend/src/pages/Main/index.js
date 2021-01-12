@@ -158,13 +158,13 @@ function Main() {
     const [modalError, setModalError] = useState(false);
     const [modalCube, setModalCube] = useState(false);
     const [modalDeletePallet, setModalDeletePallet]  = useState(false);
+    const [modalPackingTableError, setModalPackingTableError] = useState(false);
+    const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrCube, setValueQrCube] = useState('');
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
     const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
-    const [notificationPackingTableErrorText, setNotificationPackingTableErrorText] = useState("");
-    const [cookies] = useCookies();
     const classes = useStyles({ mode });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
 
@@ -178,7 +178,6 @@ function Main() {
                     multipacksAfterPintset: res.data.params.multipacks_after_pintset,
                 })
             })
-            .catch(e => setNotificationErrorText(e.response.detail))
 
         axios.get(address + "/api/v1_0/get_mode")
             .then(res => {
@@ -196,7 +195,7 @@ function Main() {
                 let temp = res.data;
                 if (temp.state !== "normal") setNotificationColumnErrorText(temp.error_msg)
                 else if (temp.pintset_state !== "normal") setNotificationPintsetErrorText(temp.pintset_error_msg)
-                else if (temp.packing_table_state !== "normal") setNotificationPackingTableErrorText(temp.packing_table_error_msg)
+                else if (temp.packing_table_state !== "normal") setModalPackingTableError(temp.packing_table_error_msg)
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
@@ -237,6 +236,7 @@ function Main() {
 
     const flushStateColumn = () => {
         axios.patch(address + "/api/v1_0/flush_state")
+            .then(() => setNotificationColumnErrorText(""))
             .catch(e => setNotificationErrorText(e.response.detail[0].msg))
     }
 
@@ -267,6 +267,48 @@ function Main() {
 
     return (
         <div className={classes.Main}>
+            {modalPackingTableError  && 
+                <ModalWindow
+                    title="Ошибочный вывоз"
+                    description={modalPackingTableError}
+                >
+                    <Button onClick={() => {
+                        axios.patch(address + "/api/v1_0/flush_packing_table_with_remove")
+                            .then(() => setModalPackingTableError(false))
+                            .catch(e => {
+                                console.log(e.response);
+                                setNotificationErrorText(e.response.data.detail)
+                            })
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Это брак. Удалить продукцию.
+                    </Button>
+                    <TextField
+                        placeholder="QR..."
+                        onChange={async e => {
+                            setValueQrModalPackingTable(e.target.value);
+                        }}
+                        onKeyPress={e => {
+                                if (e.charCode === 13) {
+                                    axios.patch(address + "/api/v1_0/flush_packing_table_with_identify?qr=" + valueQrModalPackingTable)
+                                        .then(() => {
+                                            setModalPackingTableError(false);
+                                            setNotificationText("Успешно идентифицировано");
+                                            setTimeout(setDefaultNotificationText, 2000);
+                                        })
+                                        .catch(e => setNotificationErrorText(e.response.data.detail[0].msg))
+                                }
+                            }
+                        }
+                        hidden={false}
+                        value={valueQrModalPackingTable}
+                        outlined
+                        forceFocus
+                        autoFocus
+                    />
+                </ModalWindow>
+            }
+
             {modalDeletion && (
                 <ModalWindow
                     title="Удаление объекта"
@@ -347,7 +389,11 @@ function Main() {
 
                     <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
                 
-                    <Button onClick={() => console.log()}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
+                    <Button onClick={() => {
+                        axios.delete(address + "/api/v1_0/remove_two_multipacks_to_refresh_wrapper")
+                            .then(() => setNotificationText("Паллеты успешно удалены"), setTimeout(setDefaultNotificationText, 2000))
+                            .catch(e => console.log(e.responce))
+                    }}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
