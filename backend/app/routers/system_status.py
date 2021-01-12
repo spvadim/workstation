@@ -1,15 +1,13 @@
-from app.db.db_utils import (change_coded_setting, delete_cube,
-                             delete_multipack, flush_packing_table,
-                             flush_pintset, flush_state, get_current_state,
-                             get_current_status, get_current_workmode,
-                             get_last_batch, get_last_cube_in_queue,
-                             get_multipacks_queue, get_report,
-                             packing_table_error, pintset_error,
-                             set_column_red, set_column_yellow)
+from app.db.db_utils import (
+    change_coded_setting, check_qr_unique, delete_cube, delete_multipack,
+    flush_packing_table, flush_pintset, flush_state, get_current_state,
+    get_current_status, get_current_workmode, get_last_batch,
+    get_last_cube_in_queue, get_multipacks_queue, get_report,
+    packing_table_error, pintset_error, set_column_red, set_column_yellow)
 from app.db.engine import engine
 from app.models.cube import Cube
-from app.models.multipack import Status
 from app.models.message import TGMessage
+from app.models.multipack import Status
 from app.models.report import ReportRequest, ReportResponse
 from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
@@ -17,7 +15,7 @@ from app.utils.background_tasks import (flush_to_normal, send_error,
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_string_datetime
 from app.utils.pintset import off_pintset, on_pintset
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi_versioning import version
 from pydantic import parse_obj_as
 
@@ -130,6 +128,8 @@ async def set_packing_table_normal_with_remove(
 @version(1, 0)
 async def set_packing_table_normal_with_identify(
         qr: str, background_tasks: BackgroundTasks):
+    if not await check_qr_unique(Cube, qr):
+        raise HTTPException(400, detail=f'Куб с QR {qr} уже существует')
     state = await get_current_state()
     error_msg = state.packing_table_error_msg
     current_time = await get_string_datetime()
@@ -157,15 +157,14 @@ async def set_packing_table_normal_with_identify(
                 multipacks_for_cube[i].id)] = multipacks_for_cube[i].pack_ids
             await engine.save_all(multipacks_for_cube)
 
-            cube = Cube(
-                qr=qr,
-                multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
-                batch_number=batch_number,
-                multipacks_in_cubes=needed_multipacks,
-                packs_in_multipacks=needed_packs,
-                created_at=current_time,
-                added_qr_at=current_time)
-            await engine.save(cube)
+        cube = Cube(qr=qr,
+                    multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
+                    batch_number=batch_number,
+                    multipacks_in_cubes=needed_multipacks,
+                    packs_in_multipacks=needed_packs,
+                    created_at=current_time,
+                    added_qr_at=current_time)
+        await engine.save(cube)
 
     background_tasks.add_task(flush_to_normal)
     return await flush_packing_table()
