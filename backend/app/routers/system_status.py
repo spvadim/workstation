@@ -11,7 +11,7 @@ from app.models.multipack import Status
 from app.models.report import ReportRequest, ReportResponse
 from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
-                                        send_warning)
+                                        send_warning, send_error_with_buzzer)
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_string_datetime
 from app.utils.pintset import off_pintset, on_pintset
@@ -84,7 +84,7 @@ async def set_normal_state(background_tasks: BackgroundTasks):
 @version(1, 0)
 async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
     background_tasks.add_task(off_pintset)
-    background_tasks.add_task(send_error)
+    background_tasks.add_task(send_error_with_buzzer)
     return await pintset_error(error_msg)
 
 
