@@ -13,16 +13,24 @@ async def send_error():
     tasks = []
 
     tasks.append(snmp_set_green_off())
-    tasks.append(snmp_set_buzzer_on())
     tasks.append(snmp_set_red_on())
 
     await asyncio.gather(*tasks)
 
 
-async def send_error_and_send_tg_message(message: str):
+async def send_error_with_buzzer():
     tasks = []
 
     tasks.append(send_error())
+    tasks.append(snmp_set_buzzer_on())
+
+    await asyncio.gather(*tasks)
+
+
+async def send_error_with_buzzer_and_tg_message(message: str):
+    tasks = []
+
+    tasks.append(send_error_with_buzzer())
     tasks.append(send_telegram_message(TGMessage(text=message,
                                        timestamp=False)))
     await asyncio.gather(*tasks)
@@ -32,7 +40,6 @@ async def send_warning():
     tasks = []
 
     tasks.append(snmp_set_green_off())
-    tasks.append(snmp_set_buzzer_on())
     tasks.append(snmp_set_yellow_on())
 
     await asyncio.gather(*tasks)
