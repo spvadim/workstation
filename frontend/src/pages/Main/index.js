@@ -193,9 +193,12 @@ function Main() {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => {
                 let temp = res.data;
-                if (temp.state !== "normal") setNotificationColumnErrorText(temp.error_msg)
-                if (temp.pintset_state !== "normal") setNotificationPintsetErrorText(temp.pintset_error_msg)
-                if (temp.packing_table_state !== "normal") setModalPackingTableError(temp.packing_table_error_msg)
+                if (temp.state === "normal") setNotificationColumnErrorText("") 
+                    else setNotificationColumnErrorText(temp.error_msg) 
+                if (temp.pintset_state === "normal") setNotificationPintsetErrorText("") 
+                    else setNotificationPintsetErrorText(temp.pintset_error_msg)
+                if (temp.packing_table_state === "normal") setModalPackingTableError("") 
+                    else setModalPackingTableError(temp.packing_table_error_msg)
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
