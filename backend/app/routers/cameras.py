@@ -90,10 +90,10 @@ async def new_pack_after_pintset(pack: PackCameraInput,
 
     if error_msg:
         logger.error(error_msg)
-        background_tasks.add_task(off_pintset)
-        background_tasks.add_task(pintset_error, error_msg)
-        background_tasks.add_task(send_error_with_buzzer_and_tg_message,
-                                  error_msg)
+        # background_tasks.add_task(off_pintset)
+        # background_tasks.add_task(pintset_error, error_msg)
+        # background_tasks.add_task(send_error_with_buzzer_and_tg_message,
+        #                           error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
