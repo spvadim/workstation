@@ -24,6 +24,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_versioning import version
 from loguru import logger
+from .io import send_telegram_message
 
 router = APIRouter()
 
@@ -86,11 +87,12 @@ async def new_pack_after_pintset(pack: PackCameraInput,
 
     if error_msg:
         logger.error(error_msg)
-        background_tasks.add_task(off_pintset)
-        background_tasks.add_task(pintset_error, error_msg)
-        background_tasks.add_task(send_error_with_buzzer_and_tg_message,
-                                  error_msg)
-        return JSONResponse(status_code=400, content={'detail': error_msg})
+        send_telegram_message(TGMessage(text=error_msg, timestamp=False))
+        # background_tasks.add_task(off_pintset)
+        # background_tasks.add_task(pintset_error, error_msg)
+        # background_tasks.add_task(send_error_with_buzzer_and_tg_message,
+        #                           error_msg)
+        # return JSONResponse(status_code=400, content={'detail': error_msg})
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
 
