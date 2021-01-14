@@ -18,12 +18,15 @@ from app.models.packing_table import (PackingTableRecord,
 from app.utils.background_tasks import (send_error,
                                         send_error_with_buzzer_and_tg_message,
                                         send_warning_and_back_to_normal)
+from app.models.message import TGMessage
 from app.utils.naive_current_datetime import get_string_datetime
 from app.utils.pintset import off_pintset
+from app.utils.io import send_telegram_message
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_versioning import version
 from loguru import logger
+
 
 router = APIRouter()
 
@@ -82,7 +85,8 @@ async def new_pack_after_pintset(pack: PackCameraInput,
         error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался'
 
     elif not await check_qr_unique(Pack, pack.qr):
-        error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+        tg_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+        await send_telegram_message(TGMessage(text=tg_msg, timestamp=False))
 
     if error_msg:
         logger.error(error_msg)
