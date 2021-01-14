@@ -4,7 +4,11 @@ import { Redirect } from "react-router-dom";
 import address from "../../address.js";
 import { createUseStyles } from "react-jss";
 
+import ModalWindow from "../../components/ModalWindow/index.js";
 import Table from "../../components/Table/index.js";
+import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
+import imgCross from 'src/assets/images/cross.svg';
+import imgOk from 'src/assets/images/ok.svg';
 
 const useStyles = createUseStyles({
     tableContainer: {
@@ -48,6 +52,11 @@ function Admin() {
 
     const [batchesParams, setBatchesParams] = useState([]);
 
+    const [modalAddBatchParams, setModalAddBatchParams] = useState(false);
+    const [newPacks, setNewPacks] = useState(false);
+    const [newMultipacks, setNewMultipacks] = useState(false);
+    const [newPalletAfterPintset, setNewPalletAfterPintset] = useState(false); 
+
     useEffect(() => {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/batches_params");
@@ -60,6 +69,73 @@ function Admin() {
 
     return (
         <div style={{padding: 20}}>
+            {modalAddBatchParams && 
+            <ModalWindow
+                title="Добавление"
+                description="Введите параметры партии"
+            >
+                <div>
+                    <TextField
+                            placeholder="Пачек в паллете"
+                            onChange={async e => {
+                                setNewPacks(e.target.value);
+                            }}
+                            hidden={false}
+                            outlined
+                            autoFocus
+                    />
+                    <TextField
+                            placeholder="Паллет в кубе"
+                            onChange={async e => {
+                                setNewMultipacks(e.target.value);
+                            }}
+                            hidden={false}
+                            outlined
+                            autoFocus
+                    />
+                    <TextField
+                            placeholder="Паллет после пинцета"
+                            onChange={async e => {
+                                setNewPalletAfterPintset(e.target.value);
+                            }}
+                            hidden={false}
+                            outlined
+                            autoFocus
+                    />
+                </div>
+
+
+                <Button onClick={() => {
+                    if (newPacks && newMultipacks && newPalletAfterPintset) {
+                        axios.put(address + "/api/v1_0/batches_params", {
+                            packs: newPacks,
+                            multipacks: newMultipacks,
+                            multipacks_after_pintset: newPalletAfterPintset,
+                        })
+                            .then(() => {
+                                setNewPalletAfterPintset("");
+                                setNewPacks("");
+                                setNewMultipacks("");
+                                setModalAddBatchParams(false);
+                            })
+                    }
+                    
+                }}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Добавить
+                </Button>
+                <Button onClick={() => {
+                    setNewPalletAfterPintset("");
+                    setNewPacks("");
+                    setNewMultipacks("");
+                    setModalAddBatchParams(false);
+                }} theme="secondary">
+                    <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                    Отмена
+                </Button>
+            </ModalWindow>}
+
+
             <div className={classes.header}>
                 <div className={classes.commonParams}>
                     <span>Общие параметры</span>
@@ -104,7 +180,10 @@ function Admin() {
                 </div>
             </div>
             
+            <br />
+
             <div className={classes.tableContainer}>
+                <Button onClick={() => setModalAddBatchParams(true)}>Создать новые параметры партии</Button>
                 <Table columns={bathesParamsTableProps}
                         rows={batchesParams.map((param, index) => {
                             let temp = {};
