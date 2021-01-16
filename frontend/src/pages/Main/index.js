@@ -171,12 +171,15 @@ function Main() {
     useEffect(() => {
         axios.get(address + "/api/v1_0/current_batch")
             .then(res => {
-                setBatchSettings({
-                    batchNumber: res.data.number,
-                    multipacks: res.data.params.multipacks,
-                    packs: res.data.params.packs,
-                    multipacksAfterPintset: res.data.params.multipacks_after_pintset,
-                })
+                if (res.data) {
+                    setBatchSettings({
+                        batchNumber: res.data.number,
+                        multipacks: res.data.params.multipacks,
+                        packs: res.data.params.packs,
+                        multipacksAfterPintset: res.data.params.multipacks_after_pintset,
+                    })
+                }
+                
             })
             .catch(e => setNotificationErrorText(e.response.detail))
 
@@ -356,7 +359,7 @@ function Main() {
                     setNotification={setNotificationText}
                     setNotificationError={setNotificationErrorText}
                     mode={mode}
-                    forceFocus={!modalCube}
+                    forceFocus={!modalCube || !modalPackingTableError}
                     extended={extended}
                     className={classes.qrInput}
                 />
