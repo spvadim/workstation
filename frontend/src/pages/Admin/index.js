@@ -16,28 +16,15 @@ const useStyles = createUseStyles({
         width: 634,
         height: 300,
     },
-
-    header: {
-        width: "100%",
-        height: "max-content",
-    },
-
-    commonParams: {
-        width: "max-content",
+    settingsContainer: {
         display: "flex",
         flexDirection: "column",
-    },
-
-    innerParams: {
-        width: "max-content",
-        display: "flex",
-        flexDirection: "column",
-        paddingLeft: 20,
+        gap: 5,
     },
     row: {
         display: "flex",
         alignItems: "center",
-        gap: 20,
+        gap: 5,
     },
 })
 
@@ -62,6 +49,13 @@ function Admin() {
     const [newPacks, setNewPacks] = useState(false);
     const [newMultipacks, setNewMultipacks] = useState(false);
     const [newPalletAfterPintset, setNewPalletAfterPintset] = useState(false); 
+    const [settings, setSettings] = useState({});
+    const [editSettings, setEditSettings] = useState({});
+
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/get_settings?default=false")
+             .then(res => {setSettings(res.data); setEditSettings(res.data)});
+    }, []);
 
     useEffect(() => {
         const request = () => {
@@ -72,6 +66,17 @@ function Admin() {
         const interval = setInterval(request, 1000);
         return () => clearInterval(interval);
     }, []);
+
+    const generateSettings = () => {
+        return Object.keys(settings).map((key) => {
+            return <div className={classes.row}>
+                <span>{key}</span>
+                <input value={editSettings[key]} onChange={(e) => {let temp = {}; Object.assign(temp, editSettings); temp[key] = e.target.value; setEditSettings(temp)}} />
+            </div>
+        })
+    }
+
+    console.log(editSettings)
 
     return (
         <div style={{padding: 20}}>
@@ -141,52 +146,12 @@ function Admin() {
                 </Button>
             </ModalWindow>}
 
-
-            <div className={classes.header}>
-                <div className={classes.commonParams}>
-                    <span>Общие параметры</span>
-                    <div className={classes.innerParams}>
-                        <span>Завод ТЕХНОПЛЕКС, Учалы, линия №1 XPS</span>
-                        <span className={classes.row} title={`Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, \n sunt in culpa qui officia deserunt mollit anim id est laborum.`}>Дней хранения информации: 60 <ToolTip text={""} /></span>
-                        <span>Часовой пояс: 5</span> 
-                    </div>
-                </div>
-
-                <br />
-
-                <div className={classes.commonParams}>
-                    <span>Параметры блока ERD</span>
-                    <div className={classes.innerParams}>
-                        <span>IP адрес блока ERD: 192.168.20.200</span>
-                        <span>порт SNMP: 161</span>
-                    </div>
-                </div>
-
-                <br />
-
-                <div className={classes.commonParams}>
-                    <span> Параметры подключения к пинцету</span>
-                    <div className={classes.innerParams}>
-                        <span>IP пинцета: 192.168.20.210</span>
-                        <span>Rack: 0</span>
-                        <span>Slot: 2</span>
-                        <span>Область памяти: 60</span>
-                        <span>C какого байта читать: 0</span>
-                    </div>
-                </div>
-
-                <br />
-
-                <div className={classes.commonParams}>
-                    <span>Параметры телеграмм</span>
-                    <div className={classes.innerParams}>
-                        <span>BotApiKey</span>
-                        <span>chat_id</span>
-                    </div>
-                </div>
+            <div className={classes.settingsContainer}>
+                {generateSettings()}
+                <Button style={{width: "max-content"}} onClick={() => {
+                    axios.post(address + "/api/v1_0/set_settings", editSettings)
+                }} > Сохранить </Button>
             </div>
-            
-            <br />
 
             <div className={classes.tableContainer}>
                 <Button onClick={() => setModalAddBatchParams(true)}>Создать новые параметры партии</Button>

@@ -29,6 +29,7 @@ function TextField({ className, outlined, width, forceFocus, hidden, ...restProp
         if (!forceFocus || !ref.current) {
             return
         }
+        ref.current.focus();
         const interval = setInterval(() => {
             if (document.activeElement.tagName !== 'INPUT') {
                 ref.current.focus();

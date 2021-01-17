@@ -152,7 +152,7 @@ const useStyles = createUseStyles({
 function Main() {
     const [mode, setMode] = useState('auto');
     const [batchSettings, setBatchSettings] = useState({});
-    const [extended, setExtended] = useState(false);
+    const [extended, setExtended] = useState(true);
     const [page, setPage] = useState('');
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
@@ -339,6 +339,8 @@ function Main() {
                         outlined
                         forceFocus
                         autoFocus
+
+                        
                     />
                 </ModalWindow>
             }
@@ -435,7 +437,7 @@ function Main() {
                     setNotification={setNotificationText}
                     setNotificationError={setNotificationErrorText}
                     mode={mode}
-                    forceFocus={!modalCube || !modalPackingTableError}
+                    forceFocus={!modalCube && !modalPackingTableError}
                     extended={extended}
                     className={classes.qrInput}
                 />
