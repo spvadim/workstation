@@ -34,7 +34,6 @@ const TableAddress = React.memo(({
 
                 setTableData(rows);
             })
-            request.catch(e => {console.log(e)})
             request.finally(() => setLoading(false));
         };
         request();

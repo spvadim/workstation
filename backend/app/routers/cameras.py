@@ -1,17 +1,32 @@
 from typing import List
-from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException
-from fastapi_versioning import version
+
+from app.db.db_utils import (
+    check_qr_unique, get_100_last_packing_records, get_all_wrapping_multipacks,
+    get_current_workmode, get_first_cube_without_qr,
+    get_first_exited_pintset_multipack, get_first_multipack_without_qr,
+    get_first_wrapping_multipack, get_last_batch, get_last_cube_in_queue,
+    get_last_packing_table_amount, get_multipacks_queue, get_packs_queue,
+    packing_table_error, pintset_error, set_column_red)
 from app.db.engine import engine
-from app.db.db_utils import check_qr_unique, get_last_batch, \
-    get_current_workmode, set_column_yellow, set_column_red, get_packs_queue, \
-    get_multipacks_queue, get_first_exited_pintset_multipack, \
-    get_first_wrapping_multipack, get_all_wrapping_multipacks, \
-    get_first_cube_without_qr, get_first_multipack_without_qr
-from app.models.pack import Pack, PackCameraInput, PackOutput
-from app.models.multipack import Multipack, MultipackOutput, \
-    Status, MultipackIdentificationAuto
 from app.models.cube import Cube, CubeIdentificationAuto
+from app.models.multipack import (Multipack, MultipackIdentificationAuto,
+                                  MultipackOutput, Status)
+from app.models.pack import Pack, PackCameraInput, PackOutput
+from app.models.packing_table import (PackingTableRecord,
+                                      PackingTableRecordInput,
+                                      PackingTableRecords)
+from app.utils.background_tasks import (send_error,
+                                        send_error_with_buzzer_and_tg_message,
+                                        send_warning_and_back_to_normal)
+from app.models.message import TGMessage
+from app.utils.naive_current_datetime import get_string_datetime
+from app.utils.pintset import off_pintset
+from app.utils.io import send_telegram_message
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi_versioning import version
+from loguru import logger
+
 
 router = APIRouter()
 
@@ -20,14 +35,14 @@ router = APIRouter()
             response_model=PackCameraInput,
             response_model_exclude={"id"})
 @version(1, 0)
-async def new_pack_after_applikator(pack: PackCameraInput):
+async def new_pack_after_applikator(pack: PackCameraInput,
+                                    background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
 
-    current_datetime = (datetime.utcnow() +
-                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_datetime = await get_string_datetime()
 
     error_msg = None
     if not pack.qr and not pack.barcode:
@@ -39,28 +54,25 @@ async def new_pack_after_applikator(pack: PackCameraInput):
     elif not pack.barcode:
         error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
 
-    # TODO: пока что нужно убрать проверку на уникальность
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
-    # elif not await check_qr_unique(Pack, pack.qr):
-    #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
+    elif not await check_qr_unique(Pack, pack.qr):
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        await set_column_yellow(error_msg)
-        raise HTTPException(400, detail=error_msg)
-
+        logger.warning(error_msg)
+        background_tasks.add_task(send_warning_and_back_to_normal, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
     return pack
 
 
 @router.put('/new_pack_after_pintset', response_model=Pack)
 @version(1, 0)
-async def new_pack_after_pintset(pack: PackCameraInput):
+async def new_pack_after_pintset(pack: PackCameraInput,
+                                 background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
-    current_datetime = (datetime.utcnow() +
-                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_datetime = await get_string_datetime()
 
     error_msg = None
     if not pack.qr and not pack.barcode:
@@ -72,15 +84,17 @@ async def new_pack_after_pintset(pack: PackCameraInput):
     elif not pack.barcode:
         error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался'
 
-    # TODO: пока что нужно убрать проверку на уникальность
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
-    # elif not await check_qr_unique(Pack, pack.qr):
-    #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+    elif not await check_qr_unique(Pack, pack.qr):
+        tg_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+        await send_telegram_message(TGMessage(text=tg_msg, timestamp=False))
 
     if error_msg:
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        logger.error(error_msg)
+        # background_tasks.add_task(off_pintset)
+        # background_tasks.add_task(pintset_error, error_msg)
+        # background_tasks.add_task(send_error_with_buzzer_and_tg_message,
+        #                           error_msg)
+        # return JSONResponse(status_code=400, content={'detail': error_msg})
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
 
@@ -93,7 +107,7 @@ async def new_pack_after_pintset(pack: PackCameraInput):
 
 @router.patch('/pintset_reverse', response_model=List[PackOutput])
 @version(1, 0)
-async def pintset_reverse():
+async def pintset_reverse(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -102,14 +116,14 @@ async def pintset_reverse():
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
 
-    current_datetime = (datetime.utcnow() +
-                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_datetime = await get_string_datetime()
 
     packs_queue = await get_packs_queue()
     if len(packs_queue) < multipacks_after_pintset:
         error_msg = f'{current_datetime} пинцет положил пачку с переворотом, но пачек в очереди меньше чем {multipacks_after_pintset}'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     last_packs = packs_queue[-multipacks_after_pintset:]
 
@@ -149,7 +163,7 @@ async def remove_packs_from_pintset():
 
 @router.put('/pintset_finish', response_model=List[MultipackOutput])
 @version(1, 0)
-async def pintset_finish():
+async def pintset_finish(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -161,13 +175,13 @@ async def pintset_finish():
     number = batch.number
 
     packs_queue = await get_packs_queue()
-    current_time = (datetime.utcnow() +
-                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_time = await get_string_datetime()
 
     if len(packs_queue) < needed_packs:
         error_msg = f'{current_time} пинцет начал формирование {multipacks_after_pintset} мультипаков, но пачек в очереди меньше чем {needed_packs}'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
@@ -210,19 +224,20 @@ async def multipack_wrapping_auto():
 
 @router.delete('/remove_multipack_from_wrapping', response_model=Multipack)
 @version(1, 0)
-async def remove_multipack_from_wrapping():
+async def remove_multipack_from_wrapping(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
 
-    current_datetime = (datetime.utcnow() +
-                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_datetime = await get_string_datetime()
     multipack = await get_first_wrapping_multipack()
     if not multipack:
         error_msg = f'{current_datetime} при попытке изъятия мультипака из обмотки он не был обнаружен в системе'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
+
     for id in multipack.pack_ids:
         pack = await engine.find_one(Pack, Pack.id == id)
         await engine.delete(pack)
@@ -234,13 +249,13 @@ async def remove_multipack_from_wrapping():
 @router.patch('/multipack_identification_auto', response_model=Multipack)
 @version(1, 0)
 async def multipack_identification_auto(
-        identification: MultipackIdentificationAuto):
+        identification: MultipackIdentificationAuto,
+        background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
-    current_datetime = (datetime.utcnow() +
-                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_datetime = await get_string_datetime()
     qr = identification.qr
     barcode = identification.barcode
     multipack_to_update = await get_first_multipack_without_qr()
@@ -258,14 +273,13 @@ async def multipack_identification_auto(
     elif not barcode:
         error_msg = f'{current_datetime} при присвоении внешнего кода мультипаку с QR={qr} ШК не считался'
 
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
     elif not await check_qr_unique(Multipack, qr):
         error_msg = f'{current_datetime} при попытке присвоения внешнего кода мультипаку использован QR={qr} и он не уникален в системе'
 
     if error_msg:
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_to_update.qr = qr
     multipack_to_update.added_qr_at = current_datetime
@@ -278,7 +292,8 @@ async def multipack_identification_auto(
 
 @router.patch('/cube_identification_auto', response_model=Cube)
 @version(1, 0)
-async def cube_identification_auto(identification: CubeIdentificationAuto):
+async def cube_identification_auto(identification: CubeIdentificationAuto,
+                                   background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -287,8 +302,7 @@ async def cube_identification_auto(identification: CubeIdentificationAuto):
     qr = identification.qr
     barcode = identification.barcode
     cube_to_update = await get_first_cube_without_qr()
-    current_datetime = (datetime.utcnow() +
-                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_datetime = await get_string_datetime()
 
     error_msg = None
     if not cube_to_update:
@@ -303,14 +317,13 @@ async def cube_identification_auto(identification: CubeIdentificationAuto):
     elif not barcode:
         error_msg = f'{current_datetime} при присвоении внешнего кода кубу с QR={qr} ШК не считался'
 
-    # TODO: дописать код для ERD контроллера
-    # TODO: tg
     elif not await check_qr_unique(Cube, qr):
         error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и он не уникален в системе'
 
     if error_msg:
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     cube_to_update.qr = qr
     cube_to_update.added_qr_at = current_datetime
@@ -322,7 +335,7 @@ async def cube_identification_auto(identification: CubeIdentificationAuto):
 
 @router.put('/cube_finish_auto', response_model=Cube)
 @version(1, 0)
-async def cube_finish_auto():
+async def cube_finish_auto(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -335,12 +348,12 @@ async def cube_finish_auto():
 
     multipacks_queue = await get_multipacks_queue()
 
-    current_time = (datetime.utcnow() +
-                    timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    current_time = await get_string_datetime()
     if len(multipacks_queue) < needed_multipacks:
         error_msg = f'{current_time} попытка формирования куба, когда в очереди меньше {needed_multipacks} мультипаков'
-        await set_column_red(error_msg)
-        raise HTTPException(400, detail=error_msg)
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(set_column_red, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_ids_with_pack_ids = {}
     for i in range(needed_multipacks):
@@ -357,3 +370,59 @@ async def cube_finish_auto():
     await engine.save(cube)
 
     return cube
+
+
+@router.put('/packing_table_records', response_model=PackingTableRecord)
+@version(1, 0)
+async def add_packing_table_record(record: PackingTableRecordInput,
+                                   background_tasks: BackgroundTasks):
+    current_datetime = await get_string_datetime()
+    record = PackingTableRecord(**record.dict(exclude={'id'}),
+                                recorded_at=current_datetime)
+
+    prev_record_amount = await get_last_packing_table_amount()
+    current_amount = record.multipacks_amount
+
+    if current_amount == prev_record_amount:
+        return record
+
+    await engine.save(record)
+    error_msg = ''
+    cube = await get_last_cube_in_queue()
+    current_batch = await get_last_batch()
+    needed_multipacks = current_batch.params.multipacks
+
+    if current_amount == 0:
+
+        if not cube:
+            error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
+            error_msg += 'Чтобы собрать куб, введите его QR.'
+
+        if prev_record_amount == needed_multipacks and not cube.qr:
+            error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
+
+        multipacks_in_cube = len(cube.multipack_ids_with_pack_ids.keys())
+
+        if multipacks_in_cube == prev_record_amount and not cube.qr:
+            error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
+
+        if multipacks_in_cube != prev_record_amount:
+            error_msg = f'{current_datetime} количество паллет на упаковочном столе и в последнем кубе не совпадают. '
+            error_msg += 'Чтобы собрать куб, введите его QR.'
+
+    if error_msg:
+        background_tasks.add_task(send_error)
+        background_tasks.add_task(packing_table_error, error_msg,
+                                  prev_record_amount)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
+
+    return record
+
+
+@router.get('/packing_table_records', response_model=PackingTableRecords)
+@version(1, 0)
+async def get_packing_table_records():
+    multipacks_amount = await get_last_packing_table_amount()
+    records = await get_100_last_packing_records()
+    return PackingTableRecords(multipacks_amount=multipacks_amount,
+                               records=records)

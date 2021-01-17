@@ -1,28 +1,45 @@
-from typing import List, Optional, Union
-from fastapi import HTTPException
-from odmantic import query, ObjectId, Model
-from pydantic.tools import parse_obj_as
 from datetime import datetime
-
-from .engine import engine
-
-from app.models.pack import Pack
-from app.models.multipack import Multipack, Status
-from app.models.cube import Cube
-from app.models.production_batch import ProductionBatch
-from app.models.system_status import SystemStatus, Mode, SystemState, State
-from app.models.system_settings import SystemSettings, SystemSettingsResponse
-from app.models.report import ReportRequest, ReportResponse, \
-    CubeReportItem, MPackReportItem, PackReportItem
+from typing import List, Optional, Union
 
 from app.config import default_settings, get_apply_settings_url
+from app.models.cube import Cube
+from app.models.multipack import Multipack, Status
+from app.models.pack import Pack
+from app.models.packing_table import PackingTableRecord
+from app.models.production_batch import ProductionBatch
+from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
+                               ReportRequest, ReportResponse)
+from app.models.system_settings import SystemSettings, SystemSettingsResponse
+from app.models.system_status import Mode, State, SystemState, SystemStatus
+from fastapi import HTTPException
+from odmantic import Model, ObjectId, query
+from pydantic.tools import parse_obj_as
+
+from .engine import engine
 
 
 async def get_by_id_or_404(model, id: ObjectId) -> Model:
     instance = await engine.find_one(model, model.id == id)
     if instance is None:
-        raise HTTPException(404)
+        raise HTTPException(404, detail=f'{model} с id={id} не найден')
     return instance
+
+
+async def delete_multipack(id: ObjectId) -> Multipack:
+    multipack = await get_by_id_or_404(Multipack, id=id)
+    for pack_id in multipack.pack_ids:
+        pack = await get_by_id_or_404(Pack, id=pack_id)
+        await engine.delete(pack)
+    await engine.delete(multipack)
+    return multipack
+
+
+async def delete_cube(id: ObjectId) -> Cube:
+    cube = await get_by_id_or_404(Cube, id=id)
+    for multipack_id in cube.multipack_ids_with_pack_ids.keys():
+        await delete_multipack(ObjectId(multipack_id))
+    await engine.delete(cube)
+    return cube
 
 
 async def get_by_qr_or_404(model, qr: str) -> Model:
@@ -64,23 +81,59 @@ async def change_coded_setting(coded: bool) -> SystemStatus:
 
 async def set_column_yellow(error_msg: str) -> SystemState:
     current_status = await get_current_status()
-    current_status.system_state = SystemState(state=State.WARNING,
-                                              error_msg=error_msg)
+    current_status.system_state.state = State.WARNING
+    current_status.system_state.error_msg = error_msg
     await engine.save(current_status)
     return current_status.system_state
 
 
 async def set_column_red(error_msg: str) -> SystemState:
     current_status = await get_current_status()
-    current_status.system_state = SystemState(state=State.ERROR,
-                                              error_msg=error_msg)
+    current_status.system_state.state = State.ERROR
+    current_status.system_state.error_msg = error_msg
     await engine.save(current_status)
     return current_status.system_state
 
 
 async def flush_state() -> SystemState:
     current_status = await get_current_status()
-    current_status.system_state = SystemState()
+    current_status.system_state.state = State.NORMAL
+    current_status.system_state.error_msg = None
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def pintset_error(error_msg: str) -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.pintset_state = State.ERROR
+    current_status.system_state.pintset_error_msg = error_msg
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def flush_pintset() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.pintset_state = State.NORMAL
+    current_status.system_state.pintset_error_msg = None
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def packing_table_error(error_msg: str,
+                              multipacks_on_error: int) -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.packing_table_state = State.ERROR
+    current_status.system_state.packing_table_error_msg = error_msg
+    current_status.system_state.multipacks_on_table_error = multipacks_on_error
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def flush_packing_table() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.packing_table_state = State.NORMAL
+    current_status.system_state.packing_table_error_msg = None
+    current_status.system_state.multipacks_on_table_error = None
     await engine.save(current_status)
     return current_status.system_state
 
@@ -93,6 +146,15 @@ async def get_last_batch() -> ProductionBatch:
     last_batch = await engine.find_one(ProductionBatch,
                                        sort=query.desc(ProductionBatch.id))
     return last_batch
+
+
+async def get_last_packing_table_amount() -> int:
+    last_record = await engine.find_one(PackingTableRecord,
+                                        sort=query.desc(PackingTableRecord.id))
+    if not last_record:
+        return 0
+    multipacks_amount = last_record.multipacks_amount
+    return multipacks_amount
 
 
 async def get_batch_by_number_or_return_last(
@@ -109,6 +171,13 @@ async def get_batch_by_number_or_return_last(
     return batch
 
 
+async def get_100_last_packing_records() -> List[PackingTableRecord]:
+    records = await engine.find(PackingTableRecord,
+                                sort=query.desc(PackingTableRecord.id),
+                                limit=100)
+    return records
+
+
 async def get_packs_queue() -> List[Pack]:
     packs = await engine.find(Pack,
                               Pack.in_queue == True,
@@ -121,6 +190,11 @@ async def get_multipacks_queue() -> List[Multipack]:
                                    Multipack.status != Status.IN_CUBE,
                                    sort=query.asc(Multipack.id))
     return multipacks
+
+
+async def count_multipacks_queue() -> int:
+    amount = await engine.count(Multipack, Multipack.status != Status.IN_CUBE)
+    return amount
 
 
 async def get_first_exited_pintset_multipack() -> Multipack:
@@ -153,6 +227,14 @@ async def get_first_cube_without_qr() -> Union[Cube, None]:
                                  Cube.batch_number == last_batch.number,
                                  Cube.qr == None,
                                  sort=query.asc(Cube.id))
+    return cube
+
+
+async def get_last_cube_in_queue() -> Cube:
+    last_batch = await get_last_batch()
+    cube = await engine.find_one(Cube,
+                                 Cube.batch_number == last_batch.number,
+                                 sort=query.desc(Cube.id))
     return cube
 
 

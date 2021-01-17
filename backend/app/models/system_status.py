@@ -1,5 +1,6 @@
-from typing import Optional
 from enum import Enum
+from typing import Optional
+
 from odmantic import EmbeddedModel, Model
 
 
@@ -20,7 +21,12 @@ class Mode(EmbeddedModel):
 
 class SystemState(EmbeddedModel):
     state: State = State.NORMAL
+    pintset_state: State = State.NORMAL
+    packing_table_state: State = State.NORMAL
     error_msg: Optional[str]
+    pintset_error_msg: Optional[str]
+    packing_table_error_msg: Optional[str]
+    multipacks_on_table_error: Optional[int]
 
 
 class SystemStatus(Model):

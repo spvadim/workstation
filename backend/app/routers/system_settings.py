@@ -1,13 +1,13 @@
 import json
 
+from app.config import default_settings, default_settings_response
+from app.db.db_utils import (get_current_system_settings,
+                             get_system_settings_with_apply_url)
+from app.db.engine import engine
+from app.models.system_settings import SystemSettings, SystemSettingsResponse
 from fastapi import APIRouter, Request
 from fastapi_versioning import version
-from app.models.system_settings import SystemSettings, SystemSettingsResponse
-from app.db.db_utils import get_system_settings_with_apply_url, get_current_system_settings
-from app.db.engine import engine
 from pydantic import parse_obj_as
-
-from app.config import default_settings, default_settings_response
 
 router = APIRouter()
 

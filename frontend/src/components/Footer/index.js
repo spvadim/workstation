@@ -11,7 +11,7 @@ const useStyles = createUseStyles({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        fontSize: 14,
+        fontSize: 20,
         color: color.textGrey,
         marginBottom: 22,
     },
@@ -20,7 +20,7 @@ const useStyles = createUseStyles({
 function Footer() {
     const classes = useStyles();
     return <div className={classes.Footer}>
-        <img src={imgFooterLogo} />
+        <img src={imgFooterLogo} style={{height: "64px"}} />
         ПАК Верификации 2D кодов
     </div>
 }

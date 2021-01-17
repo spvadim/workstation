@@ -1,5 +1,6 @@
 from abc import ABC
 from enum import Enum
+
 from odmantic import EmbeddedModel
 
 

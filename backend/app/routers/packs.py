@@ -1,12 +1,15 @@
-from typing import List
-from fastapi import APIRouter, Query, HTTPException
 from datetime import datetime, timedelta
+from typing import List
+
+from app.db.db_utils import (check_qr_unique,
+                             get_batch_by_number_or_return_last,
+                             get_by_id_or_404, get_by_qr_or_404,
+                             get_packs_queue)
+from app.db.engine import engine
+from app.models.pack import Pack, PackOutput, PackPatchSchema
+from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
-from app.db.engine import engine
-from app.db.db_utils import get_batch_by_number_or_return_last, \
-    check_qr_unique, get_packs_queue, get_by_id_or_404, get_by_qr_or_404
-from app.models.pack import Pack, PackOutput, PackPatchSchema
 
 router = APIRouter()
 

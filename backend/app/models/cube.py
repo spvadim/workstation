@@ -1,6 +1,7 @@
-from typing import List, Optional, Dict
-from pydantic import BaseModel
+from typing import Dict, List, Optional
+
 from odmantic import Model, ObjectId
+from pydantic import BaseModel
 
 
 class Cube(Model):
@@ -43,3 +44,9 @@ class CubePatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
     multipack_ids_with_pack_ids: Optional[Dict[str, List[ObjectId]]]
+
+
+class CubeEditSchema(Model):
+    pack_ids_to_delete: List[ObjectId]
+    packs_barcode: str
+    pack_qrs: List[str]
