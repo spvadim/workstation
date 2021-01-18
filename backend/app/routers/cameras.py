@@ -1,14 +1,18 @@
 from typing import List
 
-from app.db.db_utils import (
-    check_qr_unique, get_100_last_packing_records, get_all_wrapping_multipacks,
-    get_current_workmode, get_first_cube_without_qr,
-    get_first_exited_pintset_multipack, get_first_multipack_without_qr,
-    get_first_wrapping_multipack, get_last_batch, get_last_cube_in_queue,
-    get_last_packing_table_amount, get_multipacks_queue, get_packs_queue,
-    packing_table_error, pintset_error, set_column_red)
+from app.db.db_utils import (check_qr_unique, get_100_last_packing_records,
+                             get_all_wrapping_multipacks, get_current_workmode,
+                             get_first_exited_pintset_multipack,
+                             get_first_multipack_without_qr,
+                             get_first_wrapping_multipack, get_last_batch,
+                             get_last_cube_in_queue,
+                             get_last_packing_table_amount,
+                             get_multipacks_queue, get_packs_queue,
+                             packing_table_error, pintset_error,
+                             set_column_red)
 from app.db.engine import engine
 from app.models.cube import Cube, CubeIdentificationAuto
+from app.models.message import TGMessage
 from app.models.multipack import (Multipack, MultipackIdentificationAuto,
                                   MultipackOutput, Status)
 from app.models.pack import Pack, PackCameraInput, PackOutput
@@ -18,15 +22,13 @@ from app.models.packing_table import (PackingTableRecord,
 from app.utils.background_tasks import (send_error,
                                         send_error_with_buzzer_and_tg_message,
                                         send_warning_and_back_to_normal)
-from app.models.message import TGMessage
+from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_string_datetime
 from app.utils.pintset import off_pintset
-from app.utils.io import send_telegram_message
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi_versioning import version
 from loguru import logger
-
 
 router = APIRouter()
 
