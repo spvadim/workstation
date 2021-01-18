@@ -9,7 +9,7 @@ from app.db.db_utils import (check_qr_unique, get_100_last_packing_records,
                              get_last_packing_table_amount,
                              get_multipacks_queue, get_packs_queue,
                              packing_table_error, pintset_error,
-                             set_column_red)
+                             set_column_red, form_cube_from_n_multipacks)
 from app.db.engine import engine
 from app.models.cube import Cube, CubeIdentificationAuto
 from app.models.message import TGMessage
@@ -402,23 +402,29 @@ async def add_packing_table_record(record: PackingTableRecordInput,
         if not cube:
             error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
             error_msg += 'Чтобы собрать куб, введите его QR.'
+            new_cube = await form_cube_from_n_multipacks(prev_record_amount)
+            wrong_cube_id = new_cube.id
 
         if prev_record_amount == needed_multipacks and not cube.qr:
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
+            wrong_cube_id = cube.id
 
         multipacks_in_cube = len(cube.multipack_ids_with_pack_ids.keys())
 
         if multipacks_in_cube == prev_record_amount and not cube.qr:
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
+            wrong_cube_id = cube.id
 
         if multipacks_in_cube != prev_record_amount:
             error_msg = f'{current_datetime} количество паллет на упаковочном столе и в последнем кубе не совпадают. '
             error_msg += 'Чтобы собрать куб, введите его QR.'
+            new_cube = await form_cube_from_n_multipacks(prev_record_amount)
+            wrong_cube_id = new_cube.id
 
     if error_msg:
         background_tasks.add_task(send_error)
         background_tasks.add_task(packing_table_error, error_msg,
-                                  prev_record_amount)
+                                  wrong_cube_id)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     return record
