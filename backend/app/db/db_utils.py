@@ -11,6 +11,7 @@ from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
                                ReportRequest, ReportResponse)
 from app.models.system_settings import SystemSettings, SystemSettingsResponse
 from app.models.system_status import Mode, State, SystemState, SystemStatus
+from app.utils.naive_current_datetime import get_string_datetime
 from fastapi import HTTPException
 from odmantic import Model, ObjectId, query
 from pydantic.tools import parse_obj_as
@@ -120,11 +121,11 @@ async def flush_pintset() -> SystemState:
 
 
 async def packing_table_error(error_msg: str,
-                              multipacks_on_error: int) -> SystemState:
+                              wrong_cube_id: ObjectId) -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.packing_table_state = State.ERROR
     current_status.system_state.packing_table_error_msg = error_msg
-    current_status.system_state.multipacks_on_table_error = multipacks_on_error
+    current_status.system_state.wrong_cube_id = wrong_cube_id
     await engine.save(current_status)
     return current_status.system_state
 
@@ -133,7 +134,7 @@ async def flush_packing_table() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.packing_table_state = State.NORMAL
     current_status.system_state.packing_table_error_msg = None
-    current_status.system_state.multipacks_on_table_error = None
+    current_status.system_state.wrong_cube_id = None
     await engine.save(current_status)
     return current_status.system_state
 
@@ -169,6 +170,34 @@ async def get_batch_by_number_or_return_last(
         if not batch:
             raise HTTPException(404)
     return batch
+
+
+async def form_cube_from_n_multipacks(n: int) -> Cube:
+    batch = await get_last_batch()
+    batch_number = batch.number
+    needed_multipacks = batch.params.multipacks
+    needed_packs = batch.params.packs
+    current_time = await get_string_datetime()
+
+    multipacks = await get_multipacks_queue()
+    multipacks_for_cube = multipacks[:n]
+    multipack_ids_with_pack_ids = {}
+
+    for i in range(len(multipacks_for_cube)):
+        multipacks_for_cube[i].status = Status.IN_CUBE
+        multipack_ids_with_pack_ids[str(
+            multipacks_for_cube[i].id)] = multipacks_for_cube[i].pack_ids
+        await engine.save_all(multipacks_for_cube)
+
+    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
+                batch_number=batch_number,
+                multipacks_in_cubes=needed_multipacks,
+                packs_in_multipacks=needed_packs,
+                created_at=current_time,
+                added_qr_at=current_time)
+
+    await engine.save(cube)
+    return cube
 
 
 async def get_100_last_packing_records() -> List[PackingTableRecord]:
