@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Union
 
 from app.config import default_settings, get_apply_settings_url
@@ -11,7 +11,6 @@ from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
                                ReportRequest, ReportResponse)
 from app.models.system_settings import SystemSettings, SystemSettingsResponse
 from app.models.system_status import Mode, State, SystemState, SystemStatus
-from app.utils.naive_current_datetime import get_string_datetime
 from fastapi import HTTPException
 from odmantic import Model, ObjectId, query
 from pydantic.tools import parse_obj_as
@@ -177,7 +176,10 @@ async def form_cube_from_n_multipacks(n: int) -> Cube:
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
     needed_packs = batch.params.packs
-    current_time = await get_string_datetime()
+    current_settings = await get_current_system_settings()
+    tz = current_settings.timeZone
+    current_time = (datetime.utcnow() +
+                    timedelta(hours=tz)).strftime("%d.%m.%Y %H:%M")
 
     multipacks = await get_multipacks_queue()
     multipacks_for_cube = multipacks[:n]
