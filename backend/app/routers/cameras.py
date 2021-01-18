@@ -301,12 +301,15 @@ async def cube_identification_auto(identification: CubeIdentificationAuto,
 
     qr = identification.qr
     barcode = identification.barcode
-    cube_to_update = await get_first_cube_without_qr()
+    cube_to_update = await get_last_cube_in_queue()
     current_datetime = await get_string_datetime()
 
     error_msg = None
     if not cube_to_update:
-        error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу в системе не обнаружено мультипаков без него'
+        error_msg = f'{current_datetime} в текущей очереди нет кубов'
+
+    if cube_to_update.qr:
+        error_msg = f'{current_datetime} последний куб в очереди уже идентифицирован'
 
     if not qr and not barcode:
         error_msg = f'{current_datetime} при присвоении внешнего кода кубу с него не смогли считать ни одного кода!'
