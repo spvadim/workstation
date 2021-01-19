@@ -69,6 +69,7 @@ const getTableProps = (extended) => ({
 
 const useStyles = createUseStyles({
     Main: {
+        backgroundColor: ({ redBackground }) => redBackground && "#CC3333",
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
@@ -151,64 +152,86 @@ const useStyles = createUseStyles({
 
 function Main() {
     const [mode, setMode] = useState('auto');
+    const [redBackground, setRedBackground] = useState(false);
     const [batchSettings, setBatchSettings] = useState({});
-    const [extended, setExtended] = useState(true);
+    const [extended, setExtended] = useState(false);
     const [page, setPage] = useState('');
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
     const [modalCube, setModalCube] = useState(false);
+    const [modalDisassemble, setModalDisassemble] = useState(false);
     const [modalDelete2Pallet, setModalDelete2Pallet]  = useState(false);
     const [modalPackingTableError, setModalPackingTableError] = useState(false);
+    const [modalAgree, setModalAgree] = useState(false);
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
+    const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
     const [valueQrCube, setValueQrCube] = useState('');
+    const [packingTableRecords, setPackingTableRecords] = useState("");
     const [notificationText, setNotificationText] = useState("");
+    const [returnNotificationText, setReturnNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
     const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
-    const classes = useStyles({ mode });
+    const classes = useStyles({ mode, redBackground });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/current_batch")
-            .then(res => {
-                if (res.data) {
-                    setBatchSettings({
-                        batchNumber: res.data.number,
-                        multipacks: res.data.params.multipacks,
-                        packs: res.data.params.packs,
-                        multipacksAfterPintset: res.data.params.multipacks_after_pintset,
-                    })
-                }
-                
+        .then(res => {
+            setBatchSettings({
+                batchNumber: res.data.number,
+                multipacks: res.data.params.multipacks,
+                packs: res.data.params.packs,
+                multipacksAfterPintset: res.data.params.multipacks_after_pintset,
             })
+            
+        })
+    }, [setBatchSettings]);
 
+    useEffect(() => {
         axios.get(address + "/api/v1_0/get_mode")
             .then(res => {
                 setMode(res.data.work_mode);
-                setNotificationText(res.data.work_mode === "auto" ?
-                    // "Сосканируйте QR мультипака/пачки для идентификации куба" :
-                    "Сосканируйте QR для идентификации куба" :
-                    "Сосканируйте QR куба для редактирования")
             })
             .catch(e => setNotificationErrorText(e.response.data.detail))
+    }, [setMode]);
 
+    useEffect(() => {
+        const request2 = () => {
+            axios.get(address + "/api/v1_0/packing_table_records")
+                .then(res => {
+                    setPackingTableRecords(res.data);
+                    if (res.data.multipacks_amount === batchSettings.multipacks) {
+                        setNotificationText("Надо отсканировать QR Куба")
+                    } else {
+                        returnNotification();
+                    }
+            });
+        }
+        
+        request2();
+        const interval1 = setInterval(() => request2(), 1000);
+        return () => clearInterval(interval1);
+    }, [batchSettings]);
+
+    useEffect(() => {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => {
                 let temp = res.data;
                 if (temp.state === "normal") setNotificationColumnErrorText("") 
-                    else setNotificationColumnErrorText(temp.error_msg) 
+                    else {setNotificationColumnErrorText(temp.error_msg); setRedBackground(true)}
                 if (temp.pintset_state === "normal") setNotificationPintsetErrorText("") 
-                    else setNotificationPintsetErrorText(temp.pintset_error_msg)
+                    else {setNotificationPintsetErrorText(temp.pintset_error_msg); setRedBackground(true)}
                 if (temp.packing_table_state === "normal") setModalPackingTableError("") 
-                    else setModalPackingTableError(temp.packing_table_error_msg)
+                    else {setModalPackingTableError(temp.packing_table_error_msg); setRedBackground(true)}
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
         request();
-        const interval = setInterval(request, 1000);
-        return () => clearInterval(interval);
-    }, [notificationColumnErrorText]);
+        const interval = setInterval(() => request(), 1000);
+        return () => {clearInterval(interval)};
+    }, []);
 
     if (page === "batch_params") {
         return (
@@ -220,14 +243,15 @@ function Main() {
         );
     }
 
+    const returnNotification = () => {
+        setNotificationText(returnNotificationText);
+    }
+
     const updateMode = () => {
         let newMode = mode === "auto" ? "manual" : "auto"
         axios.patch(address + "/api/v1_0/set_mode", { work_mode: newMode })
             .then(res => {
                 setMode(res.data.work_mode);
-                setNotificationText(res.data.work_mode === "auto" ?
-                    "Сосканируйте QR для идентификации куба" :
-                    "Сосканируйте QR куба для редактирования")
             })
             .catch(e => {
                 // TOD0: handle error
@@ -235,14 +259,9 @@ function Main() {
             })
     }
 
-    const setDefaultNotificationText = () => {
-        if (mode === "auto") setNotificationText("Сосканируйте QR для идентификации куба")
-        else if (mode === "manual") setNotificationText("Сосканируйте QR куба для редактирования")
-    }
-
     const flushStateColumn = () => {
         axios.patch(address + "/api/v1_0/flush_state")
-            .then(() => setNotificationColumnErrorText(""))
+            .then(() => {setNotificationColumnErrorText(""); setRedBackground(false)})
             .catch(e => setNotificationErrorText(e.response.detail[0].msg))
     }
 
@@ -250,9 +269,11 @@ function Main() {
         axios.patch(address + "/api/v1_0/flush_pintset")
             .then(res => {
                 if (res.status === 200) {
+                    setReturnNotificationText(notificationText);
                     setNotificationText("Ошибка с пинцета успешно сброшена");
                     setNotificationPintsetErrorText("");
-                    setTimeout(() => setDefaultNotificationText(), 2000);
+                    setRedBackground(false);
+                    setTimeout(() => returnNotification(), 2000);
                 }
             })
             .catch(res => setNotificationErrorText(res.response.detail[0].msg))
@@ -261,9 +282,10 @@ function Main() {
     const createIncompleteCube = () => {
         axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + valueQrCube.replace("/", "%2F"))
             .then(() => {
+                setReturnNotificationText(notificationText);
                 setNotificationText("Неполный куб успешно сформирован");
                 setTimeout(() => {
-                    setNotificationText("");
+                    returnNotification();
                 }, 2000);
             })
             .catch(e => {
@@ -273,6 +295,54 @@ function Main() {
 
     return (
         <div className={classes.Main}>
+            {modalAgree && 
+                <ModalWindow
+                    title="Подтвердите действие"
+                    description="Вы действительно хотите удалить объект?"
+                >
+                    <Button onClick={() => {axios.delete((address + "/api/v1_0/cubes/" + valueQrToDisassemble)).then(() => setModalAgree(false)); setValueQrToDisassemble("")}}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Удалить
+                    </Button>
+
+                    <Button onClick={() => {setValueQrToDisassemble("");  setModalAgree(false)}}>
+                        Отмена
+                    </Button>
+                </ModalWindow>
+            }
+
+            {modalDisassemble && 
+                <ModalWindow
+                    title="Разобрать куб?"
+                    description="Введите QR куба для разбора"
+                >
+                    <Button onClick={() => {setModalDisassemble(false); setValueQrToDisassemble("")}}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Отмена
+                    </Button>
+
+                    <TextField
+                        placeholder="QR..."
+                        onChange={async e => {
+                            setValueQrToDisassemble(e.target.value);
+                        }}
+                        onKeyPress={e => {
+                                if (e.charCode === 13) {
+                                    setModalDisassemble(false);
+                                    setModalAgree(true);
+                                }
+                            }
+                        }
+                        value={valueQrToDisassemble}
+                        outlined
+                        forceFocus
+                        autoFocus
+
+                        
+                    />
+                </ModalWindow>
+            }
+
             {modalDelete2Pallet && 
                 <ModalWindow
                     title="Удаление двух паллет"
@@ -280,7 +350,7 @@ function Main() {
                 >
                     <Button onClick={() => {
                         axios.delete(address + "/api/v1_0/remove_two_multipacks_to_refresh_wrapper")
-                        .then(() => setNotificationText("Паллеты успешно удалены"), setTimeout(setDefaultNotificationText, 2000), setModalDelete2Pallet(false))
+                        .then(() => setReturnNotificationText(notificationText), setNotificationText("Паллеты успешно удалены"), setTimeout(returnNotification, 2000), setModalDelete2Pallet(false))
                             .catch(e => console.log(e.responce))
                     }}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
@@ -311,7 +381,7 @@ function Main() {
                     </Button>
                     <Button onClick={() => {
                         axios.patch(address + "/api/v1_0/flush_packing_table")
-                            .then(() => setModalPackingTableError(false), setValueQrModalPackingTable(""))
+                            .then(() => setModalPackingTableError(false), setRedBackground(false), setValueQrModalPackingTable(""))
                             .catch(e => setNotificationErrorText(e.responce.data.detail[0].msg))
                     }}>
                         Отмена
@@ -326,9 +396,11 @@ function Main() {
                                     axios.patch(address + "/api/v1_0/flush_packing_table_with_identify?qr=" + valueQrModalPackingTable)
                                         .then(() => {
                                             setModalPackingTableError(false);
+                                            setRedBackground(false);
                                             setValueQrModalPackingTable("");
+                                            setReturnNotificationText(notificationText);
                                             setNotificationText("Успешно идентифицировано");
-                                            setTimeout(setDefaultNotificationText, 2000);
+                                            setTimeout(returnNotification, 2000);
                                         })
                                         .catch(e => setNotificationErrorText(e.response.data.detail[0].msg))
                                 }
@@ -421,6 +493,9 @@ function Main() {
                 </div>
 
                 <div className={classes.headerCenter}>
+                    <Button onClick={() => {
+                        setModalDisassemble(true)
+                    }}>Разобрать куб по его QR</Button>
                     <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
 
                     <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
@@ -489,7 +564,7 @@ function Main() {
                 notifications={
                     notificationText && (
                         <Notification
-                            title="Уведомление"
+                            title="Подсказка"
                             description={notificationText}
                         />
                     )

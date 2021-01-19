@@ -76,7 +76,6 @@ function Admin() {
         })
     }
 
-    console.log(editSettings)
 
     return (
         <div style={{padding: 20}}>

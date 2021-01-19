@@ -34,7 +34,7 @@ const useStyles = createUseStyles({
     }
 });
 
-function NotificationPanel({ notifications, errors }) {
+const NotificationPanel = React.memo(({ notifications, errors }) =>  {
     const classes = useStyles();
     return (
         <div className={['notification-panel', classes.root].join(' ')} style={{}}>
@@ -50,6 +50,6 @@ function NotificationPanel({ notifications, errors }) {
             </div>
         </div>
     )
-}
+})
 
 export default NotificationPanel;

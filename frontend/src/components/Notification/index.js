@@ -7,7 +7,7 @@ import imgCross from 'src/assets/images/cross.svg';
 
 const useStyles = createUseStyles({
     rootNotification: {
-        width: 301,
+        width: 351,
         paddingLeft: 21,
         paddingRight: 21,
     },
@@ -30,7 +30,7 @@ const useStyles = createUseStyles({
     },
     description: {
         marginTop: 11,
-        fontSize: 18,
+        fontSize: 22,
     },
     actions: {
         '& > .button': {
@@ -46,7 +46,7 @@ const useStyles = createUseStyles({
     },
 });
 
-export function Notification({ title, description, error, className, children, onClose, ...restProps }) {
+export const Notification = React.memo(({ title, description, error, className, children, onClose, ...restProps }) => {
     const classes = useStyles();
 
     return (
@@ -64,7 +64,7 @@ export function Notification({ title, description, error, className, children, o
             )}
         </Paper>
     )
-} 
+})
 
 export function NotificationImage({ title, description, children, className, ...restProps }) {
     const classes = useStyles();

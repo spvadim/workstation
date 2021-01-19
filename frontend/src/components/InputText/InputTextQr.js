@@ -56,10 +56,10 @@ const InputTextQr = React.memo(({ setNotification, setNotificationError, mode, e
         .then(() => {
             setFlagSetQr(false);
             setValue("");
-            setNotification("Куб успешно идентифицирован");
-            setTimeout(() => {
-                setNotification("Сосканируйте QR для идентификации куба")
-            }, 2000);
+            // setNotification("Куб успешно идентифицирован");
+            // setTimeout(() => {
+            //     setNotification("Сосканируйте QR для идентификации куба")
+            // }, 2000);
         })
         .catch(e => setNotificationError(e.response.data.detail))
 
