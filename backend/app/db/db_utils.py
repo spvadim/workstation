@@ -6,7 +6,7 @@ from app.models.cube import Cube
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack
 from app.models.packing_table import PackingTableRecord
-from app.models.production_batch import ProductionBatch
+from app.models.production_batch import ProductionBatch, ProductionBatchNumber
 from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
                                ReportRequest, ReportResponse)
 from app.models.system_settings import SystemSettings, SystemSettingsResponse
@@ -158,7 +158,7 @@ async def get_last_packing_table_amount() -> int:
 
 
 async def get_batch_by_number_or_return_last(
-        batch_number: Optional[int]) -> ProductionBatch:
+        batch_number: Optional[ProductionBatchNumber]) -> ProductionBatch:
     if batch_number:
         batch = await engine.find_one(ProductionBatch,
                                       ProductionBatch.number == batch_number)
