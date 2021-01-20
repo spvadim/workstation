@@ -6,7 +6,9 @@ import { Redirect } from "react-router-dom";
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
-import { Text, Switch, Button, Loader, TextField} from 'src/components';
+import { Text, Switch, Button, NotificationPanel, Loader, TextField } from 'src/components';
+import { Notification } from "../../components/Notification/index.js";
+
 import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
@@ -166,9 +168,13 @@ function Edit({ description, type, extended }) {
     const classes = useStyles();
     const tableProps = getTableProps(type, extended);
     const [tableSwitch, setTableSwitch] = useState(false);
+    const [newQrCube, setNewQrCube] = useState("");
+    const [cubeId, setCubeId] = useState("");
     const [valueQr, setValueQr] = useState('');
     const [valueFlag, setValueFlag] = useState(false);
     const [barcode, setBarcode] = useState("placeholder");
+    const [errorText, setErrorText] = useState("");
+    const [errorText2, setErrorText2] = useState("");
     const [addTableData, setAddTableData] = useState([]);
     const [removeTableData, setRemoveTableData] = useState([]);
     const [page, setPage] = useState('');
@@ -197,7 +203,7 @@ function Edit({ description, type, extended }) {
                     setContainTableData(await getPacks(res.data.pack_ids));
                 } else if (type === "cubes") {
                     setContainTableData(await getPacksFromMultipacks(Object.keys(res.data.multipack_ids_with_pack_ids)));
-                    setBarcode(res.data.barcode)
+                    setCubeId(res.data.id);
                 }
             })
     }, [])
@@ -255,6 +261,7 @@ function Edit({ description, type, extended }) {
 
     const deleteRow = (row, from) => {
         if (!row) return false;
+        setErrorText("");
         if (from === "addTable") {
             let temp = addTableData.filter((obj) => obj.qr !== row.qr);
             setAddTableData(temp);
@@ -276,32 +283,40 @@ function Edit({ description, type, extended }) {
         let finded = addTableData.find(obj => obj.qr === qr)
         if (!finded) {
             let temp = addTableData.slice();
-            temp.push({ barcode: barcode, qr: qr});
+            temp.push({ barcode: containTableData[0].barcode, qr: qr});
+            setErrorText("");
             setAddTableData(temp);
         }
     }
 
     const submitChanges = () => {
-        if (containTableData !== "/loader") {
+        if (containTableData !== "/loader" && (removeTableData.length !== 0 || addTableData.length !== 0) && !errorText2) {
             axios.patch(address + "/api/v1_0/edit_cube/" + description.id, {
                 pack_ids_to_delete: removeTableData.map(row => row.id),
-                packs_barcode: "placeholder",
+                packs_barcode: containTableData[0].barcode,
                 pack_qrs: addTableData.map(row => row.qr),
             })
-            .then(() => setPage("/"))
-            .catch(e => console.log(e.response.data))
-
-            
-        } else {
-            setPage("/")
+            .then(() => {setErrorText(""); setPage("/")})
+            .catch(e => setErrorText(e.response.data.detail))
         }
+
+        if (newQrCube && !errorText) {
+            axios.patch(address + "/api/v1_0/cubes/" + cubeId, {qr: newQrCube})
+                .then(() => {setErrorText2(""); setPage("/")})
+                .catch(e => setErrorText2(e.response.data.detail))
+        }
+
     }
 
     const closeChanges = () => {
-         setPage("/");
+        setErrorText("");
+        setErrorText2("");
+        setPage("/");
     }
 
-    if (page === "/") return <Redirect to="/" />
+    console.log(page, errorText, errorText2)
+    if (page === "/" && !errorText && !errorText2) return <Redirect to="/" />
+
 
     return (
         <div className={classes.Edit}>
@@ -366,6 +381,13 @@ function Edit({ description, type, extended }) {
                 }} className={classes.switchTable} />
                 <div>
                     <Text className={classes.tableTitle} type="title2">{type}</Text>
+                    <span style={{marginLeft: 30}}>Новый QR: <TextField style={{padding: "5px 5px"}}
+                                                                        outlined
+                                                                        placeholder="Новый Qr..."
+                                                                        onChange={async e => {
+                                                                            setNewQrCube(e.target.value);
+                                                                            setErrorText2("");
+                                                                        }} /></span>
                     <TableData
                         className={classes.tableDescription}
                         rows={[description]}
@@ -375,8 +397,7 @@ function Edit({ description, type, extended }) {
 
                     <div className={classes.buttonContainer}>
                         <Button onClick={() => {
-                            console.log(removeTableData.length, addTableData.length)
-                            if (removeTableData.length === 0 && addTableData.length === 0) closeChanges()
+                            if ((removeTableData.length === 0 && addTableData.length === 0) && !newQrCube) closeChanges()
                             else setModalSubmit([submitChanges])
                         }} className={classes.buttonSubmit}>
                             <img src={imgOk} /><span>Принять изменения</span>
@@ -418,6 +439,27 @@ function Edit({ description, type, extended }) {
                     />
                 </div>
             </div>
+
+            <NotificationPanel
+                errors={
+                    [
+                        errorText && (
+                            <Notification
+                                title="Ошибка"
+                                description={errorText}
+                                error
+                            > </Notification>
+                        ),
+                        errorText2 && (
+                            <Notification
+                                title="Ошибка"
+                                description={errorText2}
+                                error
+                            > </Notification>
+                        ),
+                    ]
+                }
+            />
 
             {/* <div className={classes.footer}>
                 <div>
