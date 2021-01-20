@@ -1,18 +1,18 @@
 from typing import List, Optional
-
+from .production_batch import ProductionBatchNumber
 from pydantic import BaseModel
 
 
 class PackReportItem(BaseModel):
     created_at: Optional[str]
-    batch_number: Optional[int]
+    batch_number: Optional[ProductionBatchNumber]
     qr: str
     barcode: str
 
 
 class MPackReportItem(BaseModel):
     created_at: Optional[str]
-    batch_number: Optional[int]
+    batch_number: Optional[ProductionBatchNumber]
     qr: Optional[str]
     barcode: Optional[str]
     packs: List[PackReportItem] = []
@@ -20,7 +20,7 @@ class MPackReportItem(BaseModel):
 
 class CubeReportItem(BaseModel):
     created_at: str
-    batch_number: int
+    batch_number: ProductionBatchNumber
     qr: Optional[str]
     barcode: Optional[str]
     multipacks_in_cubes: int
