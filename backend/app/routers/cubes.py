@@ -66,10 +66,11 @@ async def create_cube(cube_input: CubeInput):
 @version(1, 0)
 async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     batch_number = cube_input.batch_number
-    batch = await engine.find_one(ProductionBatch,
-                                  ProductionBatch.number == batch_number)
+    batch = await engine.find_one(
+        ProductionBatch, ProductionBatch.number.batch_number == batch_number)
     if not batch:
         raise HTTPException(404, detail='Такой партии не существует!')
+    batch_number = batch.number
 
     params = await get_by_id_or_404(ProductionBatchParams,
                                     cube_input.params_id)
