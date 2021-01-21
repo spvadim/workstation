@@ -46,5 +46,3 @@ class MultipackPatchSchema(BaseModel):
     status: Optional[Status]
     comments: Optional[List[str]]
     to_process: Optional[bool]
-
-

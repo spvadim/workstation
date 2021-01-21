@@ -1,12 +1,9 @@
-from app.db.db_utils import (change_coded_setting, check_qr_unique,
-                             delete_cube, delete_multipack,
-                             flush_packing_table, flush_pintset, flush_state,
-                             get_by_id_or_404, get_current_state,
-                             get_current_status, get_current_workmode,
-                             get_last_batch, get_last_cube_in_queue,
-                             get_multipacks_queue, get_report,
-                             packing_table_error, pintset_error,
-                             set_column_red, set_column_yellow)
+from app.db.db_utils import (
+    change_coded_setting, check_qr_unique, delete_cube, delete_multipack,
+    flush_packing_table, flush_pintset, flush_state, get_by_id_or_404,
+    get_current_state, get_current_status, get_current_workmode,
+    get_last_batch, get_last_cube_in_queue, get_multipacks_queue, get_report,
+    packing_table_error, pintset_error, set_column_red, set_column_yellow)
 from app.db.engine import engine
 from app.models.cube import Cube
 from app.models.message import TGMessage
@@ -18,7 +15,7 @@ from app.utils.background_tasks import (flush_to_normal, send_error,
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_string_datetime
 from app.utils.pintset import off_pintset, on_pintset
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, File, UploadFile
 from fastapi_versioning import version
 from pydantic import parse_obj_as
 
@@ -164,5 +161,7 @@ async def get_system_report_with_query(
 
 
 @router.post("/send_message", response_model=bool)
-async def send_tg_message(msg: TGMessage) -> bool:
-    return await send_telegram_message(msg)
+async def send_tg_message(text: str,
+                          timestamp: bool = False,
+                          img: UploadFile = File(None)) -> bool:
+    return await send_telegram_message(TGMessage(text=text, timestamp=timestamp), img)
