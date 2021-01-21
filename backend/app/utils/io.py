@@ -18,7 +18,7 @@ msg_templates_by_subject = {
 }
 
 
-async def send_telegram_message(msg: TGMessage) -> bool:
+async def send_telegram_message(msg: TGMessage, img=None) -> bool:
     """
     функция отправки сообщения в телеграмм канал
     """
@@ -39,9 +39,16 @@ async def send_telegram_message(msg: TGMessage) -> bool:
         message += f' Время на сервере: {timestamp}.'
 
     async with httpx.AsyncClient() as client:
-        r = await client.get(
-            'https://api.telegram.org/bot{}/sendMessage'.format(tg_token),
-            params=dict(chat_id=tg_channel_id, text=message))
+        if img:
+            files = {'photo': (img.filename, img.file)}
+            r = await client.post(
+                'https://api.telegram.org/bot{}/sendPhoto'.format(tg_token),
+                data=dict(chat_id=tg_channel_id, caption=message),
+                files=files)
+        else:
+            r = await client.get(
+                'https://api.telegram.org/bot{}/sendMessage'.format(tg_token),
+                params=dict(chat_id=tg_channel_id, text=message))
     if r.status_code != 200:
         return False
 
