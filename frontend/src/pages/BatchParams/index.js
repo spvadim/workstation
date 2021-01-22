@@ -69,6 +69,7 @@ function BatchParams() {
     const [loading, setLoading] = useState(false);
     const [settings, setSettings] = useState({})
     const [redirect, setRedirect] = useState(false);
+    const [date, setDate] = useState("");
 
     const [cookies, setCookie] = useCookies([]);
 
@@ -87,9 +88,12 @@ function BatchParams() {
     function submitHandler(event) {
         event.preventDefault();
 
-        if (batchNumber && Object.keys(settings).length !== 0) {
+        if (batchNumber && Object.keys(settings).length !== 0 && date) {
             axios.put(address + "/api/v1_0/batches", {
-                number: batchNumber,
+                number: {
+                    batch_number: batchNumber,
+                    batch_date: date,
+                },
                 params_id: settings.id
             })
                 .then(() => setRedirect(true))
@@ -105,13 +109,16 @@ function BatchParams() {
 
         return <Redirect to="/" />
     }
+
+    console.log(date)
     return (
         <div className={classes.BatchParams}>
             <Text type="title" className={classes.title}>Вход</Text>
             <div className={classes.main}>
+                <input type="date" onChange={e => setDate(e.target.value + " 00:00")} style={{height: "max-content"}} />
+
                 <Paper className={classes.paperMain}>
                     <form className={classes.form} onSubmit={submitHandler} autoComplete="off">
-
                         <div className={classes.input}>
                             <span className={classes.inputLabel}>Номер партии ГП: </span>
                             <TextField
