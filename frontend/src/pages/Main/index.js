@@ -177,12 +177,14 @@ function Main() {
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/current_batch")
-        .then(res => {
-            setBatchSettings({
-                batchNumber: res.data.number,
-                multipacks: res.data.params.multipacks,
-                packs: res.data.params.packs,
-                multipacksAfterPintset: res.data.params.multipacks_after_pintset,
+            .then(res => {
+                setBatchSettings({
+                    batchNumber: res.data.number.batch_number,
+                    batchDate: res.data.number.batch_date.split("T")[0].split("-").reverse(), 
+                    multipacks: res.data.params.multipacks,
+                    packs: res.data.params.packs,
+                    multipacksAfterPintset: res.data.params.multipacks_after_pintset,
+                })
             })
             
         })
@@ -487,6 +489,7 @@ function Main() {
             <div className={classes.header}>
                 <div className={classes.headerInfo}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
+                    <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
                     <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
                     <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
                     <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />

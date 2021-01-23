@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional
 
-from odmantic import EmbeddedModel, Model
+from odmantic import EmbeddedModel, Model, ObjectId
 
 
 class WorkMode(str, Enum):
@@ -26,7 +26,7 @@ class SystemState(EmbeddedModel):
     error_msg: Optional[str]
     pintset_error_msg: Optional[str]
     packing_table_error_msg: Optional[str]
-    multipacks_on_table_error: Optional[int]
+    wrong_cube_id: Optional[ObjectId]
 
 
 class SystemStatus(Model):

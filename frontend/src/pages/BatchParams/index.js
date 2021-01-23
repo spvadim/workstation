@@ -63,12 +63,15 @@ const useStyles = createUseStyles({
 });
 
 function BatchParams() {
+    const date_ = new Date();
+
     const classes = useStyles();
     const [batchNumber, setBatchNumber] = useState('');
     const [params, setParams] = useState([]);
     const [loading, setLoading] = useState(false);
     const [settings, setSettings] = useState({})
     const [redirect, setRedirect] = useState(false);
+    const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : (date_.getMonth() + 1)) + "-" + date_.getDate() + " 00:00");
 
     const [cookies, setCookie] = useCookies([]);
 
@@ -87,9 +90,12 @@ function BatchParams() {
     function submitHandler(event) {
         event.preventDefault();
 
-        if (batchNumber && Object.keys(settings).length !== 0) {
+        if (batchNumber && Object.keys(settings).length !== 0 && date) {
             axios.put(address + "/api/v1_0/batches", {
-                number: batchNumber,
+                number: {
+                    batch_number: batchNumber,
+                    batch_date: date,
+                },
                 params_id: settings.id
             })
                 .then(() => setRedirect(true))
@@ -105,13 +111,16 @@ function BatchParams() {
 
         return <Redirect to="/" />
     }
+
+    console.log(date)
     return (
         <div className={classes.BatchParams}>
             <Text type="title" className={classes.title}>Вход</Text>
             <div className={classes.main}>
+                
+
                 <Paper className={classes.paperMain}>
                     <form className={classes.form} onSubmit={submitHandler} autoComplete="off">
-
                         <div className={classes.input}>
                             <span className={classes.inputLabel}>Номер партии ГП: </span>
                             <TextField
@@ -125,6 +134,7 @@ function BatchParams() {
                                 forceFocus
                             />
                         </div>
+                        <input type="date" value={date.split(" ")[0]} onChange={e => setDate(e.target.value + " 00:00")} style={{width: "max-content"}} />
 
                         {loading ?
                             <Loader /> :

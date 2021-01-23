@@ -3,22 +3,26 @@ from typing import Dict, List, Optional
 from odmantic import Model, ObjectId
 from pydantic import BaseModel
 
+from .production_batch import ProductionBatchNumber
+
 
 class Cube(Model):
     qr: Optional[str]
     barcode: Optional[str]
     multipack_ids_with_pack_ids: Dict[str, List[ObjectId]]
-    batch_number: int
+    batch_number: ProductionBatchNumber
     created_at: str
     added_qr_at: Optional[str]
     packs_in_multipacks: int
     multipacks_in_cubes: int
+    to_process: bool = False
+    comments: List[str] = []
 
 
 class CubeInput(Model):
     qr: Optional[str]
     barcode: Optional[str]
-    batch_number: Optional[int]
+    batch_number: Optional[ProductionBatchNumber]
     multipack_ids: List[ObjectId]
 
 
@@ -43,7 +47,8 @@ class CubeIdentificationAuto(Model):
 class CubePatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
-    multipack_ids_with_pack_ids: Optional[Dict[str, List[ObjectId]]]
+    to_process: Optional[bool]
+    comments: Optional[List[str]]
 
 
 class CubeEditSchema(Model):

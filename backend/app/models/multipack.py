@@ -4,6 +4,8 @@ from typing import List, Optional
 from odmantic import Model, ObjectId
 from pydantic import BaseModel
 
+from .production_batch import ProductionBatchNumber
+
 
 class Status(str, Enum):
     EXIT_PINTSET = 'вышел из пинцета'
@@ -20,7 +22,9 @@ class Multipack(Model):
     barcode: Optional[str]
     status: Status = Status.EXIT_PINTSET
     pack_ids: List[ObjectId]
-    batch_number: Optional[int]
+    comments: List[str] = []
+    to_process: bool = False
+    batch_number: Optional[ProductionBatchNumber]
     created_at: Optional[str]
     added_qr_at: Optional[str]
 
@@ -40,6 +44,5 @@ class MultipackPatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
     status: Optional[Status]
-    pack_ids: Optional[List[ObjectId]]
-
-
+    comments: Optional[List[str]]
+    to_process: Optional[bool]
