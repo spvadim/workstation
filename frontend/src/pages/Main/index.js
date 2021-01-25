@@ -187,8 +187,8 @@ function Main() {
                 })
             })
             
-        })
-    }, [setBatchSettings]);
+        }, [setBatchSettings])
+
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/get_mode")
