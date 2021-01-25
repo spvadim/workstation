@@ -2,7 +2,7 @@
 branch=$(git rev-parse --abbrev-ref HEAD)
 echo "Here all the branches"
 git branch
-echo "Current branch is '$branch'. To change branch run 'git checkout <branch_name>' or 'git checkuot -b <branch_name>' if branch is not in list"
+echo "Current branch is '$branch'. To change branch run 'git checkout <branch_name>' or 'git checkout -b <branch_name>' if branch is not in list above"
 echo "Stopping everything"
 sudo docker-compose down
 # read -p "Than switch to '$branch'. Press Enter to continue"
