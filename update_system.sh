@@ -14,7 +14,7 @@ git pull origin $branch
 # if [[ "$delete_all" == "delete_all" ]]; then
 #     echo "try to delete"
 # fi
-read -p "Delete all not needed docker images"
-docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
 read -p "Than rebuild docker containers and run them. Press Enter to continue"
 sudo docker-compose up --build -d
+echo "Delete all not needed docker images"
+docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
