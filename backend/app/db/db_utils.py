@@ -215,6 +215,11 @@ async def get_packs_queue() -> List[Pack]:
     return packs
 
 
+async def count_packs_queue() -> int:
+    packs_amount = await engine.count(Pack, Pack.in_queue == True)
+    return packs_amount
+
+
 async def get_multipacks_queue() -> List[Multipack]:
     multipacks = await engine.find(Multipack,
                                    Multipack.status != Status.IN_CUBE,
@@ -223,8 +228,9 @@ async def get_multipacks_queue() -> List[Multipack]:
 
 
 async def count_multipacks_queue() -> int:
-    amount = await engine.count(Multipack, Multipack.status != Status.IN_CUBE)
-    return amount
+    multipacks_amount = await engine.count(Multipack,
+                                           Multipack.status != Status.IN_CUBE)
+    return multipacks_amount
 
 
 async def get_first_exited_pintset_multipack() -> Multipack:

@@ -1,15 +1,12 @@
 from typing import List
 
-from app.db.db_utils import (check_qr_unique, get_100_last_packing_records,
-                             get_all_wrapping_multipacks, get_current_workmode,
-                             get_first_exited_pintset_multipack,
-                             get_first_multipack_without_qr,
-                             get_first_wrapping_multipack, get_last_batch,
-                             get_last_cube_in_queue,
-                             get_last_packing_table_amount,
-                             get_multipacks_queue, get_packs_queue,
-                             packing_table_error, pintset_error,
-                             set_column_red, form_cube_from_n_multipacks)
+from app.db.db_utils import (
+    check_qr_unique, form_cube_from_n_multipacks, get_100_last_packing_records,
+    get_all_wrapping_multipacks, get_current_workmode,
+    get_first_exited_pintset_multipack, get_first_multipack_without_qr,
+    get_first_wrapping_multipack, get_last_batch, get_last_cube_in_queue,
+    get_last_packing_table_amount, get_multipacks_queue, get_packs_queue,
+    packing_table_error, pintset_error, set_column_red)
 from app.db.engine import engine
 from app.models.cube import Cube, CubeIdentificationAuto
 from app.models.message import TGMessage
@@ -19,7 +16,8 @@ from app.models.pack import Pack, PackCameraInput, PackOutput
 from app.models.packing_table import (PackingTableRecord,
                                       PackingTableRecordInput,
                                       PackingTableRecords)
-from app.utils.background_tasks import (send_error,
+from app.utils.background_tasks import (check_multipacks_max_amount,
+                                        check_packs_max_amount, send_error,
                                         send_error_with_buzzer_and_tg_message,
                                         send_warning_and_back_to_normal)
 from app.utils.io import send_telegram_message
@@ -104,6 +102,8 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     pack.batch_number = batch.number
     pack.created_at = current_datetime
     await engine.save(pack)
+    background_tasks.add_task(check_packs_max_amount, 16)
+    background_tasks.add_task(check_multipacks_max_amount, 12)
     return pack
 
 
@@ -201,6 +201,8 @@ async def pintset_finish(background_tasks: BackgroundTasks):
         new_multipacks.append(multipack)
     await engine.save_all(new_multipacks)
 
+    background_tasks.add_task(check_packs_max_amount, 4)
+    background_tasks.add_task(check_multipacks_max_amount, 12)
     return new_multipacks
 
 
@@ -398,6 +400,9 @@ async def add_packing_table_record(record: PackingTableRecordInput,
     needed_multipacks = current_batch.params.multipacks
 
     if current_amount == 0:
+
+        background_tasks.add_task(check_packs_max_amount, 16)
+        background_tasks.add_task(check_multipacks_max_amount, 4)
 
         if not cube:
             error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
