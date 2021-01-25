@@ -9,5 +9,12 @@ sudo docker-compose down
 # git checkout $branch
 read -p "Than pull changes from '$branch'. Press Enter to continue"
 git pull origin $branch
+# echo "Press Enter to continue or input 'delete_all' to delete all docker containers"
+# read delete_all
+# if [[ "$delete_all" == "delete_all" ]]; then
+#     echo "try to delete"
+# fi
+read -p "Delete all not needed docker images"
+docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
 read -p "Than rebuild docker containers and run them. Press Enter to continue"
 sudo docker-compose up --build -d
