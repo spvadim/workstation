@@ -1,4 +1,6 @@
 #!/bin/bash
+echo "Delete all not needed docker images"
+docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
 branch=$(git rev-parse --abbrev-ref HEAD)
 echo "Here all the branches"
 git branch
@@ -16,5 +18,3 @@ git pull origin $branch
 # fi
 read -p "Than rebuild docker containers and run them. Press Enter to continue"
 sudo docker-compose up --build -d
-echo "Delete all not needed docker images"
-docker rmi $(docker images --filter "dangling=true" -q --no-trunc)
