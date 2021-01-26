@@ -12,18 +12,11 @@ FROM node:alpine as build
 WORKDIR /app
 # copy everything to /app directory
 # as opposed to on dev, in prod everything is copied to docker
-COPY . /app
+COPY package.json package-lock.json /app/
 RUN npm install --silent
-CMD ["npm", "start"]
+COPY ./ /app
+RUN npm run build
 
-# add the node_modules folder to $PATH
-# ENV PATH /app/node_modules/.bin:$PATH
-# install and cache dependencies
-RUN yarn
-#build the project for production
-RUN yarn build
-# set up production environment
-# the base image for this is an alpine based nginx image
 FROM nginx:alpine
 # copy the build folder from react to the root of nginx (www)
 COPY --from=build /app/build /usr/share/nginx/html
