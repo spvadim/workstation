@@ -27,7 +27,7 @@ const useStyles = createUseStyles({
     paperMain: {
         boxSizing: 'border-box',
         width: 422,
-        height: 294,
+        height: "max-content",
         paddingTop: 38,
         paddingBottom: 38,
         paddingLeft: 35,
@@ -42,7 +42,7 @@ const useStyles = createUseStyles({
         fontSize: 18,
     },
     submitButton: {
-        marginTop: 'auto',
+        marginTop: 13,
         width: '100%',
     },
     radioLabel: {
@@ -104,11 +104,6 @@ function BatchParams() {
     }
 
     if (redirect) {
-        setCookie("batchNumber", batchNumber, { path: "/" });
-        setCookie("multipacks", settings.multipacks, { path: "/" });
-        setCookie("packs", settings.packs, { path: "/" });
-        setCookie("multipacksAfterPintset", settings.multipacks_after_pintset, { path: "/" })
-
         return <Redirect to="/" />
     }
 
@@ -158,6 +153,8 @@ function BatchParams() {
                         <Button className={classes.submitButton}>Начать выпуск партии</Button>
 
                     </form>
+
+                    <Button className={classes.submitButton} onClick={() => setRedirect(true)}>Вернуться на основную страницу</Button>
                 </Paper>
 
                <TouchPanel addNumber={(number) => {
