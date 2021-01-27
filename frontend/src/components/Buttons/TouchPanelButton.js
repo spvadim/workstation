@@ -6,8 +6,8 @@ let useStyles = createUseStyles({
     touchPanelButton: {
         backgroundColor: "black",
         display: "flex",
-        width: 144,
-        height: 60,
+        width: 136,
+        height: 58,
         borderRadius: 5,
         cursor: "pointer",
     },

@@ -302,7 +302,7 @@ function Main() {
                     title="Подтвердите действие"
                     description="Вы действительно хотите удалить объект?"
                 >
-                    <Button onClick={() => {axios.delete((address + "/api/v1_0/cubes/" + valueQrToDisassemble)).then(() => setModalAgree(false)); setValueQrToDisassemble("")}}>
+                    <Button onClick={() => {axios.delete((address + "/api/v1_0/cubes/" + modalAgree)).then(() => setModalAgree(false)); setValueQrToDisassemble("")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Удалить
                     </Button>
@@ -328,10 +328,17 @@ function Main() {
                         onChange={async e => {
                             setValueQrToDisassemble(e.target.value);
                         }}
-                        onKeyPress={e => {
+                        onKeyPress={async e => {
                                 if (e.charCode === 13) {
-                                    setModalDisassemble(false);
-                                    setModalAgree(true);
+                                    let req = axios.get(address + "/api/v1_0/cubes/?qr=" + valueQrToDisassemble);
+                                    let awaited = await req;
+                                    
+                                    console.log(awaited);
+
+                                    if (awaited.data.id) {
+                                        setModalDisassemble(false);
+                                        setModalAgree(awaited.data.id);
+                                    }
                                 }
                             }
                         }
@@ -496,10 +503,11 @@ function Main() {
                 </div>
 
                 <div className={classes.headerCenter}>
+                    <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
+
                     <Button onClick={() => {
                         setModalDisassemble(true)
                     }}>Разобрать куб по его QR</Button>
-                    <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
 
                     <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
                 
@@ -545,7 +553,7 @@ function Main() {
                         setModal={setModalDeletion}
                         type="multipacks"
                         address="/api/v1_0/multipacks_queue"
-                        // buttonEdit="/edit"
+                        buttonEdit="/edit"
                         buttonDelete="/trash"
                     />
                 </div>

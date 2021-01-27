@@ -134,7 +134,10 @@ function BatchParams() {
                                 forceFocus
                             />
                         </div>
-                        <input type="date" value={date.split(" ")[0]} onChange={e => setDate(e.target.value + " 00:00")} style={{width: "max-content"}} />
+                        <div className={classes.input} style={{height: 24, paddingTop: 10, position: "relative"}}>
+                            <span className={classes.inputLabel}>Дата партии ГП: </span>
+                            <input type="date" value={date.split(" ")[0]} onChange={e => setDate(e.target.value + " 00:00")} style={{width: "max-content", position: "absolute", right: 0}} />
+                        </div>
 
                         {loading ?
                             <Loader /> :

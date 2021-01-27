@@ -12,6 +12,7 @@ let useStyles = createUseStyles({
         flexWrap: "wrap",
         width: 230,
         padding: 15,
+        paddingRight: 0,
         border: "1px solid #A4A4A4",
         borderRadius: 10,
     }
