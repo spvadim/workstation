@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List, Optional, Union
 
-from app.config import default_settings, get_apply_settings_url
 from app.models.cube import Cube
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack
@@ -9,7 +8,6 @@ from app.models.packing_table import PackingTableRecord
 from app.models.production_batch import ProductionBatch, ProductionBatchNumber
 from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
                                ReportRequest, ReportResponse)
-from app.models.system_settings import SystemSettings, SystemSettingsResponse
 from app.models.system_status import Mode, State, SystemState, SystemStatus
 from fastapi import HTTPException
 from odmantic import Model, ObjectId, query
@@ -176,8 +174,7 @@ async def form_cube_from_n_multipacks(n: int) -> Cube:
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
     needed_packs = batch.params.packs
-    current_settings = await get_current_system_settings()
-    tz = current_settings.timeZone
+    tz = 5
     current_time = (datetime.utcnow() +
                     timedelta(hours=tz)).strftime("%d.%m.%Y %H:%M")
 
@@ -283,30 +280,6 @@ async def get_all_wrapping_multipacks() -> List[Multipack]:
 async def get_cubes_queue() -> List[Cube]:
     last_batch = await get_last_batch()
     return await engine.find(Cube, Cube.batch_number == last_batch.number)
-
-
-async def get_current_system_settings() -> Union[SystemSettings, None]:
-    current_settings = await engine.find_one(SystemSettings,
-                                             sort=query.desc(
-                                                 SystemSettings.id))
-    return current_settings
-
-
-async def get_system_settings_with_apply_url(
-) -> Union[SystemSettingsResponse, None]:
-    current_settings = await get_current_system_settings()
-    if current_settings is None:
-        return None
-    setup_url = get_apply_settings_url(current_settings)
-    return SystemSettingsResponse(**current_settings.dict(),
-                                  setupUrl=setup_url)
-
-
-async def create_system_settings_if_not_exists():
-    system_settings = await get_system_settings_with_apply_url()
-    if system_settings is None:
-        system_settings = default_settings
-        await engine.save(system_settings)
 
 
 async def get_report(q: ReportRequest) -> ReportResponse:
