@@ -194,6 +194,11 @@ function Main() {
         axios.get(address + "/api/v1_0/get_mode")
             .then(res => {
                 setMode(res.data.work_mode);
+                if (res.data.work_mode === "auto") setReturnNotificationText("")
+                else {
+                    setReturnNotificationText("Сосканируйте QR куба для редактирования");
+                    setNotificationText("Сосканируйте QR куба для редактирования");
+                }
             })
             .catch(e => setNotificationErrorText(e.response.data.detail))
     }, [setMode]);
@@ -203,11 +208,9 @@ function Main() {
             axios.get(address + "/api/v1_0/packing_table_records")
                 .then(res => {
                     setPackingTableRecords(res.data);
-                    if (res.data.multipacks_amount === batchSettings.multipacks) {
+                    if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
                         setNotificationText("Надо отсканировать QR Куба")
-                    } else {
-                        returnNotification();
-                    }
+                    } 
             });
         }
         
@@ -254,6 +257,13 @@ function Main() {
         axios.patch(address + "/api/v1_0/set_mode", { work_mode: newMode })
             .then(res => {
                 setMode(res.data.work_mode);
+                if (res.data.work_mode === "auto") {
+                    setReturnNotificationText("");
+                    setNotificationText("");
+                } else {
+                    setReturnNotificationText("Сосканируйте QR куба для редактирования");
+                    setNotificationText("Сосканируйте QR куба для редактирования");
+                }
             })
             .catch(e => {
                 // TOD0: handle error
@@ -294,6 +304,11 @@ function Main() {
                 setNotificationErrorText(e.response.data.detail)
             })
     }
+
+    console.log(mode)
+    console.log("noti: ", notificationText);
+    console.log("retu: ", returnNotificationText);
+    console.log("");
 
     return (
         <div className={classes.Main}>
