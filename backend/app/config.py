@@ -1,5 +1,10 @@
 import os
 
+from app.models.system_settings.erd_settings import (ERDBuzzerOID,
+                                                     ERDCommunityString,
+                                                     ERDGreenOID, ERDIp,
+                                                     ERDRedOID, ERDSettings,
+                                                     ERDSNMPPort, ERDYellowOID)
 from app.models.system_settings.general_settings import (
     DaysToDelete, GeneralSettings, PintsetStop, SendApplikatorTgMessage)
 from app.models.system_settings.location_settings import (LocationSettings,
@@ -53,3 +58,21 @@ default_pintset_settings = PintsetSettings(
     pintset_bit_number=default_pintset_bit_number,
     pintset_turning_off_value=default_pintset_turning_off_value,
     pintset_turning_on_value=default_pintset_turning_on_value)
+
+# set default erd settings
+default_erd_ip = ERDIp(value=os.getenv('ERD_IP'))
+default_erd_snmp_port = ERDSNMPPort(value=os.getenv('ERD_SNMP_PORT'))
+default_erd_community_string = ERDCommunityString(
+    value=os.getenv('ERD_COMMUNITY_STRING'))
+default_erd_red_oid = ERDRedOID(value=os.getenv('ERD_OID_RED'))
+default_erd_yellow_oid = ERDYellowOID(value=os.getenv('ERD_OID_YELLOW'))
+default_erd_green_oid = ERDGreenOID(value=os.getenv('ERD_OID_GREEN'))
+default_erd_buzzer_oid = ERDBuzzerOID(value=os.getenv('ERD_OID_BUZZER'))
+default_erd_settings = ERDSettings(
+    erd_ip=default_erd_ip,
+    erd_snmp_port=default_erd_snmp_port,
+    erd_community_string=default_erd_community_string,
+    erd_red_oid=default_erd_red_oid,
+    erd_yellow_oid=default_erd_yellow_oid,
+    erd_green_oid=default_erd_green_oid,
+    erd_buzzer_oid=default_erd_buzzer_oid)
