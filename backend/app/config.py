@@ -13,6 +13,8 @@ from app.models.system_settings.pintset_settings import (
     PintsetBitNumber, PintsetByteNumber, PintsetDbName, PintsetIp, PintsetRack,
     PintsetReadingLength, PintsetSettings, PintsetSlot, PintsetStartingByte,
     PintsetTurningOffValue, PintsetTurningOnValue)
+from app.models.system_settings.telegram_settings import (TGChat, TGSettings,
+                                                          TGToken)
 
 # set deafult location settings
 default_place_name = PlaceName(value=os.getenv('DEFAULT_PLACE'))
@@ -76,3 +78,9 @@ default_erd_settings = ERDSettings(
     erd_yellow_oid=default_erd_yellow_oid,
     erd_green_oid=default_erd_green_oid,
     erd_buzzer_oid=default_erd_buzzer_oid)
+
+# set default telegram settings
+default_tg_token = TGToken(value=os.getenv('TG_TOKEN'))
+default_tg_chat = TGChat(value=os.getenv('TG_CHAT'))
+default_tg_settings = TGSettings(tg_token=default_tg_token,
+                                 tg_chat=default_tg_chat)
