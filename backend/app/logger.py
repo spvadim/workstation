@@ -1,10 +1,7 @@
-"""Configure handlers and formats for application loggers."""
 import logging
 import sys
 from pprint import pformat
 
-# if you dont like imports of private modules
-# you can move it to typing.py module
 from loguru import logger
 from loguru._defaults import LOGURU_FORMAT
 
@@ -12,9 +9,7 @@ from loguru._defaults import LOGURU_FORMAT
 class InterceptHandler(logging.Handler):
     """
     Default handler from examples in loguru documentaion.
-    See https://loguru.readthedocs.io/en/stable/overview.html#entirely-compatible-with-standard-logging
     """
-
     def emit(self, record: logging.LogRecord):
         # Get corresponding Loguru level if it exists
         try:

@@ -1,21 +1,9 @@
-import httpx
 from datetime import datetime as dt
 
-from app.db.engine import engine
-
-from app.models.system_settings import SystemSettings
+import httpx
+from app.db.system_settings import get_system_settings
 from app.models.message import TGMessage
-
-from odmantic import query
 from loguru import logger
-msg_templates_by_subject = {
-    'special':
-    'operation X was done.',
-    'settings was set':
-    'Настройки системы были успешно изменены.',
-    'default settings was set':
-    'Дефолтные настройки системы были успешно установлены.'
-}
 
 
 async def send_telegram_message(msg: TGMessage, img=None) -> bool:
@@ -24,14 +12,10 @@ async def send_telegram_message(msg: TGMessage, img=None) -> bool:
     """
 
     logger.info('Отправка сообщения в телеграмм')
-    cs = await engine.find_one(SystemSettings,
-                               sort=query.desc(SystemSettings.id))
+    cs = await get_system_settings()
 
-    if cs:
-        tg_token = cs.telegram_token
-        tg_channel_id = cs.telegram_chat
-    else:
-        return False
+    tg_token = cs.telegram_settings.tg_token.value
+    tg_channel_id = cs.telegram_settings.tg_chat.value
 
     message = msg.text
     if msg.timestamp:

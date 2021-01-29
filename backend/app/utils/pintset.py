@@ -7,10 +7,11 @@ plc = snap7.client.Client()
 def off_pintset() -> bool:
     logger.info('Выключение пинцета')
     try:
-        plc.connect('192.168.20.210', 0, 2)
-        reading = plc.db_read(60, 0, 1)
-        snap7.util.set_bool(reading, 0, 0, True)
-        plc.db_write(60, 0, reading)
+        plc.connect('192.168.20.210', 0, 2)  # ip, rack, slot
+        reading = plc.db_read(60, 0, 1)  # db_name, starting_byte, length
+        snap7.util.set_bool(reading, 0, 0,
+                            True)  # byte_number, bite_number, toggle_value_on
+        plc.db_write(60, 0, reading)  # db_name, starting_byte
         plc.disconnect()
         plc.destroy()
 
