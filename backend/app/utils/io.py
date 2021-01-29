@@ -8,14 +8,6 @@ from app.models.message import TGMessage
 
 from odmantic import query
 from loguru import logger
-msg_templates_by_subject = {
-    'special':
-    'operation X was done.',
-    'settings was set':
-    'Настройки системы были успешно изменены.',
-    'default settings was set':
-    'Дефолтные настройки системы были успешно установлены.'
-}
 
 
 async def send_telegram_message(msg: TGMessage, img=None) -> bool:
