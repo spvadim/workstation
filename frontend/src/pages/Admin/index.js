@@ -26,6 +26,20 @@ const useStyles = createUseStyles({
         alignItems: "center",
         gap: 5,
     },
+    title: {
+        fontSize: 18,
+        fontWeight: 600,
+    },
+    settingInner: {
+        paddingLeft: 15,
+        display: "flex",
+        flexDirection: "column",
+        gap: 5,
+    },
+    container: {
+        display: "flex",
+        justifyContent: "space-between",
+    },
 })
 
 const bathesParamsTableProps = [
@@ -53,7 +67,7 @@ function Admin() {
     const [editSettings, setEditSettings] = useState({});
 
     useEffect(() => {
-        axios.get(address + "/api/v1_0/get_settings?default=false")
+        axios.get(address + "/api/v1_0/settings")
              .then(res => {setSettings(res.data); setEditSettings(res.data)});
     }, []);
 
@@ -68,11 +82,41 @@ function Admin() {
     }, []);
 
     const generateSettings = () => {
-        return Object.keys(settings).map((key) => {
-            return <div className={classes.row}>
-                <span>{key}</span>
-                <input value={editSettings[key]} onChange={(e) => {let temp = {}; Object.assign(temp, editSettings); temp[key] = e.target.value; setEditSettings(temp)}} />
-            </div>
+        return Object.keys(settings).map((sKey) => {
+            if (["id"].indexOf(sKey) !== -1) return null
+
+            let setting = settings[sKey]; 
+            return (
+                <div>
+                    <span className={classes.title}>{setting.title}:</span>
+                    {
+                        <div className={classes.settingInner}>
+                            {
+                                Object.keys(setting).map((key) => {
+                                    return (
+                                        ["title", "advanced"].indexOf(key) !== -1 ?
+                                            null :
+                                            (
+                                                <div className={classes.row}>
+                                                        <span>{setting[key].title}:</span>
+                                                        <input 
+                                                        value={editSettings[sKey][key].value}
+                                                        onChange={(e) => {
+                                                            let temp = {};
+                                                            Object.assign(temp, editSettings);
+                                                            temp[sKey][key].value = temp[sKey][key].value_type === "integer" ? +e.target.value : e.target.value;
+                                                            setEditSettings(temp);
+                                                        }} />
+                                                    </div>
+                                            )
+                                    )
+                                })
+                            }
+                        </div>
+                        
+                    }   
+                </div>
+            )
         })
     }
 
@@ -145,26 +189,29 @@ function Admin() {
                 </Button>
             </ModalWindow>}
 
-            <div className={classes.settingsContainer}>
-                {generateSettings()}
-                <Button style={{width: "max-content"}} onClick={() => {
-                    axios.post(address + "/api/v1_0/set_settings", editSettings)
-                }} > Сохранить </Button>
-            </div>
+            <div className={classes.container}>
+                <div className={classes.settingsContainer}>
+                    {Object.keys(editSettings).length !== 0 && generateSettings()}
+                    <Button style={{width: "max-content"}} onClick={() => {
+                        axios.patch(address + "/api/v1_0/settings", editSettings)
+                    }} > Сохранить </Button>
+                </div>
 
-            <div className={classes.tableContainer}>
-                <Button onClick={() => setModalAddBatchParams(true)}>Создать новые параметры партии</Button>
-                <Table columns={bathesParamsTableProps}
-                        rows={batchesParams.map((param, index) => {
-                            let temp = {};
-                            Object.assign(temp, param);
-                            temp.number = batchesParams.length - index;
-                            return temp;
-                        })}
-                        className={"bathesParams"}
-                        buttonDelete={"/trash"}
-                        onDelete={(row) => rowDelete(row.id)} />
+                <div className={classes.tableContainer}>
+                    <Button onClick={() => setModalAddBatchParams(true)}>Создать новые параметры партии</Button>
+                    <Table columns={bathesParamsTableProps}
+                            rows={batchesParams.map((param, index) => {
+                                let temp = {};
+                                Object.assign(temp, param);
+                                temp.number = batchesParams.length - index;
+                                return temp;
+                            })}
+                            className={"bathesParams"}
+                            buttonDelete={"/trash"}
+                            onDelete={(row) => rowDelete(row.id)} />
+                </div>
             </div>
+            
         </div>
     );
 }

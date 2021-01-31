@@ -11,6 +11,7 @@ let useStyles = createUseStyles({
         gap: 20,
         flexWrap: "wrap",
         width: 230,
+        height: "max-content",
         padding: 15,
         paddingRight: 0,
         border: "1px solid #A4A4A4",
