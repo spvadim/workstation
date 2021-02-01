@@ -29,15 +29,6 @@ async def send_error_with_buzzer():
     await asyncio.gather(*tasks)
 
 
-async def send_error_with_buzzer_and_tg_message(message: str):
-    tasks = []
-
-    tasks.append(send_error_with_buzzer())
-    tasks.append(
-        send_telegram_message(TGMessage(text=message, timestamp=False)))
-    await asyncio.gather(*tasks)
-
-
 async def check_packs_max_amount(max_amount: int):
     packs_amount = await count_packs_queue()
 
@@ -86,8 +77,6 @@ async def send_warning_and_back_to_normal(message: str):
     tasks_before_sleep.append(send_warning())
     tasks_before_sleep.append(set_column_yellow(message))
 
-    tasks_before_sleep.append(
-        send_telegram_message(TGMessage(text=message, timestamp=False)))
     await asyncio.gather(*tasks_before_sleep)
     await asyncio.sleep(15)
 
