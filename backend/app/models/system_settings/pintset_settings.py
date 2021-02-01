@@ -3,7 +3,7 @@ from odmantic import EmbeddedModel
 
 class PintsetIp(EmbeddedModel):
     title: str = 'Ip контроллера пинцета'
-    desc: str = 'Введите IP контролера пинцета'
+    desc: str = 'Введите IP контроллера пинцета'
     value: str
     value_type: str = 'string'
 
