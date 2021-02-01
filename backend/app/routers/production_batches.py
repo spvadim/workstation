@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from app.utils.naive_current_datetime import get_string_datetime
 from typing import List
 
 from app.db.db_utils import get_by_id_or_404, get_last_batch
@@ -39,13 +39,11 @@ async def delete_params_by_id(id: ObjectId):
 async def create_batch(batch: ProductionBatchInput):
     params = await get_by_id_or_404(ProductionBatchParams, batch.params_id)
     batch = ProductionBatch(number=batch.number, params=params)
-    batch.created_at = (datetime.utcnow() +
-                        timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    batch.created_at = await get_string_datetime()
 
     last_batch = await get_last_batch()
     if last_batch:
-        last_batch.closed_at = (datetime.utcnow() +
-                                timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+        last_batch.closed_at = await get_string_datetime()
         await engine.save(last_batch)
 
     await engine.save(batch)
