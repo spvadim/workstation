@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from typing import List
 
 from app.db.db_utils import (check_qr_unique,
@@ -7,6 +6,7 @@ from app.db.db_utils import (check_qr_unique,
                              get_packs_queue)
 from app.db.engine import engine
 from app.models.pack import Pack, PackOutput, PackPatchSchema
+from app.utils.naive_current_datetime import get_string_datetime
 from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
@@ -46,8 +46,7 @@ async def create_pack(pack: Pack):
             400, detail=f'Пачка с QR-кодом {pack.qr} уже есть в системе')
 
     pack.batch_number = batch.number
-    pack.created_at = (datetime.utcnow() +
-                       timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    pack.created_at = await get_string_datetime()
     await engine.save(pack)
     return pack
 
