@@ -8,6 +8,7 @@ from app.db.db_utils import (
     get_last_packing_table_amount, get_multipacks_queue, get_packs_queue,
     packing_table_error, pintset_error, set_column_red)
 from app.db.engine import engine
+from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
 from app.models.message import TGMessage
 from app.models.multipack import (Multipack, MultipackIdentificationAuto,
@@ -18,7 +19,7 @@ from app.models.packing_table import (PackingTableRecord,
                                       PackingTableRecords)
 from app.utils.background_tasks import (check_multipacks_max_amount,
                                         check_packs_max_amount, send_error,
-                                        send_error_with_buzzer_and_tg_message,
+                                        send_error_with_buzzer,
                                         send_warning_and_back_to_normal)
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_string_datetime
@@ -59,6 +60,10 @@ async def new_pack_after_applikator(pack: PackCameraInput,
 
     if error_msg:
         logger.warning(error_msg)
+        current_settings = await get_system_settings()
+        if current_settings.general_settings.send_applikator_tg_message.value:
+            background_tasks.add_task(send_telegram_message,
+                                      TGMessage(text=error_msg))
         background_tasks.add_task(send_warning_and_back_to_normal, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
     return pack
@@ -85,16 +90,18 @@ async def new_pack_after_pintset(pack: PackCameraInput,
         error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался'
 
     elif not await check_qr_unique(Pack, pack.qr):
-        tg_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
-        await send_telegram_message(TGMessage(text=tg_msg, timestamp=False))
+        error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
         logger.error(error_msg)
-        # background_tasks.add_task(off_pintset)
-        # background_tasks.add_task(pintset_error, error_msg)
-        # background_tasks.add_task(send_error_with_buzzer_and_tg_message,
-        #                           error_msg)
-        # return JSONResponse(status_code=400, content={'detail': error_msg})
+        background_tasks.add_task(
+            send_telegram_message, TGMessage(text=error_msg))
+        current_settings = await get_system_settings()
+        if current_settings.general_settings.pintset_stop.value:
+            background_tasks.add_task(off_pintset)
+            background_tasks.add_task(pintset_error, error_msg)
+            background_tasks.add_task(send_error_with_buzzer)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
 
