@@ -1,64 +1,94 @@
-import json
 import os
 
-from app.models.system_devices import Precision
-from app.models.system_settings import SystemSettings, SystemSettingsResponse
-from app.utils.io import msg_templates_by_subject
+from app.models.system_settings.erd_settings import (ERDBuzzerOID,
+                                                     ERDCommunityString,
+                                                     ERDGreenOID, ERDIp,
+                                                     ERDRedOID, ERDSettings,
+                                                     ERDSNMPPort, ERDYellowOID)
+from app.models.system_settings.general_settings import (
+    DaysToDelete, GeneralSettings, PintsetStop, SendApplikatorTgMessage)
+from app.models.system_settings.location_settings import (LocationSettings,
+                                                          PlaceName, TimeZone)
+from app.models.system_settings.pintset_settings import (
+    PintsetBitNumber, PintsetByteNumber, PintsetDbName, PintsetIp, PintsetRack,
+    PintsetReadingLength, PintsetSettings, PintsetSlot, PintsetStartingByte,
+    PintsetTurningOffValue, PintsetTurningOnValue)
+from app.models.system_settings.system_settings import SystemSettings
+from app.models.system_settings.telegram_settings import (TGChat, TGSettings,
+                                                          TGToken)
 
-CURRENT_API_VERSION = '1_0'
+# set deafult location settings
+default_place_name = PlaceName(value=os.getenv('DEFAULT_PLACE'))
+default_time_zone = TimeZone(value=os.getenv('TZ'))
+default_location_settings = LocationSettings(place_name=default_place_name,
+                                             time_zone=default_time_zone)
+# set default general settings
+default_days_to_delete = DaysToDelete(
+    value=os.getenv('DROP_DATA_INTERVAL_DAYS'))
+default_send_applikator_tg_message = SendApplikatorTgMessage(
+    value=os.getenv('SEND_TG_MESSAGE_AFTER_APPLIKATOR'))
+default_pintset_stop = PintsetStop(value=os.getenv('PINTSET_STOP'))
+default_general_settings = GeneralSettings(
+    days_to_delete=default_days_to_delete,
+    send_applikator_tg_message=default_send_applikator_tg_message,
+    pintset_stop=default_pintset_stop)
 
-initial_pintset_device_params = {'precision': Precision.LOW}
+# set default pintset settings
+default_pintset_ip = PintsetIp(value=os.getenv('PINTSET_IP'))
+default_pintset_rack = PintsetRack(value=os.getenv('PINTSET_RACK'))
+default_pintset_slot = PintsetSlot(value=os.getenv('PINTSET_SLOT'))
+default_pintset_db_name = PintsetDbName(value=os.getenv('PINTSET_DB_NAME'))
+default_pintset_starting_byte = PintsetStartingByte(
+    value=os.getenv('PINTSET_STARTING_BYTE'))
+default_pintset_reading_length = PintsetReadingLength(
+    value=os.getenv('PINTSET_READING_LENGTH'))
+default_pintset_byte_number = PintsetByteNumber(
+    value=os.getenv('PINTSET_BYTE_NUMBER'))
+default_pintset_bit_number = PintsetBitNumber(
+    value=os.getenv('PINTSET_BIT_NUMBER'))
+default_pintset_turning_off_value = PintsetTurningOffValue(
+    value=os.getenv('PINTSET_TURNING_OFF_VALUE'))
+default_pintset_turning_on_value = PintsetTurningOnValue(
+    value=os.getenv('PINTSET_TURNING_ON_VALUE'))
+default_pintset_settings = PintsetSettings(
+    pintset_ip=default_pintset_ip,
+    pintset_rack=default_pintset_rack,
+    pintset_slot=default_pintset_slot,
+    pintset_db_name=default_pintset_db_name,
+    pintset_starting_byte=default_pintset_starting_byte,
+    pintset_reading_length=default_pintset_reading_length,
+    pintset_byte_number=default_pintset_byte_number,
+    pintset_bit_number=default_pintset_bit_number,
+    pintset_turning_off_value=default_pintset_turning_off_value,
+    pintset_turning_on_value=default_pintset_turning_on_value)
 
-initial_pintset_client_params = {
-    'local_device_ip': '172.15.0.1',
-    'device_id': 'dd0c40db-2229-4ec4-b1d8-2a50ee83d6ff',
-    'device_params': {
-        'precision': Precision.LOW
-    }
-}
+# set default erd settings
+default_erd_ip = ERDIp(value=os.getenv('ERD_IP'))
+default_erd_snmp_port = ERDSNMPPort(value=os.getenv('ERD_SNMP_PORT'))
+default_erd_community_string = ERDCommunityString(
+    value=os.getenv('ERD_COMMUNITY_STRING'))
+default_erd_red_oid = ERDRedOID(value=os.getenv('ERD_OID_RED'))
+default_erd_yellow_oid = ERDYellowOID(value=os.getenv('ERD_OID_YELLOW'))
+default_erd_green_oid = ERDGreenOID(value=os.getenv('ERD_OID_GREEN'))
+default_erd_buzzer_oid = ERDBuzzerOID(value=os.getenv('ERD_OID_BUZZER'))
+default_erd_settings = ERDSettings(
+    erd_ip=default_erd_ip,
+    erd_snmp_port=default_erd_snmp_port,
+    erd_community_string=default_erd_community_string,
+    erd_red_oid=default_erd_red_oid,
+    erd_yellow_oid=default_erd_yellow_oid,
+    erd_green_oid=default_erd_green_oid,
+    erd_buzzer_oid=default_erd_buzzer_oid)
 
-packing_sizes = json.loads(os.environ['DEFAULT_PACKING_SIZES'])
+# set default telegram settings
+default_tg_token = TGToken(value=os.getenv('TG_TOKEN'))
+default_tg_chat = TGChat(value=os.getenv('TG_CHAT'))
+default_tg_settings = TGSettings(tg_token=default_tg_token,
+                                 tg_chat=default_tg_chat)
 
-initial_system_settings = {
-    'daysToDelete': os.environ['DROP_DATA_INTERVAL_DAYS'],
-    'packSettings': packing_sizes,
-    'placeName': os.environ['DEFAULT_PLACE'],
-    'timeZone': os.environ['TZ'],
-    'telegram_token': os.environ['TLG_TOKEN'],
-    'telegram_chat': os.environ['TLG_CHAT'],
-    'telegram_message': msg_templates_by_subject['special'],
-    'pintset_client_params': initial_pintset_client_params
-}
-
-
-def get_settings_as_url_params(settings: dict):
-    # настройки клиента либы по работе с пинцетами редактируем только через .env
-    settings.pop('pintset_client_params')
-    config_as_url_params = '?' + '&'.join([
-        f'{k}={str(v) if type(v) == str else str(v).replace(" ", "")}'
-        for k, v in settings.items()
-    ])
-    return config_as_url_params
-
-
-def get_apply_settings_url(system_settings: SystemSettings) -> str:
-    settings = system_settings.dict()
-    settings.pop('id')
-    protocol = os.environ["SITE_PROTOCOL"]
-    host = os.environ["SITE_HOST_WITH_DOMAIN"]
-    port = os.environ.get("SITE_PORT", 80)
-
-    apply_settings_url = f'{protocol}://{host}:{port}/api/v{CURRENT_API_VERSION}/apply_settings/{get_settings_as_url_params(settings)}'
-    return apply_settings_url
-
-
-default_settings = SystemSettings(**initial_system_settings)
-
-default_settings_response = SystemSettingsResponse(
-    **default_settings.dict(),
-    setupUrl=get_apply_settings_url(default_settings))
-
-
-def is_settings_default(settings: SystemSettings,
-                        default: SystemSettings = default_settings) -> bool:
-    return settings.dict(exclude={'id'}) == default.dict(exclude={'id'})
+# set default settings
+default_settings = SystemSettings(location_settings=default_location_settings,
+                                  general_settings=default_general_settings,
+                                  pintset_settings=default_pintset_settings,
+                                  erd_settings=default_erd_settings,
+                                  telegram_settings=default_tg_settings)

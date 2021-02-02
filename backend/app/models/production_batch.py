@@ -21,6 +21,7 @@ class ProductionBatchParams(Model):
     multipacks: int
     packs: int
     multipacks_after_pintset: int
+    visible: bool = True
 
 
 class ProductionBatchInput(Model):
