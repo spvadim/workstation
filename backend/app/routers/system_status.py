@@ -87,7 +87,10 @@ async def set_normal_state(background_tasks: BackgroundTasks):
 @router.patch("/set_pintset_error", response_model=SystemState)
 @version(1, 0)
 async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
-    background_tasks.add_task(off_pintset)
+    current_settings = await get_system_settings()
+    pintset_settings = current_settings.pintset_settings
+
+    background_tasks.add_task(off_pintset, pintset_settings)
     background_tasks.add_task(send_error_with_buzzer)
     return await pintset_error(error_msg)
 
