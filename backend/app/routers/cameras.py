@@ -94,11 +94,12 @@ async def new_pack_after_pintset(pack: PackCameraInput,
 
     if error_msg:
         logger.error(error_msg)
-        background_tasks.add_task(
-            send_telegram_message, TGMessage(text=error_msg))
+        background_tasks.add_task(send_telegram_message,
+                                  TGMessage(text=error_msg))
         current_settings = await get_system_settings()
         if current_settings.general_settings.pintset_stop.value:
-            background_tasks.add_task(off_pintset)
+            background_tasks.add_task(off_pintset,
+                                      current_settings.pintset_settings)
             background_tasks.add_task(pintset_error, error_msg)
             background_tasks.add_task(send_error_with_buzzer)
         return JSONResponse(status_code=400, content={'detail': error_msg})
