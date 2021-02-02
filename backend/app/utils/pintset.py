@@ -1,6 +1,6 @@
 import snap7
 from loguru import logger
-from models.system_settings.pintset_settings import PintsetSettings
+from app.models.system_settings.pintset_settings import PintsetSettings
 plc = snap7.client.Client()
 
 
