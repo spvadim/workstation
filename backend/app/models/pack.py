@@ -19,6 +19,8 @@ class Pack(Model):
 class PackOutput(Model):
     qr: str
     created_at: str
+    to_process: bool
+    comments: List[str]
 
 
 class PackPatchSchema(BaseModel):

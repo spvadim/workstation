@@ -37,6 +37,8 @@ class CubeWithNewContent(Model):
 class CubeOutput(Model):
     created_at: str
     qr: Optional[str]
+    to_process: bool
+    comments: List[str]
 
 
 class CubeIdentificationAuto(Model):

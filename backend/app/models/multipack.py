@@ -33,6 +33,8 @@ class MultipackOutput(Model):
     created_at: str
     qr: Optional[str]
     status: Status
+    to_process: bool
+    comments: List[str]
 
 
 class MultipackIdentificationAuto(Model):
