@@ -156,6 +156,7 @@ function Main() {
     const [batchSettings, setBatchSettings] = useState({});
     const [extended, setExtended] = useState(false);
     const [page, setPage] = useState('');
+
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
     const [modalCube, setModalCube] = useState(false);
@@ -163,9 +164,14 @@ function Main() {
     const [modalDelete2Pallet, setModalDelete2Pallet]  = useState(false);
     const [modalPackingTableError, setModalPackingTableError] = useState(false);
     const [modalAgree, setModalAgree] = useState(false);
+    const [modalChangePack, setModalChangePack] = useState(false);
+
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
     const [valueQrCube, setValueQrCube] = useState('');
+    const [valueQrToChangePack, setValueQrToChangePack] = useState('');
+    const [valueQrToChangeNewPack, setValueQrToChangeNewPack] = useState('');
+
     const [packingTableRecords, setPackingTableRecords] = useState("");
     const [notificationText, setNotificationText] = useState("");
     const [returnNotificationText, setReturnNotificationText] = useState("");
@@ -189,6 +195,14 @@ function Main() {
             
         }, [setBatchSettings])
 
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/settings")
+            .then(res => {
+                if (res.data.location_settings) {
+                    document.title = "" + res.data.location_settings.place_name.value
+                }
+            })
+    }, [])
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/get_mode")
@@ -305,13 +319,64 @@ function Main() {
             })
     }
 
-    console.log(mode)
-    console.log("noti: ", notificationText);
-    console.log("retu: ", returnNotificationText);
-    console.log("");
-
     return (
         <div className={classes.Main}>
+            {modalChangePack && false && 
+                <ModalWindow
+                    title="Замена пачки"
+                    description="Введите QR заменяемой и новой пачек"
+                >
+                    <Button onClick={() => {setModalChangePack(false)}}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Отмена
+                    </Button>
+
+                    <TextField
+                        placeholder="QR..."
+                        onChange={async e => {
+                            setValueQrToChangePack(e.target.value);
+                        }}
+                        onKeyPress={async e => {
+                                if (e.charCode === 13) {
+                                    let req = axios.get(address + "/api/v1_0/packs/?qr=" + valueQrToChangePack);
+                                    let awaited = await req;
+                                    
+                                    if (awaited.data.id) {
+                                        console.log("123")
+                                    }
+                                }
+                            }
+                        }
+                        value={valueQrToChangePack}
+                        outlined
+                        forceFocus
+                        autoFocus
+                    />
+
+                    <TextField
+                        placeholder="QR..."
+                        onChange={async e => {
+                            setValueQrToChangeNewPack(e.target.value);
+                        }}
+                        onKeyPress={async e => {
+                                if (e.charCode === 13) {
+                                    let req = axios.get(address + "/api/v1_0/packs/?qr=" + valueQrToChangePack);
+                                    let awaited = await req;
+                                    
+                                    if (awaited.data.id) {
+                                        console.log("123")
+                                    }
+                                }
+                            }
+                        }
+                        value={valueQrToChangePack}
+                        outlined
+                        forceFocus
+                        autoFocus
+                    />
+                </ModalWindow>
+            }
+
             {modalAgree && 
                 <ModalWindow
                     title="Подтвердите действие"
@@ -530,6 +595,8 @@ function Main() {
                         setModalDelete2Pallet(true);
                         
                     }}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
+
+                    {/* <Button onClick={() => { console.log() }} >Заменить пачку на упаковке</Button> */}
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}

@@ -68,8 +68,16 @@ function Admin() {
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/settings")
-             .then(res => {setSettings(res.data); setEditSettings(res.data)});
+             .then(res => {
+                setSettings(res.data);
+                setEditSettings(res.data);
+                if (res.data.location_settings) {
+                    document.title = "Настройки: " + res.data.location_settings.place_name.value
+                }
+             });
     }, []);
+
+
 
     useEffect(() => {
         const request = () => {

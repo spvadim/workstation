@@ -87,6 +87,15 @@ function BatchParams() {
             .finally(() => setLoading(false));
     }, [])
 
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/settings")
+            .then(res => {
+                if (res.data.location_settings) {
+                    document.title = "Новая партия: " + res.data.location_settings.place_name.value
+                }
+            })
+    }, [])
+
     function submitHandler(event) {
         event.preventDefault();
 

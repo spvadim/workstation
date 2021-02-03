@@ -208,6 +208,15 @@ function Edit({ description, type, extended }) {
             })
     }, [])
 
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/settings")
+            .then(res => {
+                if (res.data.location_settings) {
+                    document.title = "Редактирование: " + res.data.location_settings.place_name.value
+                }
+            })
+    }, [])
+
     const deleteOrAddPack = () => {
         let finded = containTableData.find(obj => obj.qr === valueQr);
         
