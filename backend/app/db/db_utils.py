@@ -48,6 +48,34 @@ async def get_by_qr_or_404(model, qr: str) -> Model:
     return instance
 
 
+async def find_not_shipped_pack_by_qr(qr: str) -> Optional[Pack]:
+    pack = await get_by_qr_or_404(Pack, qr)
+
+    if pack.in_queue:
+        return pack
+
+    multipack_containing_that_pack = await get_multipack_by_included_pack_id(
+        pack.id)
+    if multipack_containing_that_pack.status != Status.IN_CUBE:
+        return pack
+
+    last_cube = await get_last_cube_in_queue()
+    if str(multipack_containing_that_pack.id
+           ) in last_cube.multipack_ids_with_pack_ids.keys():
+        if not last_cube.qr:
+            return pack
+
+    raise HTTPException(404)
+
+
+async def get_multipack_by_included_pack_id(id: ObjectId()
+                                            ) -> Optional[Multipack]:
+    multipack = await engine.find_one(Multipack, {+Multipack.pack_ids: id})
+    if not multipack:
+        raise HTTPException(404)
+    return multipack
+
+
 async def get_current_status() -> SystemStatus:
     return await engine.find_one(SystemStatus)
 

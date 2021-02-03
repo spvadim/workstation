@@ -1,6 +1,6 @@
 from typing import List
 
-from app.db.db_utils import (check_qr_unique,
+from app.db.db_utils import (check_qr_unique, find_not_shipped_pack_by_qr,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
                              get_packs_queue)
@@ -32,6 +32,13 @@ async def get_pack_by_id(id: ObjectId):
 @version(1, 0)
 async def get_pack_by_qr(qr: str = Query(None)):
     pack = await get_by_qr_or_404(Pack, qr)
+    return pack
+
+
+@router.get('/not_shipped_pack/', response_model=Pack)
+@version(1, 0)
+async def get_not_shipped_pack_by_qr(qr: str = Query(None)):
+    pack = await find_not_shipped_pack_by_qr(qr)
     return pack
 
 
