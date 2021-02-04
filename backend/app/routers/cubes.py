@@ -277,7 +277,8 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
                 400,
                 detail=f'Куб с QR-кодом {patch.qr} уже существует в системе')
         cube.added_qr_at = await get_string_datetime()
-        patch_dict = patch.dict(exclude_unset=True)
+
+    patch_dict = patch.dict(exclude_unset=True)
     for name, value in patch_dict.items():
         setattr(cube, name, value)
     await engine.save(cube)
