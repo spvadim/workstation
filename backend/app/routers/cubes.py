@@ -345,6 +345,8 @@ async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
         pack_qrs = pack_qrs[free_space:]
 
     cube.multipack_ids_with_pack_ids = multipack_ids_with_pack_ids
+    if edit_schema.to_process:
+        cube.to_process = edit_schema.to_process
     await engine.save_all(packs_to_add)
     await engine.save_all(multipacks_to_update)
     for pack in packs_to_delete:

@@ -57,3 +57,4 @@ class CubeEditSchema(Model):
     pack_ids_to_delete: List[ObjectId]
     packs_barcode: str
     pack_qrs: List[str]
+    to_process: Optional[bool]
