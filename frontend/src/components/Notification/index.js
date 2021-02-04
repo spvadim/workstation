@@ -51,12 +51,9 @@ export const Notification = React.memo(({ title, description, error, className, 
 
     return (
         <Paper className={['notification', classes.rootNotification, className].join(' ')} {...restProps}>
-            <div className={classes.header}>
-                <img src={error ? imgError : imgNotification} />
-                <Text type="title2">{title}</Text>
-                {onClose && <img src={imgCross} onClick={onClose} style={{ marginLeft: 'auto' }} />}
-            </div>
             <div className={classes.description}>
+                <img style={{float: 'left', marginRight: 10}} src={error ? imgError : imgNotification} />
+                {onClose && <img src={imgCross} onClick={onClose} style={{float: "right"}} />}
                 {description}
             </div>
             {children && (

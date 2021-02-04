@@ -165,6 +165,7 @@ function Main() {
     const [modalPackingTableError, setModalPackingTableError] = useState(false);
     const [modalAgree, setModalAgree] = useState(false);
     const [modalChangePack, setModalChangePack] = useState(false);
+    const [modalChangePackAgree, setModalChangePackAgree] = useState(false);
 
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
@@ -321,7 +322,7 @@ function Main() {
 
     return (
         <div className={classes.Main}>
-            {modalChangePack && false && 
+            {modalChangePack && 
                 <ModalWindow
                     title="Замена пачки"
                     description="Введите QR заменяемой и новой пачек"
@@ -332,13 +333,13 @@ function Main() {
                     </Button>
 
                     <TextField
-                        placeholder="QR..."
+                        placeholder="QR для замены"
                         onChange={async e => {
                             setValueQrToChangePack(e.target.value);
                         }}
                         onKeyPress={async e => {
                                 if (e.charCode === 13) {
-                                    let req = axios.get(address + "/api/v1_0/packs/?qr=" + valueQrToChangePack);
+                                    let req = axios.get(address + "/api/v1_0/not_shipped_pack/?qr=" + valueQrToChangePack);
                                     let awaited = await req;
                                     
                                     if (awaited.data.id) {
@@ -354,19 +355,15 @@ function Main() {
                     />
 
                     <TextField
-                        placeholder="QR..."
+                        placeholder="QR новой"
                         onChange={async e => {
                             setValueQrToChangeNewPack(e.target.value);
                         }}
                         onKeyPress={async e => {
                                 if (e.charCode === 13) {
-                                    let req = axios.get(address + "/api/v1_0/packs/?qr=" + valueQrToChangePack);
-                                    let awaited = await req;
-                                    
-                                    if (awaited.data.id) {
-                                        console.log("123")
+                                    axios.patch(address + "/api/v1_0/packs/" +  valueQrToChangePack, {"qr": valueQrToChangeNewPack})
+                                        
                                     }
-                                }
                             }
                         }
                         value={valueQrToChangePack}
@@ -596,7 +593,7 @@ function Main() {
                         
                     }}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
 
-                    {/* <Button onClick={() => { console.log() }} >Заменить пачку на упаковке</Button> */}
+                    <Button onClick={() => { setModalChangePack(true) }} >Заменить пачку на упаковке</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
