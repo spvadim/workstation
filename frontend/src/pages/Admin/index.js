@@ -20,11 +20,28 @@ const useStyles = createUseStyles({
         display: "flex",
         flexDirection: "column",
         gap: 5,
+        width: "50%",
     },
     row: {
         display: "flex",
         alignItems: "center",
         gap: 5,
+        border: "1px solid #A4A4A4",
+        borderRadius: 7,
+        width: "100%",
+    },
+    cell1: {
+        borderRight: "1px solid #A4A4A4",
+        width: "50%",
+        padding: "5px 5px",
+    },
+    input: {
+        padding: "6px 5px",
+        borderRadius: 7,
+        width: "50%",
+        border: "1px solid #A4A4A4",
+        marginRight: 5,
+        outline: "none",
     },
     title: {
         fontSize: 18,
@@ -106,16 +123,27 @@ function Admin() {
                                             null :
                                             (
                                                 <div className={classes.row}>
-                                                        <span>{setting[key].title}:</span>
-                                                        <input 
+                                                    <span className={classes.cell1}>{setting[key].title}:</span>
+                                                    {typeof (editSettings[sKey][key].value) === "boolean" ? 
+                                                        <select className={classes.input}
+                                                                onChange={(e) => {
+                                                                    let temp = {};
+                                                                    Object.assign(temp, editSettings);
+                                                                    temp[sKey][key].value = e.target.value === "true"
+                                                                    setEditSettings(temp);
+                                                                }}>
+                                                            <option selected={editSettings[sKey][key].value}>true</option>
+                                                            <option selected={!editSettings[sKey][key].value}>false</option>
+                                                        </select> :
+                                                        <input className={classes.input}
                                                         value={editSettings[sKey][key].value}
                                                         onChange={(e) => {
                                                             let temp = {};
                                                             Object.assign(temp, editSettings);
                                                             temp[sKey][key].value = temp[sKey][key].value_type === "integer" ? +e.target.value : e.target.value;
                                                             setEditSettings(temp);
-                                                        }} />
-                                                    </div>
+                                                        }} />} 
+                                                </div>
                                             )
                                     )
                                 })
