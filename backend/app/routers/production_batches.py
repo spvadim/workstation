@@ -1,10 +1,11 @@
-from app.utils.naive_current_datetime import get_string_datetime
 from typing import List
 
 from app.db.db_utils import get_by_id_or_404, get_last_batch
 from app.db.engine import engine
-from app.models.production_batch import (ProductionBatch, ProductionBatchInput,
+from app.models.production_batch import (PatchParamsScheme, ProductionBatch,
+                                         ProductionBatchInput,
                                          ProductionBatchParams)
+from app.utils.naive_current_datetime import get_string_datetime
 from fastapi import APIRouter
 from fastapi_versioning import version
 from odmantic import ObjectId
@@ -26,11 +27,15 @@ async def create_params(params: ProductionBatchParams):
     return params
 
 
-@router.delete("/batches_params/{id}", response_model=ProductionBatchParams)
+@router.patch("/batches_params/{id}", response_model=ProductionBatchParams)
 @version(1, 0)
-async def delete_params_by_id(id: ObjectId):
+async def update_params_by_id(id: ObjectId, patch: PatchParamsScheme):
     params = await get_by_id_or_404(ProductionBatchParams, id)
-    await engine.delete(params)
+
+    patch_dict = patch.dict(exclude_unset=True)
+    for name, value in patch_dict.items():
+        setattr(params, name, value)
+    await engine.save(params)
     return params
 
 
