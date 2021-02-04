@@ -7,6 +7,7 @@ import { createUseStyles } from "react-jss";
 import ToolTip from "../../components/ToolTip";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import Table from "../../components/Table/index.js";
+import { Notification, NotificationImage } from "../../components/Notification/index.js";
 import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
@@ -15,6 +16,10 @@ const useStyles = createUseStyles({
     tableContainer: {
         width: 634,
         height: 300,
+    },
+    container2: {
+        height: "100%",
+        position: "relative",
     },
     settingsContainer: {
         display: "flex",
@@ -40,7 +45,6 @@ const useStyles = createUseStyles({
         borderRadius: 7,
         width: "50%",
         border: "1px solid #A4A4A4",
-        marginRight: 5,
         outline: "none",
     },
     title: {
@@ -81,6 +85,7 @@ function Admin() {
     const [newMultipacks, setNewMultipacks] = useState(false);
     const [newPalletAfterPintset, setNewPalletAfterPintset] = useState(false); 
     const [settings, setSettings] = useState({});
+    const [notificationText, setNotificationText] = useState("");
     const [editSettings, setEditSettings] = useState({});
 
     useEffect(() => {
@@ -228,9 +233,28 @@ function Admin() {
             <div className={classes.container}>
                 <div className={classes.settingsContainer}>
                     {Object.keys(editSettings).length !== 0 && generateSettings()}
-                    <Button style={{width: "max-content"}} onClick={() => {
-                        axios.patch(address + "/api/v1_0/settings", editSettings)
-                    }} > Сохранить </Button>
+                    <div style={{display: "flex", alignItems: "center"}}>
+                        <Button style={{width: "max-content", height: "max-content"}} onClick={() => {
+                            axios.patch(address + "/api/v1_0/settings", editSettings)
+                                .then(() => {
+                                    setNotificationText("Успешно");
+                                    setTimeout(() => setNotificationText(""), 2000)
+                                })
+                                .catch(e => {
+                                    setNotificationText(e.responce.data.detail[0].msg);
+                                    setTimeout(() => setNotificationText(""), 2000)
+                                })
+                        }} > Сохранить </Button>
+                        <NotificationPanel  
+                            notifications={
+                                notificationText && (
+                                    <Notification
+                                        description={notificationText}
+                                    />
+                                )
+                            }
+                        />
+                    </div>
                 </div>
 
                 <div className={classes.tableContainer}>
@@ -245,7 +269,9 @@ function Admin() {
                             className={"bathesParams"}
                             buttonDelete={"/trash"}
                             onDelete={(row) => rowDelete(row.id)} />
+                    
                 </div>
+                
             </div>
             
         </div>

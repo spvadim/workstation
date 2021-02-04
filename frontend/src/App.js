@@ -12,12 +12,12 @@ import { color } from 'src/theme';
 
 const useStyles = createUseStyles({
 	App: {
-		height: "100vh",
 		overflow: "visible",
 		backgroundImage: `url(${imgBackground})`,
 		backgroundRepeat: 'no-repeat',
 		backgroundPosition: 'bottom 10px right 10px',
 		backgroundSize: 'auto calc(100% - 10px)',
+		backgroundAttachment: "fixed",
 		backgroundColor: color.background,
 	},
 	App_inner: {
