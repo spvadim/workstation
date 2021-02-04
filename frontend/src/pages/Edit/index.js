@@ -181,6 +181,8 @@ function Edit({ description, type, extended }) {
     const [containTableData, setContainTableData] = useState("/loader");
     const [modalCancel, setModalCancel] = useState(false);
     const [modalSubmit, setModalSubmit] = useState(false);
+    const [toProcess, setToProcess] = useState(false);
+    const [toProcessDump, setToProcessDump] = useState(false);
 
     // useEffect(() => {
     //     if (valueFlag) {
@@ -203,6 +205,7 @@ function Edit({ description, type, extended }) {
                     setContainTableData(await getPacks(res.data.pack_ids));
                 } else if (type === "cubes") {
                     setContainTableData(await getPacksFromMultipacks(Object.keys(res.data.multipack_ids_with_pack_ids)));
+                    setToProcess(res.data.to_process);
                     setCubeId(res.data.id);
                 }
             })
@@ -304,9 +307,13 @@ function Edit({ description, type, extended }) {
                 pack_ids_to_delete: removeTableData.map(row => row.id),
                 packs_barcode: containTableData[0].barcode,
                 pack_qrs: addTableData.map(row => row.qr),
+                to_process: toProcessDump ? false : true,
             })
             .then(() => {setErrorText(""); setPage("/")})
             .catch(e => setErrorText(e.response.data.detail))
+        } else if (toProcessDump) {
+            axios.patch(address + "/api/v1_0/cubes/" + description.id, {to_process: false})
+                .then(() => {setErrorText(""); setPage("/")})
         }
 
         if (newQrCube && !errorText) {
@@ -314,6 +321,7 @@ function Edit({ description, type, extended }) {
                 .then(() => {setErrorText2(""); setPage("/")})
                 .catch(e => setErrorText2(e.response.data.detail))
         }
+
 
     }
 
@@ -323,9 +331,7 @@ function Edit({ description, type, extended }) {
         setPage("/");
     }
 
-    console.log(page, errorText, errorText2)
     if (page === "/" && !errorText && !errorText2) return <Redirect to="/" />
-
 
     return (
         <div className={classes.Edit}>
@@ -381,6 +387,7 @@ function Edit({ description, type, extended }) {
                     forceFocus
                     autoFocus
                 />
+                
             </div>
 
             <div className={classes.tableContainer}>
@@ -389,14 +396,22 @@ function Edit({ description, type, extended }) {
                     setValueQr("");
                 }} className={classes.switchTable} />
                 <div>
-                    <Text className={classes.tableTitle} type="title2">{type}</Text>
-                    <span style={{marginLeft: 30}}>Новый QR: <TextField style={{padding: "5px 5px"}}
-                                                                        outlined
-                                                                        placeholder="Новый Qr..."
-                                                                        onChange={async e => {
-                                                                            setNewQrCube(e.target.value);
-                                                                            setErrorText2("");
-                                                                        }} /></span>
+                    <div style={{display: "flex", gap: 20, alignItems: "center"}}>
+                        <Text className={classes.tableTitle} type="title2">{type}</Text>
+                        <span>Новый QR: <TextField style={{padding: "5px 5px", width: 100}}
+                                                                            outlined
+                                                                            placeholder="Новый Qr..."
+                                                                            onChange={async e => {
+                                                                                setNewQrCube(e.target.value);
+                                                                                setErrorText2("");
+                                                                            }} /></span>
+                        {toProcess &&
+                            <Button onClick={() => setToProcessDump(!toProcessDump)} theme="secondary">
+                                <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                                Сбросить статус: ({toProcessDump ? "true" : "false"})
+                            </Button>
+                        }
+                    </div>
                     <TableData
                         className={classes.tableDescription}
                         rows={[description]}
@@ -406,7 +421,7 @@ function Edit({ description, type, extended }) {
 
                     <div className={classes.buttonContainer}>
                         <Button onClick={() => {
-                            if ((removeTableData.length === 0 && addTableData.length === 0) && !newQrCube) closeChanges()
+                            if ((removeTableData.length === 0 && addTableData.length === 0) && !newQrCube && !toProcessDump) closeChanges()
                             else setModalSubmit([submitChanges])
                         }} className={classes.buttonSubmit}>
                             <img src={imgOk} /><span>Принять изменения</span>

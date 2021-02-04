@@ -654,7 +654,6 @@ function Main() {
                 notifications={
                     notificationText && (
                         <Notification
-                            title="Подсказка"
                             description={notificationText}
                         />
                     )

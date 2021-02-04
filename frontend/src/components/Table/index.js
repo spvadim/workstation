@@ -134,16 +134,16 @@ function Table({
                                 <div style={{ gridTemplateColumns }} key={index}>
                                     {
                                         columns.map(({ name, Component }) => (
-                                            <div key={name}>
+                                            <div key={name} style={{backgroundColor: row.to_process ? "#CC3333" : null}}>
                                                 {Component ? <Component index={index}>{row[name]}</Component> : row[name]}
                                             </div>
                                         ))
                                     }
                                     {
-                                        buttonEdit && <div className={classes.editCell} onClick={() => onEdit && onEdit(row)} />
+                                        buttonEdit && <div className={classes.editCell} style={{backgroundColor: row.to_process ? "#CC3333" : null}}  onClick={() => onEdit && onEdit(row)} />
                                     }
                                     {
-                                        buttonDelete && <div className={classes.deleteCell} onClick={() => onDelete && onDelete(row)} />
+                                        buttonDelete && <div className={classes.deleteCell} style={{backgroundColor: row.to_process ? "#CC3333" : null}} onClick={() => onDelete && onDelete(row)} />
                                     }
                                 </div>
                             ))
