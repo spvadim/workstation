@@ -1,7 +1,8 @@
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
-from odmantic import Model, ObjectId, Reference, EmbeddedModel
+from odmantic import EmbeddedModel, Model, ObjectId, Reference
+from pydantic import BaseModel
 
 
 class ProductionBatchNumber(EmbeddedModel):
@@ -22,6 +23,13 @@ class ProductionBatchParams(Model):
     packs: int
     multipacks_after_pintset: int
     visible: bool = True
+
+
+class PatchParamsScheme(BaseModel):
+    number: Optional[ProductionBatchNumber]
+    packs: Optional[int]
+    multipacks_after_pintset: Optional[int]
+    visible: Optional[bool]
 
 
 class ProductionBatchInput(Model):
