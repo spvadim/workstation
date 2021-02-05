@@ -72,7 +72,7 @@ const useStyles = createUseStyles({
         backgroundColor: ({ redBackground }) => redBackground && "#CC3333",
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
+        height: "100%",
     },
     header: {
         '& .button': {
@@ -245,6 +245,8 @@ function Main() {
                     else {setNotificationPintsetErrorText(temp.pintset_error_msg); setRedBackground(true)}
                 if (temp.packing_table_state === "normal") setModalPackingTableError("") 
                     else {setModalPackingTableError(temp.packing_table_error_msg); setRedBackground(true)}
+
+                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal") setRedBackground(false);    
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };

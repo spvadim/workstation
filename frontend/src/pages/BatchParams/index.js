@@ -8,8 +8,10 @@ import { Paper, Button, InputRadio, TextField, Text, Loader, TouchPanel } from "
 
 const useStyles = createUseStyles({
     BatchParams: {
-        height: '100%',
+        position: "relative",
         display: 'flex',
+        flexDirection: "column",
+        gap: 100,
     },
     main: {
         margin: 'auto',
@@ -55,7 +57,6 @@ const useStyles = createUseStyles({
         width: 140,
     },
     title: {
-        position: 'absolute',
         marginTop: 62,
         width: '100%',
         textAlign: 'center',
@@ -71,7 +72,8 @@ function BatchParams() {
     const [loading, setLoading] = useState(false);
     const [settings, setSettings] = useState({})
     const [redirect, setRedirect] = useState(false);
-    const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : (date_.getMonth() + 1)) + "-" + date_.getDate() + " 00:00");
+    const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : (date_.getMonth() + 1)) + "-" +
+                                                               (date_.getDate().toString().length === 1 ? "0" + date_.getDate() : date_.getDate()) + " 00:00");
 
     const [cookies, setCookie] = useCookies([]);
 
@@ -115,8 +117,9 @@ function BatchParams() {
     if (redirect) {
         return <Redirect to="/" />
     }
+    
+    console.log(date.split(" ")[0])
 
-    console.log(date)
     return (
         <div className={classes.BatchParams}>
             <Text type="title" className={classes.title}>Вход</Text>
@@ -146,6 +149,7 @@ function BatchParams() {
                         {loading ?
                             <Loader /> :
                             params.map((obj, index) => (
+                                obj.visible ? 
                                 <InputRadio name="param_batch"
                                     htmlFor={obj.id}
                                     key={index}
@@ -155,7 +159,8 @@ function BatchParams() {
                                         <br />
                                         пинцет: {obj.multipacks_after_pintset} паллет
                                     </span>
-                                </InputRadio>
+                                </InputRadio> :
+                                null
                             ))}
 
 

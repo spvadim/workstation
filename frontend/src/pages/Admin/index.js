@@ -86,6 +86,7 @@ function Admin() {
     const [newPalletAfterPintset, setNewPalletAfterPintset] = useState(false); 
     const [settings, setSettings] = useState({});
     const [notificationText, setNotificationText] = useState("");
+    const [notificationErrorText, setNotificationErrorText] = useState("");
     const [editSettings, setEditSettings] = useState({});
 
     useEffect(() => {
@@ -128,7 +129,7 @@ function Admin() {
                                             null :
                                             (
                                                 <div className={classes.row}>
-                                                    <span className={classes.cell1}>{setting[key].title}:</span>
+                                                    <span className={classes.cell1} title={setting[key].desc}>{setting[key].title}:</span>
                                                     {typeof (editSettings[sKey][key].value) === "boolean" ? 
                                                         <select className={classes.input}
                                                                 onChange={(e) => {
@@ -241,11 +242,19 @@ function Admin() {
                                     setTimeout(() => setNotificationText(""), 2000)
                                 })
                                 .catch(e => {
-                                    setNotificationText(e.responce.data.detail[0].msg);
+                                    setNotificationErrorText(e.response.data.detail[0].msg);
                                     setTimeout(() => setNotificationText(""), 2000)
                                 })
                         }} > Сохранить </Button>
-                        <NotificationPanel  
+                        <NotificationPanel
+                            errors={
+                                notificationErrorText && (
+                                    <Notification
+                                        error
+                                        description={notificationErrorText}
+                                    />
+                                )
+                            }  
                             notifications={
                                 notificationText && (
                                     <Notification
@@ -268,7 +277,12 @@ function Admin() {
                             })}
                             className={"bathesParams"}
                             buttonDelete={"/trash"}
+                            buttonVisible={"/visible"}
+                            onVisible={(row) => {
+                                axios.patch(address + "/api/v1_0/batches_params/" + row.id, {visible: !row.visible})
+                            }}
                             onDelete={(row) => rowDelete(row.id)} />
+                            
                     
                 </div>
                 

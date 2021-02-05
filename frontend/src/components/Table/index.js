@@ -4,11 +4,13 @@ import { borderRadius, color } from "src/theme";
 import { Scrollbars } from 'src/components';
 import imgTrash from "src/assets/images/trash.svg";
 import imgEdit from "src/assets/images/edit.svg";
+import imgEye from "src/assets/images/eye.png";
+import imgEyeCross from "src/assets/images/eyeCross.png";
 
 const spacing = 12;
 const headHeight = 50;
 
-const getColumnTemplate = ({ columns, buttonEdit, buttonDelete }) => {
+const getColumnTemplate = ({ columns, buttonEdit, buttonDelete, buttonVisible }) => {
     let template = columns
         .map(({ width }) => {
             if (typeof width === 'number') {
@@ -25,6 +27,9 @@ const getColumnTemplate = ({ columns, buttonEdit, buttonDelete }) => {
         template += ' 40px';
     }
     if (buttonDelete) {
+        template += ' 40px';
+    }
+    if (buttonVisible) {
         template += ' 40px';
     }
     return template;
@@ -93,6 +98,14 @@ const useStyles = createUseStyles({
         backgroundPosition: 'center',
         cursor: 'pointer',
     },
+    visibleCell: {
+        borderLeftStyle: 'none !important',
+        backgroundImage: `url(${imgEye})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 21,
+        backgroundPosition: 'center',
+        cursor: 'pointer',
+    },
 })
 
 function resizeHeader(head, body) {
@@ -107,15 +120,15 @@ function resizeHeader(head, body) {
 }
 
 function Table({
-    rows, columns, className, buttonEdit, buttonDelete, onEdit, onDelete, hideTracksWhenNotNeeded
+    rows, columns, className, buttonEdit, buttonDelete, buttonVisible, onVisible, onEdit, onDelete, hideTracksWhenNotNeeded
 }) {
     const headRef = React.useRef(null);
     const bodyRef = React.useRef(null);
-    const classes = useStyles({ columns, buttonEdit, buttonDelete });
+    const classes = useStyles({ columns, buttonEdit, buttonDelete, buttonVisible });
 
     const gridTemplateColumns = React.useMemo(() => {
-        return getColumnTemplate({ columns, buttonEdit, buttonDelete });
-    }, [columns, buttonDelete, buttonEdit])
+        return getColumnTemplate({ columns, buttonEdit, buttonDelete, buttonVisible });
+    }, [columns, buttonDelete, buttonEdit, buttonVisible])
 
     return (
         <div className={['table', classes.root, className].join(' ')}>
@@ -141,6 +154,9 @@ function Table({
                                     }
                                     {
                                         buttonEdit && <div className={classes.editCell} style={{backgroundColor: row.to_process ? "#CC3333" : null}}  onClick={() => onEdit && onEdit(row)} />
+                                    }
+                                    {
+                                        buttonVisible && <div className={classes.visibleCell} style={{backgroundColor: row.to_process ? "#CC3333" : null, backgroundImage: row.visible ? `url(${imgEye})` : `url(${imgEyeCross})`}} onClick={() => onVisible && onVisible(row)} />
                                     }
                                     {
                                         buttonDelete && <div className={classes.deleteCell} style={{backgroundColor: row.to_process ? "#CC3333" : null}} onClick={() => onDelete && onDelete(row)} />

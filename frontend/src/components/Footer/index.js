@@ -5,15 +5,15 @@ import { color } from 'src/theme';
 
 const useStyles = createUseStyles({
     Footer: {
-        position: 'absolute',
+        position: 'fixed',
         width: '100%',
-        bottom: 0,
+        bottom: "5%",
+        zIndex: 0,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         fontSize: 20,
         color: color.textGrey,
-        marginBottom: 22,
     },
 });
 

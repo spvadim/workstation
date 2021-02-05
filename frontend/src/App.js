@@ -12,17 +12,19 @@ import { color } from 'src/theme';
 
 const useStyles = createUseStyles({
 	App: {
-		overflow: "visible",
 		backgroundImage: `url(${imgBackground})`,
 		backgroundRepeat: 'no-repeat',
 		backgroundPosition: 'bottom 10px right 10px',
 		backgroundSize: 'auto calc(100% - 10px)',
-		backgroundAttachment: "fixed",
 		backgroundColor: color.background,
+		minHeight: "100%",
+		position: "relative",
 	},
 	App_inner: {
-		height: '100%',
-		position: 'relative',
+		position: "absolute",
+		overflowY: "scroll",
+		height: "100%",
+		width: "100%",
 		zIndex: 1,
 	},
 });
