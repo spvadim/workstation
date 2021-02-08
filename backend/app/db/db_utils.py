@@ -146,6 +146,22 @@ async def flush_pintset() -> SystemState:
     return current_status.system_state
 
 
+async def pintset_withdrawal_error(error_msg: str) -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.pintset_withdrawal_state = State.ERROR
+    current_status.system_state.pintset_withdrawal_error_msg = error_msg
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def flush_withdrawal_pintset() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.pintset_withdrawal_state = State.NORMAL
+    current_status.system_state.pintset_withdrawal_error_msg = None
+    await engine.save(current_status)
+    return current_status.system_state
+
+
 async def packing_table_error(error_msg: str,
                               wrong_cube_id: ObjectId) -> SystemState:
     current_status = await get_current_status()

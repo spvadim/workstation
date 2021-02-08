@@ -1,12 +1,10 @@
-from app.db.db_utils import (change_coded_setting, check_qr_unique,
-                             delete_cube, delete_multipack,
-                             flush_packing_table, flush_pintset, flush_state,
-                             get_by_id_or_404, get_current_state,
-                             get_current_status, get_current_workmode,
-                             get_last_batch, get_last_cube_in_queue,
-                             get_multipacks_queue, get_report,
-                             packing_table_error, pintset_error,
-                             set_column_red, set_column_yellow)
+from app.db.db_utils import (
+    change_coded_setting, check_qr_unique, delete_cube, delete_multipack,
+    flush_packing_table, flush_pintset, flush_state, flush_withdrawal_pintset,
+    get_by_id_or_404, get_current_state, get_current_status,
+    get_current_workmode, get_last_batch, get_last_cube_in_queue,
+    get_multipacks_queue, get_report, packing_table_error, pintset_error,
+    pintset_withdrawal_error, set_column_red, set_column_yellow)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
@@ -104,6 +102,22 @@ async def set_pinset_normal(background_tasks: BackgroundTasks):
     pintset_settings = current_settings.pintset_settings
     background_tasks.add_task(on_pintset, pintset_settings)
     return await flush_pintset()
+
+
+@router.patch("/set_pintset_withdrawal_error", response_model=SystemState)
+@version(1, 0)
+async def set_pintset_withdrawal_error(error_msg: str,
+                                       background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_error_with_buzzer)
+    return await pintset_withdrawal_error(error_msg)
+
+
+@router.patch("/flush_pintset_withdrawal", response_model=SystemState)
+@version(1, 0)
+async def set_pintset_withdrawal_normal(background_tasks: BackgroundTasks):
+    background_tasks.add_task(flush_to_normal)
+
+    return await flush_withdrawal_pintset()
 
 
 @router.patch("/set_packing_table_error", response_model=SystemState)
