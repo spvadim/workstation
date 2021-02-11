@@ -190,6 +190,7 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     if len(packs_queue) < needed_packs:
         error_msg = f'{current_time} пинцет начал формирование {multipacks_after_pintset} мультипаков, но пачек в очереди меньше чем {needed_packs}'
         background_tasks.add_task(send_error)
+        logger.error(error_msg)
         background_tasks.add_task(set_column_red, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
