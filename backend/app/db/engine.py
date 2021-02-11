@@ -16,7 +16,7 @@ engine = AIOEngine(motor_client=client, database=db)
 
 
 async def models_startup():
-    await engine.get_collection(Pack).create_index('qr', unique=True)
+    await engine.get_collection(Pack).create_index('qr')
     await engine.get_collection(Pack).create_index(
         'in_queue', partialFilterExpression={'in_queue': True})
     await engine.get_collection(Multipack).create_index('status')
