@@ -22,7 +22,7 @@ from app.utils.background_tasks import (check_multipacks_max_amount,
                                         send_error_with_buzzer,
                                         send_warning_and_back_to_normal)
 from app.utils.io import send_telegram_message
-from app.utils.naive_current_datetime import get_string_datetime
+from app.utils.naive_current_datetime import get_naive_datetime
 from app.utils.pintset import off_pintset
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
@@ -43,7 +43,7 @@ async def new_pack_after_applikator(pack: PackCameraInput,
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
 
-    current_datetime = await get_string_datetime()
+    current_datetime = await get_naive_datetime()
 
     error_msg = None
     if not pack.qr and not pack.barcode:
@@ -77,7 +77,7 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
-    current_datetime = await get_string_datetime()
+    current_datetime = await get_naive_datetime()
 
     error_msg = None
     if not pack.qr and not pack.barcode:
@@ -126,7 +126,7 @@ async def pintset_reverse(background_tasks: BackgroundTasks):
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
 
-    current_datetime = await get_string_datetime()
+    current_datetime = await get_naive_datetime()
 
     packs_queue = await get_packs_queue()
     if len(packs_queue) < multipacks_after_pintset:
@@ -185,7 +185,7 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     number = batch.number
 
     packs_queue = await get_packs_queue()
-    current_time = await get_string_datetime()
+    current_time = await get_naive_datetime()
 
     if len(packs_queue) < needed_packs:
         error_msg = f'{current_time} пинцет начал формирование {multipacks_after_pintset} мультипаков, но пачек в очереди меньше чем {needed_packs}'
@@ -242,7 +242,7 @@ async def remove_multipack_from_wrapping(background_tasks: BackgroundTasks):
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
 
-    current_datetime = await get_string_datetime()
+    current_datetime = await get_naive_datetime()
     multipack = await get_first_wrapping_multipack()
     if not multipack:
         error_msg = f'{current_datetime} при попытке изъятия мультипака из обмотки он не был обнаружен в системе'
@@ -267,7 +267,7 @@ async def multipack_identification_auto(
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
-    current_datetime = await get_string_datetime()
+    current_datetime = await get_naive_datetime()
     qr = identification.qr
     barcode = identification.barcode
     multipack_to_update = await get_first_multipack_without_qr()
@@ -314,7 +314,7 @@ async def cube_identification_auto(identification: CubeIdentificationAuto,
     qr = identification.qr
     barcode = identification.barcode
     cube_to_update = await get_last_cube_in_queue()
-    current_datetime = await get_string_datetime()
+    current_datetime = await get_naive_datetime()
 
     error_msg = None
     if not cube_to_update:
@@ -363,7 +363,7 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
 
     multipacks_queue = await get_multipacks_queue()
 
-    current_time = await get_string_datetime()
+    current_time = await get_naive_datetime()
     if len(multipacks_queue) < needed_multipacks:
         error_msg = f'{current_time} попытка формирования куба, когда в очереди меньше {needed_multipacks} мультипаков'
         background_tasks.add_task(send_error)
@@ -391,7 +391,7 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
 @version(1, 0)
 async def add_packing_table_record(record: PackingTableRecordInput,
                                    background_tasks: BackgroundTasks):
-    current_datetime = await get_string_datetime()
+    current_datetime = await get_naive_datetime()
     record = PackingTableRecord(**record.dict(exclude={'id'}),
                                 recorded_at=current_datetime)
 

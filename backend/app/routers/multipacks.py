@@ -9,7 +9,7 @@ from app.db.engine import engine
 from app.models.multipack import (Multipack, MultipackOutput,
                                   MultipackPatchSchema)
 from app.models.pack import Pack
-from app.utils.naive_current_datetime import get_string_datetime
+from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
@@ -24,7 +24,7 @@ async def create_multipack(multipack: Multipack):
         batch_number=multipack.batch_number)
 
     multipack.batch_number = batch.number
-    multipack.created_at = await get_string_datetime()
+    multipack.created_at = await get_naive_datetime()
 
     packs_to_update = []
     for id in multipack.pack_ids:
@@ -39,7 +39,7 @@ async def create_multipack(multipack: Multipack):
                 400,
                 detail=f'Мультипак с QR-кодом {multipack.qr} уже есть в системе'
             )
-        multipack.added_qr_at = await get_string_datetime()
+        multipack.added_qr_at = await get_naive_datetime()
 
     await engine.save(multipack)
     return multipack
@@ -101,7 +101,7 @@ async def update_pack_by_id(id: ObjectId, patch: MultipackPatchSchema):
             raise HTTPException(
                 400,
                 detail=f'Мультипак с QR-кодом {patch.qr} уже есть в системе')
-        multipack.added_qr_at = await get_string_datetime()
+        multipack.added_qr_at = await get_naive_datetime()
 
     patch_dict = patch.dict(exclude_unset=True)
     for name, value in patch_dict.items():
