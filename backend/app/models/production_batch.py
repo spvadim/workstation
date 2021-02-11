@@ -40,5 +40,5 @@ class ProductionBatchInput(Model):
 class ProductionBatch(Model):
     number: ProductionBatchNumber
     params: ProductionBatchParams = Reference()
-    created_at: Optional[str]
-    closed_at: Optional[str]
+    created_at: Optional[datetime]
+    closed_at: Optional[datetime]

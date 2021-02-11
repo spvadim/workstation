@@ -12,7 +12,7 @@ from app.models.cube import (Cube, CubeEditSchema, CubeInput, CubeOutput,
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack
 from app.models.production_batch import ProductionBatch, ProductionBatchParams
-from app.utils.naive_current_datetime import get_string_datetime
+from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
@@ -38,7 +38,7 @@ async def create_cube(cube_input: CubeInput):
     batch_number = batch.number
     packs_in_multipacks = batch.params.packs
     multipacks_in_cubes = batch.params.multipacks
-    created_at = await get_string_datetime()
+    created_at = await get_naive_datetime()
     cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
                 batch_number=batch_number,
                 multipacks_in_cubes=multipacks_in_cubes,
@@ -51,7 +51,7 @@ async def create_cube(cube_input: CubeInput):
                 400,
                 detail=f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
         cube.qr = cube_input.qr
-        cube.added_qr_at = await get_string_datetime()
+        cube.added_qr_at = await get_naive_datetime()
 
     if cube_input.barcode:
         cube.barcode = cube_input.barcode
@@ -75,7 +75,7 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     packs_in_multipacks = params.packs
     multipacks_in_cubes = params.multipacks
     barcode = cube_input.barcode_for_packs
-    current_time = await get_string_datetime()
+    current_time = await get_naive_datetime()
     # проверка на уникальность qr-ов, переполнение и пустоту
     if await check_qr_unique(Cube, cube_input.qr):
 
@@ -139,7 +139,7 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
 @version(1, 0)
 async def finish_cube(qr: str):
     batch = await get_last_batch()
-    current_time = await get_string_datetime()
+    current_time = await get_naive_datetime()
 
     multipacks_queue = await get_multipacks_queue()
     packs_queue = await get_packs_queue()
@@ -276,7 +276,7 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
             raise HTTPException(
                 400,
                 detail=f'Куб с QR-кодом {patch.qr} уже существует в системе')
-        cube.added_qr_at = await get_string_datetime()
+        cube.added_qr_at = await get_naive_datetime()
 
     patch_dict = patch.dict(exclude_unset=True)
     for name, value in patch_dict.items():
@@ -298,7 +298,7 @@ async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
     pack_qrs = edit_schema.pack_qrs
     packs_barcode = edit_schema.packs_barcode
     multipack_ids_with_pack_ids = cube.multipack_ids_with_pack_ids
-    current_time = await get_string_datetime()
+    current_time = await get_naive_datetime()
 
     removing_pack_ids = []
     current_packs_amount = 0
