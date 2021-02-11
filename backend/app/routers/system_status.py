@@ -15,12 +15,12 @@ from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
                                         send_error_with_buzzer, send_warning)
 from app.utils.io import send_telegram_message
-from app.utils.naive_current_datetime import get_string_datetime
+from app.utils.naive_current_datetime import get_naive_datetime
 from app.utils.pintset import off_pintset, on_pintset
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 from fastapi_versioning import version
 from pydantic import parse_obj_as
-
+from datetime import datetime
 router = APIRouter()
 
 
@@ -160,7 +160,7 @@ async def set_packing_table_normal_with_identify(
 
     cube_to_update = await get_by_id_or_404(Cube, wrong_cube_id)
     cube_to_update.qr = qr
-    cube_to_update.added_qr_at = await get_string_datetime()
+    cube_to_update.added_qr_at = await get_naive_datetime()
     await engine.save(cube_to_update)
 
     background_tasks.add_task(flush_to_normal)
@@ -177,6 +177,8 @@ async def get_system_report(report_query: ReportRequest) -> ReportResponse:
 async def get_system_report_with_query(
         report_begin: str = "01.01.1970 00:00",
         report_end: str = "01.01.2050 00:00") -> ReportResponse:
+    report_begin = datetime.strptime(report_begin, "%d.%m.%Y %H:%M")
+    report_end = datetime.strptime(report_end, "%d.%m.%Y %H:%M")
     report_query = parse_obj_as(ReportRequest, {
         "report_begin": report_begin,
         "report_end": report_end
