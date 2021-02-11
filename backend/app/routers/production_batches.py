@@ -5,7 +5,7 @@ from app.db.engine import engine
 from app.models.production_batch import (PatchParamsScheme, ProductionBatch,
                                          ProductionBatchInput,
                                          ProductionBatchParams)
-from app.utils.naive_current_datetime import get_string_datetime
+from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import APIRouter
 from fastapi_versioning import version
 from odmantic import ObjectId
@@ -44,11 +44,11 @@ async def update_params_by_id(id: ObjectId, patch: PatchParamsScheme):
 async def create_batch(batch: ProductionBatchInput):
     params = await get_by_id_or_404(ProductionBatchParams, batch.params_id)
     batch = ProductionBatch(number=batch.number, params=params)
-    batch.created_at = await get_string_datetime()
+    batch.created_at = await get_naive_datetime()
 
     last_batch = await get_last_batch()
     if last_batch:
-        last_batch.closed_at = await get_string_datetime()
+        last_batch.closed_at = await get_naive_datetime()
         await engine.save(last_batch)
 
     await engine.save(batch)
