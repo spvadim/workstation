@@ -251,6 +251,7 @@ async def get_packs_queue() -> List[Pack]:
     packs = await engine.find(Pack,
                               Pack.in_queue == True,
                               sort=query.asc(Pack.id))
+
     return packs
 
 
