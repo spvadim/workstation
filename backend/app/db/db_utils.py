@@ -9,7 +9,7 @@ from app.models.production_batch import ProductionBatch, ProductionBatchNumber
 from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
                                ReportRequest, ReportResponse)
 from app.models.system_status import Mode, State, SystemState, SystemStatus
-from app.utils.naive_current_datetime import get_string_datetime
+from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import HTTPException
 from odmantic import Model, ObjectId, query
 from pydantic.tools import parse_obj_as
@@ -219,7 +219,7 @@ async def form_cube_from_n_multipacks(n: int) -> Cube:
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
     needed_packs = batch.params.packs
-    current_time = await get_string_datetime()
+    current_time = await get_naive_datetime()
     multipacks = await get_multipacks_queue()
     multipacks_for_cube = multipacks[:n]
     multipack_ids_with_pack_ids = {}
@@ -326,22 +326,13 @@ async def get_cubes_queue() -> List[Cube]:
 
 
 async def get_report(q: ReportRequest) -> ReportResponse:
-    last_batch = await get_last_batch()
-    dtf = datetime.strptime
-    tf = '%d.%m.%Y %H:%M'
 
-    dt_begin = dtf(q.report_begin, tf)
-    dt_end = dtf(q.report_end, tf)
+    dt_begin = q.report_begin
+    dt_end = q.report_end
 
     cubes = await engine.find(
-        Cube, query.and_(Cube.batch_number != last_batch.number))
-
-    cubes = [
-        cube for cube in cubes
-        if dt_begin <= dtf(cube.created_at, tf) <= dt_end
-    ]
-
-    cubes = sorted(cubes, key=lambda c: dtf(c.created_at, tf))
+        Cube, query.and_(Cube.created_at <= dt_end,
+                         Cube.created_at >= dt_begin))
 
     cubes_report = [
         parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes
@@ -350,8 +341,7 @@ async def get_report(q: ReportRequest) -> ReportResponse:
     for i, cube in enumerate(cubes):
         list_of_ids = [ObjectId(i) for i in cube.multipack_ids_with_pack_ids]
         multipacks = await engine.find(Multipack,
-                                       Multipack.id.in_(list_of_ids),
-                                       sort=query.asc(Multipack.created_at))
+                                       Multipack.id.in_(list_of_ids))
         mpacks_report = [
             parse_obj_as(MPackReportItem, mpack.dict()) for mpack in multipacks
         ]
@@ -360,8 +350,7 @@ async def get_report(q: ReportRequest) -> ReportResponse:
 
         for j, multipack in enumerate(multipacks):
             packs = await engine.find(Pack,
-                                      Pack.id.in_(multipack.pack_ids),
-                                      sort=query.asc(Pack.created_at))
+                                      Pack.id.in_(multipack.pack_ids))
             packs_report = [
                 parse_obj_as(PackReportItem, pack.dict()) for pack in packs
             ]
