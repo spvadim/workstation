@@ -1,9 +1,11 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import axios from 'axios';
 
 import TableAddress from "../../components/Table/TableAddress.js";
 import InputTextQr from "../../components/InputText/InputTextQr.js";
+import Input from "../../components/InputText/Input.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
+
 // import ColumnError from "../../components/ColumnError/index.js";
 import { Notification, NotificationImage } from "../../components/Notification/index.js";
 import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
@@ -166,6 +168,7 @@ function Main() {
     const [modalAgree, setModalAgree] = useState(false);
     const [modalChangePack, setModalChangePack] = useState(false);
     const [modalChangePackAgree, setModalChangePackAgree] = useState(false);
+    const [modalWithdrawal, setModalWithdrawal] = useState(false);
 
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
@@ -181,6 +184,24 @@ function Main() {
     const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
     const classes = useStyles({ mode, redBackground });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
+
+    const [forceFocus, setForceFocus] = useState("inputQr");
+
+    const inputQrRef = useRef();
+    const inputQrCubeRef = useRef();
+    const inputPackingTableRef = useRef();
+    const inputDisassembleRef = useRef();
+    const inputChangePackOldRef = useRef();
+    const inputChangePackNewRef = useRef();
+
+    const dictRefs = {
+        inputQr: inputQrRef,
+        inputQrCube: inputQrCubeRef,
+        inputPackingTable: inputPackingTableRef,
+        inputDisassemble: inputDisassembleRef,
+        inputChangePackOld: inputChangePackOldRef,
+        inputChangePackNew: inputChangePackNewRef,
+    }
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/current_batch")
@@ -244,9 +265,11 @@ function Main() {
                 if (temp.pintset_state === "normal") setNotificationPintsetErrorText("") 
                     else {setNotificationPintsetErrorText(temp.pintset_error_msg); setRedBackground(true)}
                 if (temp.packing_table_state === "normal") setModalPackingTableError("") 
-                    else {setModalPackingTableError(temp.packing_table_error_msg); setRedBackground(true)}
+                    else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg); setRedBackground(true)}
+                if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("") 
+                    else {setModalWithdrawal(temp.pintset_withdrawal_error_msg); setRedBackground(true)}
 
-                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal") setRedBackground(false);    
+                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal") setRedBackground(false);    
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
@@ -254,6 +277,29 @@ function Main() {
         const interval = setInterval(() => request(), 1000);
         return () => {clearInterval(interval)};
     }, []);
+
+    useEffect (() => {
+        let interval;
+        let isExist = Object.keys(dictRefs).indexOf(forceFocus) !== -1;
+
+        console.log(forceFocus)
+
+        if (forceFocus && isExist) {
+            interval = setInterval(() => {
+                if (document.activeElement.id !== forceFocus && dictRefs[forceFocus].current) {
+                    dictRefs[forceFocus].current.focus();
+                }
+            }, 300)
+        } else if (!isExist) {
+            interval = setInterval(() => {
+                if (document.activeElement.id !== forceFocus) {
+                    dictRefs["inputQr"].current.focus();
+                }
+            }, 300);
+        }       
+
+        return () => {clearInterval(interval)};
+    }, [forceFocus])
 
     if (page === "batch_params") {
         return (
@@ -309,7 +355,7 @@ function Main() {
     }
 
     const createIncompleteCube = () => {
-        axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + valueQrCube.replace("/", "%2F"))
+        axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + inputQrCubeRef.current.value.replace("/", "%2F"))
             .then(() => {
                 setReturnNotificationText(notificationText);
                 setNotificationText("Неполный куб успешно сформирован");
@@ -324,17 +370,103 @@ function Main() {
 
     return (
         <div className={classes.Main}>
+            {modalWithdrawal && 
+                <ModalWindow
+                    title="Подтверждение выемки из-под пинцета"
+                    description={modalWithdrawal}
+                >
+                    <Button onClick={() => {
+                        axios.patch(address + "/api/v1_0/flush_pintset_withdrawal")
+                            .then(() => setModalWithdrawal(false))
+                        axios.delete(address + "/api/v1_0/remove_packs_from_pintset")
+                            .catch(e => {
+                                setNotificationErrorText(e.response.data.detail);
+                            })
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Вынимаю все
+                    </Button>
+
+                    <Button onClick={() => {
+                        axios.patch(address + "/api/v1_0/flush_pintset_withdrawal")
+                            .then(() => setModalWithdrawal(false))
+                    }}>
+                        Ничего не вынимаю
+                    </Button>
+                </ModalWindow>
+            }
+
+            {modalChangePackAgree && 
+                <ModalWindow
+                    title="Подтвердите действие"
+                    description="Вы действительно хотите заменить пачку?"
+                >
+                    <Button onClick={modalChangePackAgree[0]}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Заменить
+                    </Button>
+
+                    <Button onClick={() => {setModalChangePackAgree(false); setForceFocus("inputQr")}}>
+                        Отмена
+                    </Button>
+                </ModalWindow>
+            }
+
             {modalChangePack && 
                 <ModalWindow
                     title="Замена пачки"
                     description="Введите QR заменяемой и новой пачек"
                 >
-                    <Button onClick={() => {setModalChangePack(false)}}>
+                    <Button onClick={() => {setModalChangePack(false); setForceFocus("inputQr")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Отмена
                     </Button>
 
-                    <TextField
+                    <Input 
+                        id="inputChangePackOld"
+                        ref={inputChangePackOldRef}
+                        onKeyPress={async e => {
+                            if (e.charCode === 13) {
+                                let req = axios.get(address + "/api/v1_0/not_shipped_pack/?qr=" + inputChangePackOldRef.current.value);
+                                req.catch(e => {
+                                    setNotificationErrorText(e.response.data.detail);
+                                    inputChangePackOldRef.current.value = "";
+                                    setTimeout(() => {
+                                        setNotificationErrorText("");
+                                    }, 2000);
+                                })                                
+                                let awaited = await req;
+                                
+                                if (awaited.data.id) {
+                                    setForceFocus("inputChangePackNew");
+                                }
+                            }
+                        }
+                    }
+                    />
+
+                    <Input 
+                        id="inputChangePackNew"
+                        ref={inputChangePackNewRef}
+                        onKeyPress={async e => {
+                            if (e.charCode === 13) {
+                                setModalChangePack(false);
+                                let old = inputChangePackOldRef.current.value;
+                                let new_ = inputChangePackNewRef.current.value;
+                                let req = await axios.get(address + "/api/v1_0/packs/?qr=" + old);
+
+                                setModalChangePackAgree([() => {
+                                    setForceFocus("inputQr");
+                                    axios.patch(address + "/api/v1_0/packs/" + req.data.id, {"qr": new_})
+                                        .then(() => setModalChangePackAgree(false))
+                                        .catch(e => setNotificationErrorText(e.response.data.detail))
+                                }])
+                                
+                        }
+                    }}
+                    />
+
+                    {/* <TextField
                         placeholder="QR для замены"
                         onChange={async e => {
                             setValueQrToChangePack(e.target.value);
@@ -372,7 +504,7 @@ function Main() {
                         outlined
                         forceFocus
                         autoFocus
-                    />
+                    /> */}
                 </ModalWindow>
             }
 
@@ -381,12 +513,12 @@ function Main() {
                     title="Подтвердите действие"
                     description="Вы действительно хотите удалить объект?"
                 >
-                    <Button onClick={() => {axios.delete((address + "/api/v1_0/cubes/" + modalAgree)).then(() => setModalAgree(false)); setValueQrToDisassemble("")}}>
+                    <Button onClick={() => {axios.delete((address + "/api/v1_0/cubes/" + modalAgree)).then(() => setModalAgree(false))}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Удалить
                     </Button>
 
-                    <Button onClick={() => {setValueQrToDisassemble("");  setModalAgree(false)}}>
+                    <Button onClick={() => {setModalAgree(false)}}>
                         Отмена
                     </Button>
                 </ModalWindow>
@@ -397,12 +529,35 @@ function Main() {
                     title="Разобрать куб?"
                     description="Введите QR куба для разбора"
                 >
-                    <Button onClick={() => {setModalDisassemble(false); setValueQrToDisassemble("")}}>
+                    <Button onClick={() => {setModalDisassemble(false)}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Отмена
                     </Button>
 
-                    <TextField
+                    <Input  
+                        id="inputDisassemble"
+                        ref={inputDisassembleRef}
+                        onKeyPress={async e => {
+                            if (e.charCode === 13) {
+                                let req = axios.get(address + "/api/v1_0/cubes/?qr=" + inputDisassembleRef.current.value);
+                                req.catch(e => {
+                                    setNotificationErrorText(e.response.data.detail);
+                                    inputDisassembleRef.current.value = "";
+                                    setTimeout(() => {
+                                        setNotificationErrorText("");
+                                    }, 2000);
+                                })
+                                let awaited = await req;
+
+                                if (awaited.data.id) {
+                                    setModalDisassemble(false);
+                                    setModalAgree(awaited.data.id);
+                                }
+                            }
+                        }}
+                    />
+
+                    {/* <TextField
                         placeholder="QR..."
                         onChange={async e => {
                             setValueQrToDisassemble(e.target.value);
@@ -427,7 +582,7 @@ function Main() {
                         autoFocus
 
                         
-                    />
+                    /> */}
                 </ModalWindow>
             }
 
@@ -470,11 +625,31 @@ function Main() {
                     <Button onClick={() => {
                         axios.patch(address + "/api/v1_0/flush_packing_table")
                             .then(() => setModalPackingTableError(false), setRedBackground(false), setValueQrModalPackingTable(""))
-                            .catch(e => setNotificationErrorText(e.responce.data.detail[0].msg))
+                            .catch(e => setNotificationErrorText(e.responce.data.detail))
                     }}>
                         Отмена
                     </Button>
-                    <TextField
+                    <Input
+                        id="inputPackingTable"
+                        ref={inputPackingTableRef}
+                        placeholder="QR..."
+                        onKeyPress={e => {
+                            if (e.charCode === 13) {
+                                axios.patch(address + "/api/v1_0/flush_packing_table_with_identify?qr=" + inputPackingTableRef.current.value)
+                                    .then(() => {
+                                        setModalPackingTableError(false);
+                                        setRedBackground(false);
+                                        if (inputPackingTableRef.current) inputPackingTableRef.current.value = "";
+                                        setReturnNotificationText(notificationText);
+                                        setNotificationText("Успешно идентифицировано");
+                                        setTimeout(returnNotification, 2000);
+                                    })
+                                    .catch(e => setNotificationErrorText(e.response.data.detail))
+                            }
+                        }}
+                    />
+
+                    {/* <TextField
                         placeholder="QR..."
                         onChange={async e => {
                             setValueQrModalPackingTable(e.target.value);
@@ -501,7 +676,7 @@ function Main() {
                         autoFocus
 
                         
-                    />
+                    /> */}
                 </ModalWindow>
             }
 
@@ -538,31 +713,37 @@ function Main() {
                 >
                     <div style={{ display: "grid", gap: "2rem" }}>
                         <div>
-                            <TextField
+                            <Input
+                                id={"inputQrCube"}
+                                ref={inputQrCubeRef}
+                            />
+                            {/* <TextField
                                 placeholder="QR..."
                                 onChange={async e => {
-                                    setValueQrCube(e.target.value);
+                                    setinputQrCubeRef.current.value(e.target.value);
                                 }}
-                                value={valueQrCube}
+                                value={inputQrCubeRef.current.value}
                                 outlined
                                 forceFocus
                                 autoFocus
-                            />
+                            /> */}
                         </div>
                         <div style={{ display: "flex", gap: "2rem" }}>
                             <Button onClick={() => {
-                                if (valueQrCube) {
+                                if (inputQrCubeRef.current.value) {
+                                    setForceFocus("inputQr");
                                     setModalCube(false);
                                     createIncompleteCube();
-                                    setValueQrCube("")
+                                    inputQrCubeRef.current.value = "";
                                 }
                             }}>
                                 <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                                 Создать
                             </Button>
                             <Button onClick={() => {
+                                setForceFocus("inputQr");
                                 setModalCube(false);
-                                setValueQrCube("");
+                                inputQrCubeRef.current.value = "";
                             }} theme="secondary">
                                 <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
                                 Отмена
@@ -585,28 +766,30 @@ function Main() {
                     <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
 
                     <Button onClick={() => {
-                        setModalDisassemble(true)
+                        setModalDisassemble(true);
+                        setForceFocus("inputDisassemble");
                     }}>Разобрать куб по его QR</Button>
 
-                    <Button onClick={() => { setModalCube([createIncompleteCube]) }} >Сформировать неполный куб</Button>
+                    <Button onClick={() => { setModalCube([createIncompleteCube]); setForceFocus("inputQrCube") }} >Сформировать неполный куб</Button>
                 
                     <Button onClick={() => {
                         setModalDelete2Pallet(true);
                         
                     }}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
 
-                    <Button onClick={() => { setModalChangePack(true) }} >Заменить пачку на упаковке</Button>
+                    <Button onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }} >Заменить пачку на упаковке</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
                 <Button onClick={() => setPage("create")}>Новый куб</Button>
                 <InputTextQr
+                    id="inputQr"
                     setNotification={setNotificationText}
                     setNotificationError={setNotificationErrorText}
                     mode={mode}
                     forceFocus={!modalCube && !modalPackingTableError}
-                    extended={extended}
-                    className={classes.qrInput}
+                    hidden={!extended}
+                    ref={inputQrRef}
                 />
 
             </div>
