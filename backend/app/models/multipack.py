@@ -3,9 +3,10 @@ from enum import Enum
 from typing import List, Optional
 
 from odmantic import Model
-from odmantic.bson import BSON_TYPES_ENCODERS, ObjectId
+from odmantic.bson import ObjectId
 from pydantic import BaseModel
 
+from .model_config import ModelConfig
 from .production_batch import ProductionBatchNumber
 
 
@@ -30,6 +31,8 @@ class Multipack(Model):
     created_at: Optional[datetime]
     added_qr_at: Optional[datetime]
 
+    Config = ModelConfig
+
 
 class MultipackOutput(BaseModel):
     id: ObjectId
@@ -39,16 +42,14 @@ class MultipackOutput(BaseModel):
     to_process: bool
     comments: List[str]
 
-    class Config:
-        json_encoders = {
-            **BSON_TYPES_ENCODERS, datetime:
-            lambda v: v.strftime("%d.%m.%Y %H:%M")
-        }
+    Config = ModelConfig
 
 
-class MultipackIdentificationAuto(Model):
+class MultipackIdentificationAuto(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
+
+    Config = ModelConfig
 
 
 class MultipackPatchSchema(BaseModel):
@@ -57,3 +58,5 @@ class MultipackPatchSchema(BaseModel):
     status: Optional[Status]
     comments: Optional[List[str]]
     to_process: Optional[bool]
+
+    Config = ModelConfig

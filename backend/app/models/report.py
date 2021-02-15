@@ -2,6 +2,7 @@ from typing import List, Optional
 from .production_batch import ProductionBatchNumber
 from datetime import datetime
 from pydantic import BaseModel
+from .model_config import ModelConfig
 
 
 class PackReportItem(BaseModel):
@@ -10,8 +11,7 @@ class PackReportItem(BaseModel):
     qr: str
     barcode: str
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.strftime("%d.%m.%Y %H:%M")}
+    Config = ModelConfig
 
 
 class MPackReportItem(BaseModel):
@@ -21,8 +21,7 @@ class MPackReportItem(BaseModel):
     barcode: Optional[str]
     packs: List[PackReportItem] = []
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.strftime("%d.%m.%Y %H:%M")}
+    Config = ModelConfig
 
 
 class CubeReportItem(BaseModel):
@@ -34,16 +33,14 @@ class CubeReportItem(BaseModel):
     packs_in_multipacks: int
     multipacks: List[MPackReportItem] = []
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.strftime("%d.%m.%Y %H:%M")}
+    Config = ModelConfig
 
 
 class ReportRequest(BaseModel):
     report_begin: Optional[datetime]
     report_end: Optional[datetime]
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.strftime("%d.%m.%Y %H:%M")}
+    Config = ModelConfig
 
 
 class ReportResponse(ReportRequest):
