@@ -1,7 +1,9 @@
 from typing import Optional
+
 from odmantic import Model
 from pydantic import BaseModel
 
+from ..model_config import ModelConfig
 from .erd_settings import ERDSettings
 from .general_settings import GeneralSettings
 from .location_settings import LocationSettings
@@ -16,6 +18,8 @@ class SystemSettings(Model):
     pintset_settings: PintsetSettings
     telegram_settings: TGSettings
 
+    Config = ModelConfig
+
 
 class SystemSettingsPatchScheme(BaseModel):
     general_settings: Optional[GeneralSettings]
@@ -23,3 +27,5 @@ class SystemSettingsPatchScheme(BaseModel):
     erd_settings: Optional[ERDSettings]
     pintset_settings: Optional[PintsetSettings]
     telegram_settings: Optional[TGSettings]
+
+    Config = ModelConfig
