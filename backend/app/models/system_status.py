@@ -3,6 +3,8 @@ from typing import Optional
 
 from odmantic import EmbeddedModel, Model, ObjectId
 
+from .model_config import ModelConfig
+
 
 class WorkMode(str, Enum):
     AUTO = 'auto'
@@ -35,3 +37,5 @@ class SystemStatus(Model):
     mode: Mode
     system_state: SystemState
     multipack_coded_by_qr: bool = False
+
+    Config = ModelConfig

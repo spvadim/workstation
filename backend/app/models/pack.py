@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import List, Optional
-
+from .model_config import ModelConfig
 from odmantic import Model
-from odmantic.bson import BSON_TYPES_ENCODERS, ObjectId
+from odmantic.bson import ObjectId
 from pydantic import BaseModel
 
 from .production_batch import ProductionBatchNumber
@@ -17,6 +17,8 @@ class Pack(Model):
     in_queue: bool = True
     created_at: Optional[datetime]
 
+    Config = ModelConfig
+
 
 class PackOutput(BaseModel):
     id: ObjectId
@@ -25,11 +27,7 @@ class PackOutput(BaseModel):
     to_process: bool
     comments: List[str]
 
-    class Config:
-        json_encoders = {
-            **BSON_TYPES_ENCODERS, datetime:
-            lambda v: v.strftime("%d.%m.%Y %H:%M")
-        }
+    Config = ModelConfig
 
 
 class PackPatchSchema(BaseModel):
@@ -38,7 +36,11 @@ class PackPatchSchema(BaseModel):
     comments: Optional[List[str]]
     to_process: Optional[bool]
 
+    Config = ModelConfig
+
 
 class PackCameraInput(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
+
+    Config = ModelConfig

@@ -2,9 +2,10 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 from odmantic import Model
-from odmantic.bson import BSON_TYPES_ENCODERS, ObjectId
+from odmantic.bson import ObjectId
 from pydantic import BaseModel
 
+from .model_config import ModelConfig
 from .production_batch import ProductionBatchNumber
 
 
@@ -20,12 +21,16 @@ class Cube(Model):
     to_process: bool = False
     comments: List[str] = []
 
+    Config = ModelConfig
+
 
 class CubeInput(Model):
     qr: Optional[str]
     barcode: Optional[str]
     batch_number: Optional[ProductionBatchNumber]
     multipack_ids: List[ObjectId]
+
+    Config = ModelConfig
 
 
 class CubeWithNewContent(Model):
@@ -35,6 +40,8 @@ class CubeWithNewContent(Model):
     qr: str
     content: List[List[Dict[str, str]]]
 
+    Config = ModelConfig
+
 
 class CubeOutput(BaseModel):
     id: ObjectId
@@ -43,16 +50,14 @@ class CubeOutput(BaseModel):
     to_process: bool
     comments: List[str]
 
-    class Config:
-        json_encoders = {
-            **BSON_TYPES_ENCODERS, datetime:
-            lambda v: v.strftime("%d.%m.%Y %H:%M")
-        }
+    Config = ModelConfig
 
 
-class CubeIdentificationAuto(Model):
+class CubeIdentificationAuto(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
+
+    Config = ModelConfig
 
 
 class CubePatchSchema(BaseModel):
@@ -61,9 +66,13 @@ class CubePatchSchema(BaseModel):
     to_process: Optional[bool]
     comments: Optional[List[str]]
 
+    Config = ModelConfig
+
 
 class CubeEditSchema(Model):
     pack_ids_to_delete: List[ObjectId]
     packs_barcode: str
     pack_qrs: List[str]
     to_process: Optional[bool]
+
+    Config = ModelConfig
