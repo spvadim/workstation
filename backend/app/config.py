@@ -1,13 +1,12 @@
 import os
 
-from app.models.system_settings.erd_settings import (ERDBuzzerOID,
-                                                     ERDCommunityString,
-                                                     ERDGreenOID, ERDIp,
-                                                     ERDRedOID, ERDSettings,
-                                                     ERDSNMPPort, ERDYellowOID)
+from app.models.system_settings.erd_settings import (
+    ERDBuzzerOID, ERDCommunityString, ERDFifthOID, ERDFirstOID, ERDFourthOID,
+    ERDGreenOID, ERDIp, ERDRedOID, ERDSecondOID, ERDSettings, ERDSNMPPort,
+    ERDThirdOID, ERDYellowOID, SecondERDSettings)
 from app.models.system_settings.general_settings import (
-    DaysToDelete, GeneralSettings, PintsetStop, ReportMaxCubes, ReportMaxDays,
-    SendApplikatorTgMessage)
+    CurtainOpeningDelay, DaysToDelete, GeneralSettings, PintsetStop,
+    ReportMaxCubes, ReportMaxDays, SendApplikatorTgMessage)
 from app.models.system_settings.location_settings import (LocationSettings,
                                                           PlaceName, TimeZone)
 from app.models.system_settings.pintset_settings import (
@@ -31,12 +30,25 @@ default_send_applikator_tg_message = SendApplikatorTgMessage(
 default_pintset_stop = PintsetStop(value=os.getenv('PINTSET_STOP'))
 default_report_max_days = ReportMaxDays(value=os.getenv('REPORT_MAX_DAYS'))
 default_report_max_cubes = ReportMaxCubes(value=os.getenv('REPORT_MAX_CUBES'))
+default_applikator_curtain_opening_delay = CurtainOpeningDelay(
+    value=os.getenv('APPLIKATOR_CURTAIN_OPENING_DELAY'),
+    title='Задержка открытия шторки после аппликатора',
+    desc='Введите задержку открытия шторки после аппликатора в секундах')
+default_camera_counter_curtain_opening_delay = CurtainOpeningDelay(
+    title='Задержка открытия шторки после камеры-счетчика',
+    desc='Введите задержку открытия шторки после камеры-счетчика в секундах')
+default_dropping_mechanism_opening_delay = CurtainOpeningDelay(
+    title='Задержка открытия скидывающего механизма',
+    desc='Введите задержку открытия скидывающего механизма в секундах')
 default_general_settings = GeneralSettings(
     days_to_delete=default_days_to_delete,
     send_applikator_tg_message=default_send_applikator_tg_message,
     pintset_stop=default_pintset_stop,
     report_max_days=default_report_max_days,
-    report_max_cubes=default_report_max_cubes)
+    report_max_cubes=default_report_max_cubes,
+    applikator_curtain_opening_delay=default_applikator_curtain_opening_delay,
+    camera_counter_curtain_opening_delay=default_camera_counter_curtain_opening_delay,
+    dropping_mechanism_opening_delay=default_dropping_mechanism_opening_delay)
 
 # set default pintset settings
 default_pintset_ip = PintsetIp(value=os.getenv('PINTSET_IP'))
@@ -83,7 +95,17 @@ default_erd_settings = ERDSettings(
     erd_red_oid=default_erd_red_oid,
     erd_yellow_oid=default_erd_yellow_oid,
     erd_green_oid=default_erd_green_oid,
-    erd_buzzer_oid=default_erd_buzzer_oid)
+    erd_buzzer_oid=default_erd_buzzer_oid,
+    erd_fifth_oid=ERDFifthOID())
+default_second_erd_settings = SecondERDSettings(
+    erd_ip=ERDIp(),
+    erd_snmp_port=ERDSNMPPort(),
+    erd_community_string=ERDCommunityString(),
+    erd_first_oid=ERDFirstOID(),
+    erd_second_oid=ERDSecondOID(),
+    erd_third_oid=ERDThirdOID(),
+    erd_fourth_oid=ERDFourthOID(),
+    erd_fifth_oid=ERDFifthOID())
 
 # set default telegram settings
 default_tg_token = TGToken(value=os.getenv('TG_TOKEN'))
@@ -92,8 +114,10 @@ default_tg_settings = TGSettings(tg_token=default_tg_token,
                                  tg_chat=default_tg_chat)
 
 # set default settings
-default_settings = SystemSettings(location_settings=default_location_settings,
-                                  general_settings=default_general_settings,
-                                  pintset_settings=default_pintset_settings,
-                                  erd_settings=default_erd_settings,
-                                  telegram_settings=default_tg_settings)
+default_settings = SystemSettings(
+    location_settings=default_location_settings,
+    general_settings=default_general_settings,
+    pintset_settings=default_pintset_settings,
+    erd_settings=default_erd_settings,
+    second_erd_settings=default_second_erd_settings,
+    telegram_settings=default_tg_settings)

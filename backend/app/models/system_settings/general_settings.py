@@ -1,4 +1,5 @@
 from odmantic import EmbeddedModel
+from typing import Optional
 
 
 class DaysToDelete(EmbeddedModel):
@@ -23,6 +24,13 @@ class SendApplikatorTgMessage(EmbeddedModel):
     value_type: str = 'bool'
 
 
+class CurtainOpeningDelay(EmbeddedModel):
+    title: str
+    desc: str
+    value: Optional[int]
+    value_type: str = 'integer'
+
+
 class ReportMaxDays(EmbeddedModel):
     title: str = 'Максимальное количество дней отчета'
     desc: str = ('Введите максимальное количество дней для отчета')
@@ -44,3 +52,6 @@ class GeneralSettings(EmbeddedModel):
     send_applikator_tg_message: SendApplikatorTgMessage
     report_max_days: ReportMaxDays
     report_max_cubes: ReportMaxCubes
+    applikator_curtain_opening_delay: CurtainOpeningDelay
+    camera_counter_curtain_opening_delay: CurtainOpeningDelay
+    dropping_mechanism_opening_delay: CurtainOpeningDelay

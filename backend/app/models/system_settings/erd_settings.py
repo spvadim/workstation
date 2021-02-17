@@ -1,24 +1,25 @@
 from odmantic import EmbeddedModel
+from typing import Optional
 
 
 class ERDIp(EmbeddedModel):
     title: str = 'IP ERD контроллера'
     desc: str = 'Введите IP ERD контроллера'
-    value: str
+    value: Optional[str]
     value_type: str = 'string'
 
 
 class ERDSNMPPort(EmbeddedModel):
     title: str = 'SNMP порт ERD контроллера'
     desc: str = 'Введите порт SNMP ERD контроллера'
-    value: int
+    value: Optional[int]
     value_type: str = 'integer'
 
 
 class ERDCommunityString(EmbeddedModel):
     title: str = 'Строка авторизации ERD контроллера'
     desc: str = 'Введите строку авторизации ERD контроллера'
-    value: str
+    value: Optional[str]
     value_type: str = 'string'
 
 
@@ -50,6 +51,41 @@ class ERDBuzzerOID(EmbeddedModel):
     value_type: str = 'string'
 
 
+class ERDFirstOID(EmbeddedModel):
+    title: str = 'ID первого порта в ERD контроллере'
+    desc: str = 'Введите ID порта в ерд контроллере'
+    value: Optional[str]
+    value_type: str = 'string'
+
+
+class ERDSecondOID(EmbeddedModel):
+    title: str = 'ID второго порта в ERD контроллере'
+    desc: str = 'Введите ID порта в ерд контроллере'
+    value: Optional[str]
+    value_type: str = 'string'
+
+
+class ERDThirdOID(EmbeddedModel):
+    title: str = 'ID третьего порта в ERD контроллере'
+    desc: str = 'Введите ID порта в ерд контроллере'
+    value: Optional[str]
+    value_type: str = 'string'
+
+
+class ERDFourthOID(EmbeddedModel):
+    title: str = 'ID четвертого порта в ERD контроллере'
+    desc: str = 'Введите ID порта в ерд контроллере'
+    value: Optional[str]
+    value_type: str = 'string'
+
+
+class ERDFifthOID(EmbeddedModel):
+    title: str = 'ID пятого порта в ERD контроллере'
+    desc: str = 'Введите ID порта в ерд контроллере'
+    value: Optional[str]
+    value_type: str = 'string'
+
+
 class ERDSettings(EmbeddedModel):
     title: str = 'Настройки ERD контроллера'
     advanced: bool = True
@@ -60,3 +96,17 @@ class ERDSettings(EmbeddedModel):
     erd_yellow_oid: ERDYellowOID
     erd_green_oid: ERDGreenOID
     erd_buzzer_oid: ERDBuzzerOID
+    erd_fifth_oid: ERDFifthOID
+
+
+class SecondERDSettings(EmbeddedModel):
+    title: str = 'Настройки второго ERD контроллера'
+    advanced: bool = True
+    erd_ip: ERDIp
+    erd_snmp_port: ERDSNMPPort
+    erd_community_string: ERDCommunityString
+    erd_first_oid: ERDFirstOID
+    erd_second_oid: ERDSecondOID
+    erd_third_oid: ERDThirdOID
+    erd_fourth_oid: ERDFourthOID
+    erd_fifth_oid: ERDFifthOID
