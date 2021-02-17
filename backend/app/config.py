@@ -5,8 +5,8 @@ from app.models.system_settings.erd_settings import (
     ERDGreenOID, ERDIp, ERDRedOID, ERDSecondOID, ERDSettings, ERDSNMPPort,
     ERDThirdOID, ERDYellowOID, SecondERDSettings)
 from app.models.system_settings.general_settings import (
-    DaysToDelete, GeneralSettings, PintsetStop, ReportMaxCubes, ReportMaxDays,
-    SendApplikatorTgMessage)
+    CurtainOpeningDelay, DaysToDelete, GeneralSettings, PintsetStop,
+    ReportMaxCubes, ReportMaxDays, SendApplikatorTgMessage)
 from app.models.system_settings.location_settings import (LocationSettings,
                                                           PlaceName, TimeZone)
 from app.models.system_settings.pintset_settings import (
@@ -30,12 +30,25 @@ default_send_applikator_tg_message = SendApplikatorTgMessage(
 default_pintset_stop = PintsetStop(value=os.getenv('PINTSET_STOP'))
 default_report_max_days = ReportMaxDays(value=os.getenv('REPORT_MAX_DAYS'))
 default_report_max_cubes = ReportMaxCubes(value=os.getenv('REPORT_MAX_CUBES'))
+default_applikator_curtain_opening_delay = CurtainOpeningDelay(
+    value=os.getenv('APPLIKATOR_CURTAIN_OPENING_DELAY'),
+    title='Задержка открытия шторки после аппликатора',
+    desc='Введите задержку открытия шторки после аппликатора в секундах')
+default_camera_counter_curtain_opening_delay = CurtainOpeningDelay(
+    title='Задержка открытия шторки после камеры-счетчика',
+    desc='Введите задержку открытия шторки после камеры-счетчика в секундах')
+default_dropping_mechanism_opening_delay = CurtainOpeningDelay(
+    title='Задержка открытия скидывающего механизма',
+    desc='Введите задержку открытия скидывающего механизма в секундах')
 default_general_settings = GeneralSettings(
     days_to_delete=default_days_to_delete,
     send_applikator_tg_message=default_send_applikator_tg_message,
     pintset_stop=default_pintset_stop,
     report_max_days=default_report_max_days,
-    report_max_cubes=default_report_max_cubes)
+    report_max_cubes=default_report_max_cubes,
+    applikator_curtain_opening_delay=default_applikator_curtain_opening_delay,
+    camera_counter_curtain_opening_delay=default_camera_counter_curtain_opening_delay,
+    dropping_mechanism_opening_delay=default_dropping_mechanism_opening_delay)
 
 # set default pintset settings
 default_pintset_ip = PintsetIp(value=os.getenv('PINTSET_IP'))
