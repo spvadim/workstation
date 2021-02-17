@@ -6,7 +6,8 @@ from app.models.system_settings.erd_settings import (ERDBuzzerOID,
                                                      ERDRedOID, ERDSettings,
                                                      ERDSNMPPort, ERDYellowOID)
 from app.models.system_settings.general_settings import (
-    DaysToDelete, GeneralSettings, PintsetStop, SendApplikatorTgMessage)
+    DaysToDelete, GeneralSettings, PintsetStop, ReportMaxCubes, ReportMaxDays,
+    SendApplikatorTgMessage)
 from app.models.system_settings.location_settings import (LocationSettings,
                                                           PlaceName, TimeZone)
 from app.models.system_settings.pintset_settings import (
@@ -28,10 +29,14 @@ default_days_to_delete = DaysToDelete(
 default_send_applikator_tg_message = SendApplikatorTgMessage(
     value=os.getenv('SEND_TG_MESSAGE_AFTER_APPLIKATOR'))
 default_pintset_stop = PintsetStop(value=os.getenv('PINTSET_STOP'))
+default_report_max_days = ReportMaxDays(value=os.getenv('REPORT_MAX_DAYS'))
+default_report_max_cubes = ReportMaxCubes(value=os.getenv('REPORT_MAX_CUBES'))
 default_general_settings = GeneralSettings(
     days_to_delete=default_days_to_delete,
     send_applikator_tg_message=default_send_applikator_tg_message,
-    pintset_stop=default_pintset_stop)
+    pintset_stop=default_pintset_stop,
+    report_max_days=default_report_max_days,
+    report_max_cubes=default_report_max_cubes)
 
 # set default pintset settings
 default_pintset_ip = PintsetIp(value=os.getenv('PINTSET_IP'))
