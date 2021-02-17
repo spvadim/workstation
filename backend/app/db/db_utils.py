@@ -331,7 +331,7 @@ async def get_report(q: ReportRequest) -> ReportResponse:
     dt_end = q.report_end
 
     cubes = await engine.find(
-        Cube, query.and_(Cube.created_at <= dt_end,
+        Cube, query.and_(Cube.created_at < dt_end,
                          Cube.created_at >= dt_begin))
 
     cubes_report = [
