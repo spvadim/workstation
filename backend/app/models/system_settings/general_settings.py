@@ -23,8 +23,24 @@ class SendApplikatorTgMessage(EmbeddedModel):
     value_type: str = 'bool'
 
 
+class ReportMaxDays(EmbeddedModel):
+    title: str = 'Максимальное количество дней отчета'
+    desc: str = ('Введите максимальное количество дней для отчета')
+    value: int
+    value_type: str = 'integer'
+
+
+class ReportMaxCubes(EmbeddedModel):
+    title: str = 'Максимальное количество кубов в отчете'
+    desc: str = ('Введите максимальное количество кубов в отчете')
+    value: int
+    value_type: str = 'integer'
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = 'Общие настройки'
     advanced: bool = False
     pintset_stop: PintsetStop
     send_applikator_tg_message: SendApplikatorTgMessage
+    report_max_days: ReportMaxDays
+    report_max_cubes: ReportMaxCubes
