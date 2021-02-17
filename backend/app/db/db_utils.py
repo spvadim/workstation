@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import List, Optional, Union
-
+from datetime import timedelta
 from app.models.cube import Cube
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack
@@ -15,6 +15,7 @@ from odmantic import Model, ObjectId, query
 from pydantic.tools import parse_obj_as
 
 from .engine import engine
+from .system_settings import get_system_settings
 
 
 async def get_by_id_or_404(model, id: ObjectId) -> Model:
@@ -330,9 +331,17 @@ async def get_report(q: ReportRequest) -> ReportResponse:
     dt_begin = q.report_begin
     dt_end = q.report_end
 
+    current_settings = await get_system_settings()
+    general_settings = current_settings.general_settings
+    report_max_days = general_settings.report_max_days.value
+    report_max_cubes = general_settings.report_max_cubes.value
+
+    if dt_end - dt_begin > timedelta(days=report_max_days):
+        raise HTTPException(400, detail='Слишком большой период для отчета')
+
     cubes = await engine.find(
         Cube, query.and_(Cube.created_at < dt_end,
-                         Cube.created_at >= dt_begin))
+                         Cube.created_at >= dt_begin), limit=report_max_cubes)
 
     cubes_report = [
         parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes
@@ -349,8 +358,7 @@ async def get_report(q: ReportRequest) -> ReportResponse:
         cubes_report[i].multipacks = mpacks_report
 
         for j, multipack in enumerate(multipacks):
-            packs = await engine.find(Pack,
-                                      Pack.id.in_(multipack.pack_ids))
+            packs = await engine.find(Pack, Pack.id.in_(multipack.pack_ids))
             packs_report = [
                 parse_obj_as(PackReportItem, pack.dict()) for pack in packs
             ]
