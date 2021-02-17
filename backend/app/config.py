@@ -1,10 +1,9 @@
 import os
 
-from app.models.system_settings.erd_settings import (ERDBuzzerOID,
-                                                     ERDCommunityString,
-                                                     ERDGreenOID, ERDIp,
-                                                     ERDRedOID, ERDSettings,
-                                                     ERDSNMPPort, ERDYellowOID)
+from app.models.system_settings.erd_settings import (
+    ERDBuzzerOID, ERDCommunityString, ERDFifthOID, ERDFirstOID, ERDFourthOID,
+    ERDGreenOID, ERDIp, ERDRedOID, ERDSecondOID, ERDSettings, ERDSNMPPort,
+    ERDThirdOID, ERDYellowOID, SecondERDSettings)
 from app.models.system_settings.general_settings import (
     DaysToDelete, GeneralSettings, PintsetStop, ReportMaxCubes, ReportMaxDays,
     SendApplikatorTgMessage)
@@ -83,7 +82,17 @@ default_erd_settings = ERDSettings(
     erd_red_oid=default_erd_red_oid,
     erd_yellow_oid=default_erd_yellow_oid,
     erd_green_oid=default_erd_green_oid,
-    erd_buzzer_oid=default_erd_buzzer_oid)
+    erd_buzzer_oid=default_erd_buzzer_oid,
+    erd_fifth_oid=ERDFifthOID())
+default_second_erd_settings = SecondERDSettings(
+    erd_ip=ERDIp(),
+    erd_snmp_port=ERDSNMPPort(),
+    erd_community_string=ERDCommunityString(),
+    erd_first_oid=ERDFirstOID(),
+    erd_second_oid=ERDSecondOID(),
+    erd_third_oid=ERDThirdOID(),
+    erd_fourth_oid=ERDFourthOID(),
+    erd_fifth_oid=ERDFifthOID())
 
 # set default telegram settings
 default_tg_token = TGToken(value=os.getenv('TG_TOKEN'))
@@ -92,8 +101,10 @@ default_tg_settings = TGSettings(tg_token=default_tg_token,
                                  tg_chat=default_tg_chat)
 
 # set default settings
-default_settings = SystemSettings(location_settings=default_location_settings,
-                                  general_settings=default_general_settings,
-                                  pintset_settings=default_pintset_settings,
-                                  erd_settings=default_erd_settings,
-                                  telegram_settings=default_tg_settings)
+default_settings = SystemSettings(
+    location_settings=default_location_settings,
+    general_settings=default_general_settings,
+    pintset_settings=default_pintset_settings,
+    erd_settings=default_erd_settings,
+    second_erd_settings=default_second_erd_settings,
+    telegram_settings=default_tg_settings)
