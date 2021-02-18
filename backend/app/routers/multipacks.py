@@ -3,7 +3,7 @@ from typing import List
 from app.db.db_utils import (check_qr_unique, delete_multipack,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
-                             get_last_packing_table_amount,
+                             get_last_batch, get_last_packing_table_amount,
                              get_multipacks_queue)
 from app.db.engine import engine
 from app.models.multipack import (Multipack, MultipackOutput,
@@ -72,16 +72,18 @@ async def delete_pack_by_id(id: ObjectId):
     return await delete_multipack(id)
 
 
-@router.delete('/remove_two_multipacks_to_refresh_wrapper',
+@router.delete('/remove_multipacks_to_refresh_wrapper',
                response_model=List[Multipack])
 @version(1, 0)
-async def remove_two_multipacks_to_refresh_wrapper():
+async def remove_multipacks_to_refresh_wrapper():
     multipacks_amount = await get_last_packing_table_amount()
+    current_batch = await get_last_batch()
+    multipacks_to_delete_amount = current_batch.params.multipacks_after_pintset
     multipacks_to_delete = await get_multipacks_queue()
     multipacks_to_delete = multipacks_to_delete[
-        multipacks_amount:multipacks_amount + 2]
+        multipacks_amount:multipacks_amount + multipacks_to_delete_amount]
 
-    if len(multipacks_to_delete) != 2:
+    if len(multipacks_to_delete) != multipacks_to_delete_amount:
         error_msg = 'Недостаточно паллет для перезагрузки обмотчика'
         raise HTTPException(status_code=400, detail=error_msg)
 
