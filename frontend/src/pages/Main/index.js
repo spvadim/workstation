@@ -588,11 +588,11 @@ function Main() {
 
             {modalDelete2Pallet && 
                 <ModalWindow
-                    title="Удаление двух паллет"
-                    description="Вы действительно хотите удалить две паллеты?"
+                    title="Удаление паллет"
+                    description="Вы действительно хотите удалить паллет(ы)?"
                 >
                     <Button onClick={() => {
-                        axios.delete(address + "/api/v1_0/remove_two_multipacks_to_refresh_wrapper")
+                        axios.delete(address + "/api/v1_0/remove_multipacks_to_refresh_wrapper")
                         .then(() => setReturnNotificationText(notificationText), setNotificationText("Паллеты успешно удалены"), setTimeout(returnNotification, 2000), setModalDelete2Pallet(false))
                             .catch(e => console.log(e.responce))
                     }}>
@@ -775,7 +775,7 @@ function Main() {
                     <Button onClick={() => {
                         setModalDelete2Pallet(true);
                         
-                    }}>Удалить 2 паллеты для перезагрузки обмотчика</Button>
+                    }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
 
                     <Button onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }} >Заменить пачку на упаковке</Button>
                 </div>
