@@ -1,12 +1,12 @@
-from datetime import datetime, timedelta
 from typing import List
 
-from app.db.db_utils import (check_qr_unique,
+from app.db.db_utils import (check_qr_unique, find_not_shipped_pack_by_qr,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
                              get_packs_queue)
 from app.db.engine import engine
 from app.models.pack import Pack, PackOutput, PackPatchSchema
+from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
@@ -35,6 +35,13 @@ async def get_pack_by_qr(qr: str = Query(None)):
     return pack
 
 
+@router.get('/not_shipped_pack/', response_model=Pack)
+@version(1, 0)
+async def get_not_shipped_pack_by_qr(qr: str = Query(None)):
+    pack = await find_not_shipped_pack_by_qr(qr)
+    return pack
+
+
 @router.put('/packs', response_model=Pack)
 @version(1, 0)
 async def create_pack(pack: Pack):
@@ -46,8 +53,7 @@ async def create_pack(pack: Pack):
             400, detail=f'Пачка с QR-кодом {pack.qr} уже есть в системе')
 
     pack.batch_number = batch.number
-    pack.created_at = (datetime.utcnow() +
-                       timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    pack.created_at = await get_naive_datetime()
     await engine.save(pack)
     return pack
 

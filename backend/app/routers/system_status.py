@@ -1,10 +1,12 @@
 from app.db.db_utils import (
     change_coded_setting, check_qr_unique, delete_cube, delete_multipack,
-    flush_packing_table, flush_pintset, flush_state, get_by_id_or_404,
-    get_current_state, get_current_status, get_current_workmode,
-    get_last_batch, get_last_cube_in_queue, get_multipacks_queue, get_report,
-    packing_table_error, pintset_error, set_column_red, set_column_yellow)
+    flush_packing_table, flush_pintset, flush_state, flush_withdrawal_pintset,
+    get_by_id_or_404, get_current_state, get_current_status,
+    get_current_workmode, get_last_batch, get_last_cube_in_queue,
+    get_multipacks_queue, get_report, packing_table_error, pintset_error,
+    pintset_withdrawal_error, set_column_red, set_column_yellow)
 from app.db.engine import engine
+from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
 from app.models.message import TGMessage
 from app.models.multipack import Status
@@ -13,12 +15,12 @@ from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
                                         send_error_with_buzzer, send_warning)
 from app.utils.io import send_telegram_message
-from app.utils.naive_current_datetime import get_string_datetime
+from app.utils.naive_current_datetime import get_naive_datetime
 from app.utils.pintset import off_pintset, on_pintset
-from fastapi import APIRouter, BackgroundTasks, HTTPException, File, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 from fastapi_versioning import version
 from pydantic import parse_obj_as
-
+from datetime import datetime
 router = APIRouter()
 
 
@@ -83,7 +85,10 @@ async def set_normal_state(background_tasks: BackgroundTasks):
 @router.patch("/set_pintset_error", response_model=SystemState)
 @version(1, 0)
 async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
-    background_tasks.add_task(off_pintset)
+    current_settings = await get_system_settings()
+    pintset_settings = current_settings.pintset_settings
+
+    background_tasks.add_task(off_pintset, pintset_settings)
     background_tasks.add_task(send_error_with_buzzer)
     return await pintset_error(error_msg)
 
@@ -92,8 +97,27 @@ async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
 @version(1, 0)
 async def set_pinset_normal(background_tasks: BackgroundTasks):
     background_tasks.add_task(flush_to_normal)
-    background_tasks.add_task(on_pintset)
+
+    current_settings = await get_system_settings()
+    pintset_settings = current_settings.pintset_settings
+    background_tasks.add_task(on_pintset, pintset_settings)
     return await flush_pintset()
+
+
+@router.patch("/set_pintset_withdrawal_error", response_model=SystemState)
+@version(1, 0)
+async def set_pintset_withdrawal_error(error_msg: str,
+                                       background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_error_with_buzzer)
+    return await pintset_withdrawal_error(error_msg)
+
+
+@router.patch("/flush_pintset_withdrawal", response_model=SystemState)
+@version(1, 0)
+async def set_pintset_withdrawal_normal(background_tasks: BackgroundTasks):
+    background_tasks.add_task(flush_to_normal)
+
+    return await flush_withdrawal_pintset()
 
 
 @router.patch("/set_packing_table_error", response_model=SystemState)
@@ -136,7 +160,7 @@ async def set_packing_table_normal_with_identify(
 
     cube_to_update = await get_by_id_or_404(Cube, wrong_cube_id)
     cube_to_update.qr = qr
-    cube_to_update.added_qr_at = await get_string_datetime()
+    cube_to_update.added_qr_at = await get_naive_datetime()
     await engine.save(cube_to_update)
 
     background_tasks.add_task(flush_to_normal)
@@ -153,6 +177,8 @@ async def get_system_report(report_query: ReportRequest) -> ReportResponse:
 async def get_system_report_with_query(
         report_begin: str = "01.01.1970 00:00",
         report_end: str = "01.01.2050 00:00") -> ReportResponse:
+    report_begin = datetime.strptime(report_begin, "%d.%m.%Y %H:%M")
+    report_end = datetime.strptime(report_end, "%d.%m.%Y %H:%M")
     report_query = parse_obj_as(ReportRequest, {
         "report_begin": report_begin,
         "report_end": report_end
@@ -164,4 +190,5 @@ async def get_system_report_with_query(
 async def send_tg_message(text: str,
                           timestamp: bool = False,
                           img: UploadFile = File(None)) -> bool:
-    return await send_telegram_message(TGMessage(text=text, timestamp=timestamp), img)
+    return await send_telegram_message(
+        TGMessage(text=text, timestamp=timestamp), img)

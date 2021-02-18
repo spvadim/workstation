@@ -1,15 +1,15 @@
-from datetime import datetime, timedelta
 from typing import List
 
 from app.db.db_utils import (check_qr_unique, delete_multipack,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
-                             get_last_packing_table_amount,
+                             get_last_batch, get_last_packing_table_amount,
                              get_multipacks_queue)
 from app.db.engine import engine
 from app.models.multipack import (Multipack, MultipackOutput,
                                   MultipackPatchSchema)
 from app.models.pack import Pack
+from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
@@ -24,8 +24,7 @@ async def create_multipack(multipack: Multipack):
         batch_number=multipack.batch_number)
 
     multipack.batch_number = batch.number
-    multipack.created_at = (datetime.utcnow() +
-                            timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+    multipack.created_at = await get_naive_datetime()
 
     packs_to_update = []
     for id in multipack.pack_ids:
@@ -40,8 +39,7 @@ async def create_multipack(multipack: Multipack):
                 400,
                 detail=f'Мультипак с QR-кодом {multipack.qr} уже есть в системе'
             )
-        multipack.added_qr_at = (datetime.utcnow() +
-                                 timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+        multipack.added_qr_at = await get_naive_datetime()
 
     await engine.save(multipack)
     return multipack
@@ -74,16 +72,18 @@ async def delete_pack_by_id(id: ObjectId):
     return await delete_multipack(id)
 
 
-@router.delete('/remove_two_multipacks_to_refresh_wrapper',
+@router.delete('/remove_multipacks_to_refresh_wrapper',
                response_model=List[Multipack])
 @version(1, 0)
-async def remove_two_multipacks_to_refresh_wrapper():
+async def remove_multipacks_to_refresh_wrapper():
     multipacks_amount = await get_last_packing_table_amount()
+    current_batch = await get_last_batch()
+    multipacks_to_delete_amount = current_batch.params.multipacks_after_pintset
     multipacks_to_delete = await get_multipacks_queue()
     multipacks_to_delete = multipacks_to_delete[
-        multipacks_amount:multipacks_amount + 2]
+        multipacks_amount:multipacks_amount + multipacks_to_delete_amount]
 
-    if len(multipacks_to_delete) != 2:
+    if len(multipacks_to_delete) != multipacks_to_delete_amount:
         error_msg = 'Недостаточно паллет для перезагрузки обмотчика'
         raise HTTPException(status_code=400, detail=error_msg)
 
@@ -103,8 +103,7 @@ async def update_pack_by_id(id: ObjectId, patch: MultipackPatchSchema):
             raise HTTPException(
                 400,
                 detail=f'Мультипак с QR-кодом {patch.qr} уже есть в системе')
-        multipack.added_qr_at = (datetime.utcnow() +
-                                 timedelta(hours=5)).strftime("%d.%m.%Y %H:%M")
+        multipack.added_qr_at = await get_naive_datetime()
 
     patch_dict = patch.dict(exclude_unset=True)
     for name, value in patch_dict.items():

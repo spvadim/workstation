@@ -1,25 +1,31 @@
 from typing import List, Optional
 from .production_batch import ProductionBatchNumber
+from datetime import datetime
 from pydantic import BaseModel
+from .model_config import ModelConfig
 
 
 class PackReportItem(BaseModel):
-    created_at: Optional[str]
+    created_at: Optional[datetime]
     batch_number: Optional[ProductionBatchNumber]
     qr: str
     barcode: str
 
+    Config = ModelConfig
+
 
 class MPackReportItem(BaseModel):
-    created_at: Optional[str]
+    created_at: Optional[datetime]
     batch_number: Optional[ProductionBatchNumber]
     qr: Optional[str]
     barcode: Optional[str]
     packs: List[PackReportItem] = []
 
+    Config = ModelConfig
+
 
 class CubeReportItem(BaseModel):
-    created_at: str
+    created_at: datetime
     batch_number: ProductionBatchNumber
     qr: Optional[str]
     barcode: Optional[str]
@@ -27,10 +33,14 @@ class CubeReportItem(BaseModel):
     packs_in_multipacks: int
     multipacks: List[MPackReportItem] = []
 
+    Config = ModelConfig
+
 
 class ReportRequest(BaseModel):
-    report_begin: Optional[str]
-    report_end: Optional[str]
+    report_begin: Optional[datetime]
+    report_end: Optional[datetime]
+
+    Config = ModelConfig
 
 
 class ReportResponse(ReportRequest):

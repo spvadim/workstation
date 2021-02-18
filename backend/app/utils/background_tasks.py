@@ -1,8 +1,9 @@
 import asyncio
 
-from app.db.db_utils import (flush_state, get_current_state,
-                             count_multipacks_queue, count_packs_queue,
-                             set_column_yellow, set_column_red)
+from app.db.db_utils import (count_multipacks_queue, count_packs_queue,
+                             flush_state, get_current_state, set_column_red,
+                             set_column_yellow)
+from app.db.system_settings import get_system_settings
 from app.models.message import TGMessage
 
 from .erd import (snmp_set_buzzer_off, snmp_set_buzzer_on, snmp_set_green_off,
@@ -26,15 +27,6 @@ async def send_error_with_buzzer():
     tasks.append(send_error())
     tasks.append(snmp_set_buzzer_on())
 
-    await asyncio.gather(*tasks)
-
-
-async def send_error_with_buzzer_and_tg_message(message: str):
-    tasks = []
-
-    tasks.append(send_error_with_buzzer())
-    tasks.append(
-        send_telegram_message(TGMessage(text=message, timestamp=False)))
     await asyncio.gather(*tasks)
 
 
@@ -86,10 +78,11 @@ async def send_warning_and_back_to_normal(message: str):
     tasks_before_sleep.append(send_warning())
     tasks_before_sleep.append(set_column_yellow(message))
 
-    tasks_before_sleep.append(
-        send_telegram_message(TGMessage(text=message, timestamp=False)))
+    current_settings = await get_system_settings()
+    delay = current_settings.general_settings.applikator_curtain_opening_delay.value
+
     await asyncio.gather(*tasks_before_sleep)
-    await asyncio.sleep(15)
+    await asyncio.sleep(delay - 1.5)
 
     state = await get_current_state()
     if state.error_msg == message:

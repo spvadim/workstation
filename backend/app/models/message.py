@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from .model_config import ModelConfig
 
 
 class TGMessage(BaseModel):
@@ -8,3 +9,5 @@ class TGMessage(BaseModel):
     """
     text: str = 'Текст сообщения'
     timestamp: bool = False
+
+    Config = ModelConfig
