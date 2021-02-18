@@ -29,13 +29,16 @@ function TextField({ className, outlined, width, forceFocus, hidden, ...restProp
         if (!forceFocus || !ref.current) {
             return
         }
+        
         const interval = setInterval(() => {
             if (document.activeElement.tagName !== 'INPUT') {
+                
                 ref.current.focus();
             }
             if (['checkbox', 'button', 'radio'].includes(document.activeElement.type)) {
                 ref.current.focus();
             }
+
         }, 300);
         return () => clearInterval(interval);
     }, [forceFocus, ref.current]);

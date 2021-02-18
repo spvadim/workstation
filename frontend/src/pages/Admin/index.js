@@ -4,8 +4,10 @@ import { Redirect } from "react-router-dom";
 import address from "../../address.js";
 import { createUseStyles } from "react-jss";
 
+import ToolTip from "../../components/ToolTip";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import Table from "../../components/Table/index.js";
+import { Notification, NotificationImage } from "../../components/Notification/index.js";
 import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
@@ -15,23 +17,49 @@ const useStyles = createUseStyles({
         width: 634,
         height: 300,
     },
-
-    header: {
+    container2: {
+        height: "100%",
+        position: "relative",
+    },
+    settingsContainer: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 5,
+        width: "50%",
+    },
+    row: {
+        display: "flex",
+        alignItems: "center",
+        gap: 5,
+        border: "1px solid #A4A4A4",
+        borderRadius: 7,
         width: "100%",
-        height: "max-content",
     },
-
-    commonParams: {
-        width: "max-content",
+    cell1: {
+        borderRight: "1px solid #A4A4A4",
+        width: "50%",
+        padding: "5px 5px",
+    },
+    input: {
+        padding: "6px 5px",
+        borderRadius: 7,
+        width: "50%",
+        border: "1px solid #A4A4A4",
+        outline: "none",
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: 600,
+    },
+    settingInner: {
+        paddingLeft: 15,
         display: "flex",
         flexDirection: "column",
+        gap: 5,
     },
-
-    innerParams: {
-        width: "max-content",
+    container: {
         display: "flex",
-        flexDirection: "column",
-        paddingLeft: 20,
+        justifyContent: "space-between",
     },
 })
 
@@ -56,6 +84,23 @@ function Admin() {
     const [newPacks, setNewPacks] = useState(false);
     const [newMultipacks, setNewMultipacks] = useState(false);
     const [newPalletAfterPintset, setNewPalletAfterPintset] = useState(false); 
+    const [settings, setSettings] = useState({});
+    const [notificationText, setNotificationText] = useState("");
+    const [notificationErrorText, setNotificationErrorText] = useState("");
+    const [editSettings, setEditSettings] = useState({});
+
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/settings")
+             .then(res => {
+                setSettings(res.data);
+                setEditSettings(res.data);
+                if (res.data.location_settings) {
+                    document.title = "Настройки: " + res.data.location_settings.place_name.value
+                }
+             });
+    }, []);
+
+
 
     useEffect(() => {
         const request = () => {
@@ -66,6 +111,57 @@ function Admin() {
         const interval = setInterval(request, 1000);
         return () => clearInterval(interval);
     }, []);
+
+    const generateSettings = () => {
+        return Object.keys(settings).map((sKey) => {
+            if (["id"].indexOf(sKey) !== -1) return null
+
+            let setting = settings[sKey]; 
+            return (
+                <div>
+                    <span className={classes.title}>{setting.title}:</span>
+                    {
+                        <div className={classes.settingInner}>
+                            {
+                                Object.keys(setting).map((key) => {
+                                    return (
+                                        ["title", "advanced"].indexOf(key) !== -1 ?
+                                            null :
+                                            (
+                                                <div className={classes.row}>
+                                                    <span className={classes.cell1} title={setting[key].desc}>{setting[key].title}:</span>
+                                                    {typeof (editSettings[sKey][key].value) === "boolean" ? 
+                                                        <select className={classes.input}
+                                                                onChange={(e) => {
+                                                                    let temp = {};
+                                                                    Object.assign(temp, editSettings);
+                                                                    temp[sKey][key].value = e.target.value === "true"
+                                                                    setEditSettings(temp);
+                                                                }}>
+                                                            <option selected={editSettings[sKey][key].value}>true</option>
+                                                            <option selected={!editSettings[sKey][key].value}>false</option>
+                                                        </select> :
+                                                        <input className={classes.input}
+                                                        value={editSettings[sKey][key].value}
+                                                        onChange={(e) => {
+                                                            let temp = {};
+                                                            Object.assign(temp, editSettings);
+                                                            temp[sKey][key].value = temp[sKey][key].value_type === "integer" ? +e.target.value : e.target.value;
+                                                            setEditSettings(temp);
+                                                        }} />} 
+                                                </div>
+                                            )
+                                    )
+                                })
+                            }
+                        </div>
+                        
+                    }   
+                </div>
+            )
+        })
+    }
+
 
     return (
         <div style={{padding: 20}}>
@@ -135,66 +231,63 @@ function Admin() {
                 </Button>
             </ModalWindow>}
 
-
-            <div className={classes.header}>
-                <div className={classes.commonParams}>
-                    <span>Общие параметры</span>
-                    <div className={classes.innerParams}>
-                        <span>Завод ТЕХНОПЛЕКС, Учалы, линия №1 XPS</span>
-                        <span>Дней хранения информации: 60</span>
-                        <span>Часовой пояс: 5</span> 
+            <div className={classes.container}>
+                <div className={classes.settingsContainer}>
+                    {Object.keys(editSettings).length !== 0 && generateSettings()}
+                    <div style={{display: "flex", alignItems: "center"}}>
+                        <Button style={{width: "max-content", height: "max-content"}} onClick={() => {
+                            axios.patch(address + "/api/v1_0/settings", editSettings)
+                                .then(() => {
+                                    setNotificationText("Успешно");
+                                    setTimeout(() => setNotificationText(""), 2000)
+                                })
+                                .catch(e => {
+                                    setNotificationErrorText(e.response.data.detail[0].msg);
+                                    setTimeout(() => setNotificationText(""), 2000)
+                                })
+                        }} > Сохранить </Button>
+                        <NotificationPanel
+                            errors={
+                                notificationErrorText && (
+                                    <Notification
+                                        error
+                                        description={notificationErrorText}
+                                    />
+                                )
+                            }  
+                            notifications={
+                                notificationText && (
+                                    <Notification
+                                        description={notificationText}
+                                    />
+                                )
+                            }
+                        />
                     </div>
                 </div>
 
-                <br />
-
-                <div className={classes.commonParams}>
-                    <span>Параметры блока ERD</span>
-                    <div className={classes.innerParams}>
-                        <span>IP адрес блока ERD: 192.168.20.200</span>
-                        <span>порт SNMP: 161</span>
-                    </div>
+                <div className={classes.tableContainer}>
+                    <Button onClick={() => setModalAddBatchParams(true)}>Создать новые параметры партии</Button>
+                    <Table columns={bathesParamsTableProps}
+                            rows={batchesParams.map((param, index) => {
+                                let temp = {};
+                                Object.assign(temp, param);
+                                temp.number = batchesParams.length - index;
+                                return temp;
+                            })}
+                            className={"bathesParams"}
+                            buttonDelete={"/trash"}
+                            buttonVisible={"/visible"}
+                            onVisible={(row) => {
+                                axios.patch(address + "/api/v1_0/batches_params/" + row.id, {visible: !row.visible})
+                            }}
+                            onDelete={(row) => rowDelete(row.id)} />
+                            
+                    
                 </div>
-
-                <br />
-
-                <div className={classes.commonParams}>
-                    <span> Параметры подключения к пинцету</span>
-                    <div className={classes.innerParams}>
-                        <span>IP пинцета: 192.168.20.210</span>
-                        <span>Rack: 0</span>
-                        <span>Slot: 2</span>
-                        <span>Область памяти: 60</span>
-                        <span>C какого байта читать: 0</span>
-                    </div>
-                </div>
-
-                <br />
-
-                <div className={classes.commonParams}>
-                    <span>Параметры телеграмм</span>
-                    <div className={classes.innerParams}>
-                        <span>BotApiKey</span>
-                        <span>chat_id</span>
-                    </div>
-                </div>
+                
             </div>
             
-            <br />
-
-            <div className={classes.tableContainer}>
-                <Button onClick={() => setModalAddBatchParams(true)}>Создать новые параметры партии</Button>
-                <Table columns={bathesParamsTableProps}
-                        rows={batchesParams.map((param, index) => {
-                            let temp = {};
-                            Object.assign(temp, param);
-                            temp.number = batchesParams.length - index;
-                            return temp;
-                        })}
-                        className={"bathesParams"}
-                        buttonDelete={"/trash"}
-                        onDelete={(row) => rowDelete(row.id)} />
-            </div>
         </div>
     );
 }

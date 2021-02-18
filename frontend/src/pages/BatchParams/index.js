@@ -8,8 +8,10 @@ import { Paper, Button, InputRadio, TextField, Text, Loader, TouchPanel } from "
 
 const useStyles = createUseStyles({
     BatchParams: {
-        height: '100%',
+        position: "relative",
         display: 'flex',
+        flexDirection: "column",
+        gap: 100,
     },
     main: {
         margin: 'auto',
@@ -27,7 +29,7 @@ const useStyles = createUseStyles({
     paperMain: {
         boxSizing: 'border-box',
         width: 422,
-        height: 294,
+        height: "max-content",
         paddingTop: 38,
         paddingBottom: 38,
         paddingLeft: 35,
@@ -42,7 +44,7 @@ const useStyles = createUseStyles({
         fontSize: 18,
     },
     submitButton: {
-        marginTop: 'auto',
+        marginTop: 13,
         width: '100%',
     },
     radioLabel: {
@@ -55,7 +57,6 @@ const useStyles = createUseStyles({
         width: 140,
     },
     title: {
-        position: 'absolute',
         marginTop: 62,
         width: '100%',
         textAlign: 'center',
@@ -71,7 +72,8 @@ function BatchParams() {
     const [loading, setLoading] = useState(false);
     const [settings, setSettings] = useState({})
     const [redirect, setRedirect] = useState(false);
-    const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : (date_.getMonth() + 1)) + "-" + date_.getDate() + " 00:00");
+    const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : (date_.getMonth() + 1)) + "-" +
+                                                               (date_.getDate().toString().length === 1 ? "0" + date_.getDate() : date_.getDate()) + " 00:00");
 
     const [cookies, setCookie] = useCookies([]);
 
@@ -85,6 +87,15 @@ function BatchParams() {
             })
             .catch(e => console.log(e))
             .finally(() => setLoading(false));
+    }, [])
+
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/settings")
+            .then(res => {
+                if (res.data.location_settings) {
+                    document.title = "Новая партия: " + res.data.location_settings.place_name.value
+                }
+            })
     }, [])
 
     function submitHandler(event) {
@@ -104,15 +115,11 @@ function BatchParams() {
     }
 
     if (redirect) {
-        setCookie("batchNumber", batchNumber, { path: "/" });
-        setCookie("multipacks", settings.multipacks, { path: "/" });
-        setCookie("packs", settings.packs, { path: "/" });
-        setCookie("multipacksAfterPintset", settings.multipacks_after_pintset, { path: "/" })
-
         return <Redirect to="/" />
     }
+    
+    console.log(date.split(" ")[0])
 
-    console.log(date)
     return (
         <div className={classes.BatchParams}>
             <Text type="title" className={classes.title}>Вход</Text>
@@ -134,11 +141,15 @@ function BatchParams() {
                                 forceFocus
                             />
                         </div>
-                        <input type="date" value={date.split(" ")[0]} onChange={e => setDate(e.target.value + " 00:00")} style={{width: "max-content"}} />
+                        <div className={classes.input} style={{height: 24, paddingTop: 10, position: "relative"}}>
+                            <span className={classes.inputLabel}>Дата партии ГП: </span>
+                            <input type="date" value={date.split(" ")[0]} onChange={e => setDate(e.target.value + " 00:00")} style={{width: "max-content", position: "absolute", right: 0}} />
+                        </div>
 
                         {loading ?
                             <Loader /> :
                             params.map((obj, index) => (
+                                obj.visible ? 
                                 <InputRadio name="param_batch"
                                     htmlFor={obj.id}
                                     key={index}
@@ -148,13 +159,16 @@ function BatchParams() {
                                         <br />
                                         пинцет: {obj.multipacks_after_pintset} паллет
                                     </span>
-                                </InputRadio>
+                                </InputRadio> :
+                                null
                             ))}
 
 
                         <Button className={classes.submitButton}>Начать выпуск партии</Button>
 
                     </form>
+
+                    <Button className={classes.submitButton} onClick={() => setRedirect(true)}>Вернуться на основную страницу</Button>
                 </Paper>
 
                <TouchPanel addNumber={(number) => {

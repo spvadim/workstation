@@ -242,6 +242,15 @@ function Create({ description, type, extended }) {
     //     }
     // }
 
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/settings")
+            .then(res => {
+                if (res.data.location_settings) {
+                    document.title = "Новый куб: " + res.data.location_settings.place_name.value
+                }
+            })
+    }, [])
+
     const deletePack = (indexPack, indexMultipack) => {
         let temp = multipacksTableData.slice();
         temp[indexMultipack].splice(indexPack, 1);
