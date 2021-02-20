@@ -11,6 +11,7 @@ import { Notification, NotificationImage } from "../../components/Notification/i
 import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
+import imgHint from "src/assets/images/hint.png";
 
 const useStyles = createUseStyles({
     tableContainer: {
@@ -61,6 +62,26 @@ const useStyles = createUseStyles({
         display: "flex",
         justifyContent: "space-between",
     },
+    hintCell: {
+        borderLeftStyle: 'none !important',
+        height: 24,
+        width: 48,
+        backgroundImage: `url(${imgHint})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 21,
+        backgroundPosition: 'center',
+        cursor: 'pointer',
+    },
+    fullDescription: {
+        position: "fixed",
+        right: 50,
+        bottom: 50,
+        maxWidth: 300,
+        backgroundColor: "white",
+        borderRadius: 7,
+        padding: "10px",
+        paddingTop: 0,
+    },
 })
 
 const bathesParamsTableProps = [
@@ -88,6 +109,7 @@ function Admin() {
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [editSettings, setEditSettings] = useState({});
+    const [choosedSetting, setChoosedSetting] = useState("");
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/settings")
@@ -112,6 +134,8 @@ function Admin() {
         return () => clearInterval(interval);
     }, []);
 
+    console.log(choosedSetting)
+
     const generateSettings = () => {
         return Object.keys(settings).map((sKey) => {
             if (["id"].indexOf(sKey) !== -1) return null
@@ -129,6 +153,7 @@ function Admin() {
                                             null :
                                             (
                                                 <div className={classes.row}>
+                                                    <div className={classes.hintCell} onClick={() => setChoosedSetting(setting[key])}> </div>
                                                     <span className={classes.cell1} title={setting[key].desc}>{setting[key].title}:</span>
                                                     {typeof (editSettings[sKey][key].value) === "boolean" ? 
                                                         <select className={classes.input}
@@ -287,6 +312,13 @@ function Admin() {
                 </div>
                 
             </div>
+
+            {choosedSetting && 
+                <div className={classes.fullDescription}>
+                    <p style={{fontWeight: 500}}>{choosedSetting.title}</p>
+                    <span>{choosedSetting.desc}</span>
+                </div>
+            }
             
         </div>
     );

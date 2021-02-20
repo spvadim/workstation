@@ -243,9 +243,10 @@ function Main() {
         const request2 = () => {
             axios.get(address + "/api/v1_0/packing_table_records")
                 .then(res => {
+                    console.log(res.data.multipacks_amount, batchSettings.multipacks, mode)
                     setPackingTableRecords(res.data);
                     if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
-                        setNotificationText("Надо отсканировать QR Куба")
+                        setNotificationText("Надо отсканировать QR куба")
                     } 
             });
         }
@@ -253,7 +254,7 @@ function Main() {
         request2();
         const interval1 = setInterval(() => request2(), 1000);
         return () => clearInterval(interval1);
-    }, [batchSettings]);
+    }, [batchSettings, mode]);
 
     useEffect(() => {
         const request = () => {
@@ -415,7 +416,7 @@ function Main() {
             {modalChangePack && 
                 <ModalWindow
                     title="Замена пачки"
-                    description="Введите QR заменяемой и новой пачек"
+                    description="На постах упаковки одну пачку можно заменить на другую. Для этого введите сначала QR старой пачки, потом QR новой пачки. Далее подтвердите свое действие"
                 >
                     <Button onClick={() => {setModalChangePack(false); setForceFocus("inputQr")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
