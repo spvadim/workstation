@@ -413,11 +413,11 @@ async def add_packing_table_record(record: PackingTableRecordInput,
         background_tasks.add_task(check_packs_max_amount, 16)
         background_tasks.add_task(check_multipacks_max_amount, 4)
 
-        if not cube:
-            error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
-            error_msg += 'Чтобы собрать куб, введите его QR.'
-            new_cube = await form_cube_from_n_multipacks(prev_record_amount)
-            wrong_cube_id = new_cube.id
+        # if not cube:
+        #     error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
+        #     error_msg += 'Чтобы собрать куб, введите его QR.'
+        #     new_cube = await form_cube_from_n_multipacks(prev_record_amount)
+        #     wrong_cube_id = new_cube.id
 
         if prev_record_amount == needed_multipacks and not cube.qr:
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
@@ -429,11 +429,11 @@ async def add_packing_table_record(record: PackingTableRecordInput,
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
             wrong_cube_id = cube.id
 
-        if multipacks_in_cube != prev_record_amount:
-            error_msg = f'{current_datetime} количество паллет на упаковочном столе и в последнем кубе не совпадают. '
-            error_msg += 'Чтобы собрать куб, введите его QR.'
-            new_cube = await form_cube_from_n_multipacks(prev_record_amount)
-            wrong_cube_id = new_cube.id
+        # if multipacks_in_cube != prev_record_amount:
+        #     error_msg = f'{current_datetime} количество паллет на упаковочном столе и в последнем кубе не совпадают. '
+        #     error_msg += 'Чтобы собрать куб, введите его QR.'
+        #     new_cube = await form_cube_from_n_multipacks(prev_record_amount)
+        #     wrong_cube_id = new_cube.id
 
     if error_msg:
         background_tasks.add_task(send_error)
