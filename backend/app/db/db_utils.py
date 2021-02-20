@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import List, Optional, Union
 
 from app.models.cube import Cube
@@ -9,6 +9,7 @@ from app.models.production_batch import ProductionBatch, ProductionBatchNumber
 from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
                                ReportRequest, ReportResponse)
 from app.models.system_status import Mode, State, SystemState, SystemStatus
+from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import HTTPException
 from odmantic import Model, ObjectId, query
 from pydantic.tools import parse_obj_as
@@ -45,6 +46,34 @@ async def get_by_qr_or_404(model, qr: str) -> Model:
     if instance is None:
         raise HTTPException(404)
     return instance
+
+
+async def find_not_shipped_pack_by_qr(qr: str) -> Optional[Pack]:
+    pack = await get_by_qr_or_404(Pack, qr)
+
+    if pack.in_queue:
+        return pack
+
+    multipack_containing_that_pack = await get_multipack_by_included_pack_id(
+        pack.id)
+    if multipack_containing_that_pack.status != Status.IN_CUBE:
+        return pack
+
+    last_cube = await get_last_cube_in_queue()
+    if str(multipack_containing_that_pack.id
+           ) in last_cube.multipack_ids_with_pack_ids.keys():
+        if not last_cube.qr:
+            return pack
+
+    raise HTTPException(404)
+
+
+async def get_multipack_by_included_pack_id(id: ObjectId()
+                                            ) -> Optional[Multipack]:
+    multipack = await engine.find_one(Multipack, {+Multipack.pack_ids: id})
+    if not multipack:
+        raise HTTPException(404)
+    return multipack
 
 
 async def get_current_status() -> SystemStatus:
@@ -117,6 +146,22 @@ async def flush_pintset() -> SystemState:
     return current_status.system_state
 
 
+async def pintset_withdrawal_error(error_msg: str) -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.pintset_withdrawal_state = State.ERROR
+    current_status.system_state.pintset_withdrawal_error_msg = error_msg
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def flush_withdrawal_pintset() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.pintset_withdrawal_state = State.NORMAL
+    current_status.system_state.pintset_withdrawal_error_msg = None
+    await engine.save(current_status)
+    return current_status.system_state
+
+
 async def packing_table_error(error_msg: str,
                               wrong_cube_id: ObjectId) -> SystemState:
     current_status = await get_current_status()
@@ -174,10 +219,7 @@ async def form_cube_from_n_multipacks(n: int) -> Cube:
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
     needed_packs = batch.params.packs
-    tz = 5
-    current_time = (datetime.utcnow() +
-                    timedelta(hours=tz)).strftime("%d.%m.%Y %H:%M")
-
+    current_time = await get_naive_datetime()
     multipacks = await get_multipacks_queue()
     multipacks_for_cube = multipacks[:n]
     multipack_ids_with_pack_ids = {}
@@ -209,6 +251,7 @@ async def get_packs_queue() -> List[Pack]:
     packs = await engine.find(Pack,
                               Pack.in_queue == True,
                               sort=query.asc(Pack.id))
+
     return packs
 
 
@@ -283,22 +326,13 @@ async def get_cubes_queue() -> List[Cube]:
 
 
 async def get_report(q: ReportRequest) -> ReportResponse:
-    last_batch = await get_last_batch()
-    dtf = datetime.strptime
-    tf = '%d.%m.%Y %H:%M'
 
-    dt_begin = dtf(q.report_begin, tf)
-    dt_end = dtf(q.report_end, tf)
+    dt_begin = q.report_begin
+    dt_end = q.report_end
 
     cubes = await engine.find(
-        Cube, query.and_(Cube.batch_number != last_batch.number))
-
-    cubes = [
-        cube for cube in cubes
-        if dt_begin <= dtf(cube.created_at, tf) <= dt_end
-    ]
-
-    cubes = sorted(cubes, key=lambda c: dtf(c.created_at, tf))
+        Cube, query.and_(Cube.created_at <= dt_end,
+                         Cube.created_at >= dt_begin))
 
     cubes_report = [
         parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes
@@ -307,8 +341,7 @@ async def get_report(q: ReportRequest) -> ReportResponse:
     for i, cube in enumerate(cubes):
         list_of_ids = [ObjectId(i) for i in cube.multipack_ids_with_pack_ids]
         multipacks = await engine.find(Multipack,
-                                       Multipack.id.in_(list_of_ids),
-                                       sort=query.asc(Multipack.created_at))
+                                       Multipack.id.in_(list_of_ids))
         mpacks_report = [
             parse_obj_as(MPackReportItem, mpack.dict()) for mpack in multipacks
         ]
@@ -317,8 +350,7 @@ async def get_report(q: ReportRequest) -> ReportResponse:
 
         for j, multipack in enumerate(multipacks):
             packs = await engine.find(Pack,
-                                      Pack.id.in_(multipack.pack_ids),
-                                      sort=query.asc(Pack.created_at))
+                                      Pack.id.in_(multipack.pack_ids))
             packs_report = [
                 parse_obj_as(PackReportItem, pack.dict()) for pack in packs
             ]

@@ -9,7 +9,7 @@ class TGToken(EmbeddedModel):
 
 
 class TGChat(EmbeddedModel):
-    title: str = 'ID телегррамм чата, куда будут отправляться сообщения'
+    title: str = 'ID телеграмм чата, куда будут отправляться сообщения'
     desc: str = 'Введите ID телеграмм чата в формате @айди_нужнего_чата'
     value: str
     value_type: str = 'string'

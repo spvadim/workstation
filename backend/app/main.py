@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_versioning import VersionedFastAPI
 
+from .db.engine import models_startup
 from .db.db_utils import create_status_if_not_exists
 from .db.system_settings import create_system_settings_if_not_exists
 from .logger import init_logging
@@ -34,3 +35,4 @@ async def startup_event():
     init_logging()
     await create_status_if_not_exists()
     await create_system_settings_if_not_exists()
+    await models_startup()

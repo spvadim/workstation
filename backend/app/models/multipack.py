@@ -1,9 +1,12 @@
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from odmantic import Model, ObjectId
+from odmantic import Model
+from odmantic.bson import ObjectId
 from pydantic import BaseModel
 
+from .model_config import ModelConfig
 from .production_batch import ProductionBatchNumber
 
 
@@ -25,19 +28,28 @@ class Multipack(Model):
     comments: List[str] = []
     to_process: bool = False
     batch_number: Optional[ProductionBatchNumber]
-    created_at: Optional[str]
-    added_qr_at: Optional[str]
+    created_at: Optional[datetime]
+    added_qr_at: Optional[datetime]
+
+    Config = ModelConfig
 
 
-class MultipackOutput(Model):
-    created_at: str
+class MultipackOutput(BaseModel):
+    id: ObjectId
+    created_at: datetime
     qr: Optional[str]
     status: Status
+    to_process: bool
+    comments: List[str]
+
+    Config = ModelConfig
 
 
-class MultipackIdentificationAuto(Model):
+class MultipackIdentificationAuto(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
+
+    Config = ModelConfig
 
 
 class MultipackPatchSchema(BaseModel):
@@ -46,3 +58,5 @@ class MultipackPatchSchema(BaseModel):
     status: Optional[Status]
     comments: Optional[List[str]]
     to_process: Optional[bool]
+
+    Config = ModelConfig

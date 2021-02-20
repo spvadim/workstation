@@ -1,26 +1,17 @@
-from pysnmp.hlapi.asyncio import *
+from app.db.system_settings import get_system_settings
 from loguru import logger
+from pysnmp.hlapi.asyncio import *
 
-community_string = 'public'
-ip_address_host = '192.168.20.200'
-port_snmp = 161
 on = Integer(1)
 off = Integer(0)
 
-# словарь можно заменить на переменные
-OID = {
-    'red': '.1.3.6.1.4.1.40418.2.6.2.2.1.3.1.4',
-    'yellow': '.1.3.6.1.4.1.40418.2.6.2.2.1.3.1.3',
-    'green': '.1.3.6.1.4.1.40418.2.6.2.2.1.3.1.2',
-    'buzzer': '.1.3.6.1.4.1.40418.2.6.2.2.1.3.1.5'
-}
 
-
-async def set_cmd(key,
-                  value,
-                  port=161,
-                  engine=SnmpEngine(),
-                  context=ContextData()):
+async def set_cmd(key, value, engine=SnmpEngine(), context=ContextData()):
+    current_settings = await get_system_settings()
+    erd_settings = current_settings.erd_settings
+    community_string = erd_settings.erd_community_string.value
+    port_snmp = erd_settings.erd_snmp_port.value
+    ip_address_host = erd_settings.erd_ip.value
     return await setCmd(engine, CommunityData(community_string),
                         UdpTransportTarget((ip_address_host, port_snmp)),
                         context, ObjectType(ObjectIdentity(key), value))
@@ -34,7 +25,12 @@ async def snmp_set(key, value):
         return (val.prettyPrint())
 
 
-async def get_cmd(key, port=161, engine=SnmpEngine(), context=ContextData()):
+async def get_cmd(key, engine=SnmpEngine(), context=ContextData()):
+    current_settings = await get_system_settings()
+    erd_settings = current_settings.erd_settings
+    community_string = erd_settings.erd_community_string.value
+    port_snmp = erd_settings.erd_snmp_port.value
+    ip_address_host = erd_settings.erd_ip.value
     return await getCmd(engine, CommunityData(community_string),
                         UdpTransportTarget((ip_address_host, port_snmp)),
                         context, ObjectType(ObjectIdentity(key)))
@@ -49,39 +45,63 @@ async def snmp_get(key):
 
 async def snmp_set_yellow_on():
     logger.info('Включение желтого цвета на колонне')
-    await snmp_set(OID['yellow'], on)
+
+    current_settings = await get_system_settings()
+    yellow_oid = current_settings.erd_settings.erd_yellow_oid.value
+    await snmp_set(yellow_oid, on)
 
 
 async def snmp_set_yellow_off():
     logger.info('Выключение желтого цвета на колонне')
-    await snmp_set(OID['yellow'], off)
+
+    current_settings = await get_system_settings()
+    yellow_oid = current_settings.erd_settings.erd_yellow_oid.value
+    await snmp_set(yellow_oid, off)
 
 
 async def snmp_set_red_on():
     logger.info('Включение красного цвета на колонне')
-    await snmp_set(OID['red'], on)
+
+    current_settings = await get_system_settings()
+    red_oid = current_settings.erd_settings.erd_red_oid.value
+    await snmp_set(red_oid, on)
 
 
 async def snmp_set_red_off():
     logger.info('Выключение красного цвета на колонне')
-    await snmp_set(OID['red'], off)
+
+    current_settings = await get_system_settings()
+    red_oid = current_settings.erd_settings.erd_red_oid.value
+    await snmp_set(red_oid, off)
 
 
 async def snmp_set_green_on():
     logger.info('Включение зеленого цвета на колонне')
-    await snmp_set(OID['green'], on)
+
+    current_settings = await get_system_settings()
+    green_oid = current_settings.erd_settings.erd_green_oid.value
+    await snmp_set(green_oid, on)
 
 
 async def snmp_set_green_off():
     logger.info('Выключение зеленого цвета на колонне')
-    await snmp_set(OID['green'], off)
+
+    current_settings = await get_system_settings()
+    green_oid = current_settings.erd_settings.erd_green_oid.value
+    await snmp_set(green_oid, off)
 
 
 async def snmp_set_buzzer_on():
     logger.info('Включение зуммера')
-    await snmp_set(OID['buzzer'], on)
+
+    current_settings = await get_system_settings()
+    buzzer_oid = current_settings.erd_settings.erd_buzzer_oid.value
+    await snmp_set(buzzer_oid, on)
 
 
 async def snmp_set_buzzer_off():
     logger.info('Выключение зуммера')
-    await snmp_set(OID['buzzer'], off)
+
+    current_settings = await get_system_settings()
+    buzzer_oid = current_settings.erd_settings.erd_buzzer_oid.value
+    await snmp_set(buzzer_oid, off)
