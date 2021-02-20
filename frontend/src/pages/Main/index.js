@@ -529,7 +529,7 @@ function Main() {
                     title="Разобрать куб?"
                     description="Введите QR куба для разбора"
                 >
-                    <Button onClick={() => {setModalDisassemble(false)}}>
+                    <Button onClick={() => {setModalDisassemble(false); setForceFocus("inputQr")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Отмена
                     </Button>
