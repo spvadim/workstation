@@ -527,7 +527,7 @@ function Main() {
             {modalDisassemble && 
                 <ModalWindow
                     title="Разобрать куб?"
-                    description="Введите QR куба для разбора"
+                    description="Информация про куб и пачки в нем будет удалена из системы. Куб нужно будет распаковать, необходимые пачки нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
                 >
                     <Button onClick={() => {setModalDisassemble(false); setForceFocus("inputQr")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
