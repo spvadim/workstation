@@ -709,7 +709,7 @@ function Main() {
             {modalCube && (
                 <ModalWindow
                     title="Формирование неполного куба"
-                    description="Вы действительно хотите создать неполный куб?"
+                    description="Из всех паллет и пачек в очереди будет сформирован куб. Подтверждаете?"
                 >
                     <div style={{ display: "grid", gap: "2rem" }}>
                         <div>
