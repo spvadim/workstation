@@ -31,15 +31,19 @@ const useStyles = createUseStyles({
     row: {
         display: "flex",
         alignItems: "center",
-        gap: 5,
-        border: "1px solid #A4A4A4",
-        borderRadius: 7,
+        gap: 5,        
         width: "100%",
+        position: "relative",
     },
     cell1: {
-        borderRight: "1px solid #A4A4A4",
+        minWidth: "50%",
         width: "50%",
         padding: "5px 5px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        border: "1px solid #A4A4A4",
+        borderRadius: 7,
     },
     input: {
         padding: "6px 5px",
@@ -134,8 +138,6 @@ function Admin() {
         return () => clearInterval(interval);
     }, []);
 
-    console.log(choosedSetting)
-
     const generateSettings = () => {
         return Object.keys(settings).map((sKey) => {
             if (["id"].indexOf(sKey) !== -1) return null
@@ -153,8 +155,10 @@ function Admin() {
                                             null :
                                             (
                                                 <div className={classes.row}>
-                                                    <div className={classes.hintCell} onClick={() => setChoosedSetting(setting[key])}> </div>
-                                                    <span className={classes.cell1} title={setting[key].desc}>{setting[key].title}:</span>
+                                                    
+                                                    <span className={classes.cell1} title={setting[key].desc}>{setting[key].title}:
+                                                        <ToolTip text={setting[key].desc} style={{marginLeft: 5}} />
+                                                    </span>
                                                     {typeof (editSettings[sKey][key].value) === "boolean" ? 
                                                         <select className={classes.input}
                                                                 onChange={(e) => {
