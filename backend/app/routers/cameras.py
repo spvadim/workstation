@@ -1,12 +1,16 @@
 from typing import List
 
-from app.db.db_utils import (
-    check_qr_unique, form_cube_from_n_multipacks, get_100_last_packing_records,
-    get_all_wrapping_multipacks, get_current_workmode,
-    get_first_exited_pintset_multipack, get_first_multipack_without_qr,
-    get_first_wrapping_multipack, get_last_batch, get_last_cube_in_queue,
-    get_last_packing_table_amount, get_multipacks_queue, get_packs_queue,
-    packing_table_error, pintset_error, set_column_red)
+from app.db.db_utils import (check_qr_unique, form_cube_from_n_multipacks,
+                             get_100_last_packing_records,
+                             get_all_wrapping_multipacks, get_current_workmode,
+                             get_first_exited_pintset_multipack,
+                             get_first_multipack_without_qr,
+                             get_first_wrapping_multipack, get_last_batch,
+                             get_last_cube_in_queue,
+                             get_last_packing_table_amount,
+                             get_multipacks_queue, get_packs_queue,
+                             packing_table_error, pintset_error,
+                             set_column_red)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -29,8 +33,9 @@ from fastapi.responses import JSONResponse
 from fastapi_versioning import version
 from loguru import logger
 
-router = APIRouter()
+from .custom_routers import CameraRoute
 
+router = APIRouter(route_class=CameraRoute)
 
 @router.put('/new_pack_after_applikator',
             response_model=PackCameraInput,
@@ -59,13 +64,13 @@ async def new_pack_after_applikator(pack: PackCameraInput,
         error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        logger.warning(error_msg)
         current_settings = await get_system_settings()
         if current_settings.general_settings.send_applikator_tg_message.value:
             background_tasks.add_task(send_telegram_message,
                                       TGMessage(text=error_msg))
         background_tasks.add_task(send_warning_and_back_to_normal, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
+
     return pack
 
 
@@ -93,7 +98,6 @@ async def new_pack_after_pintset(pack: PackCameraInput,
         error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        logger.error(error_msg)
         background_tasks.add_task(send_telegram_message,
                                   TGMessage(text=error_msg))
         current_settings = await get_system_settings()
@@ -190,7 +194,6 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     if len(packs_queue) < needed_packs:
         error_msg = f'{current_time} пинцет начал формирование {multipacks_after_pintset} мультипаков, но пачек в очереди меньше чем {needed_packs}'
         background_tasks.add_task(send_error)
-        logger.error(error_msg)
         background_tasks.add_task(set_column_red, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 

@@ -46,6 +46,12 @@ def format_record(record: dict) -> str:
     return format_string
 
 
+def make_filter(name):
+    def filter(record):
+        return record["extra"].get("name") == name
+    return filter
+
+
 def init_logging():
     """
     Replaces logging handlers with a handler for using the custom handler.
@@ -67,12 +73,16 @@ def init_logging():
     logging.getLogger("uvicorn").handlers = [intercept_handler]
 
     # set logs output, level and format
-    logger.configure(handlers=[{
-        "sink": sys.stdout,
-        "level": logging.DEBUG,
-        "format": format_record
-    }, {
-        "sink": "logs/logs.log",
-        "level": logging.DEBUG,
-        "format": format_record
-    }])
+    logger.configure(handlers=[
+        {
+            "sink": sys.stdout,
+            "level": logging.DEBUG,
+            "format": format_record
+        },
+        {
+            "sink": "logs/camera_logs.log",
+            "level": logging.DEBUG,
+            "format": format_record,
+            "filter": make_filter('camera')
+        },
+    ])
