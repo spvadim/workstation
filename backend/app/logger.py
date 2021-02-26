@@ -49,6 +49,7 @@ def format_record(record: dict) -> str:
 def make_filter(name):
     def filter(record):
         return record["extra"].get("name") == name
+
     return filter
 
 
@@ -83,6 +84,7 @@ def init_logging():
             "sink": "logs/camera_logs.log",
             "level": logging.DEBUG,
             "format": format_record,
-            "filter": make_filter('camera')
+            "filter": make_filter('camera'),
+            "rotation": '1 day'
         },
     ])
