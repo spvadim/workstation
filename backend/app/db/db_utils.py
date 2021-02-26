@@ -326,6 +326,11 @@ async def get_cubes_queue() -> List[Cube]:
     return await engine.find(Cube, Cube.batch_number == last_batch.number)
 
 
+async def count_cubes_queue() -> int:
+    last_batch = await get_last_batch()
+    return await engine.count(Cube, Cube.batch_number == last_batch.number)
+
+
 async def get_report(q: ReportRequest) -> ReportResponse:
 
     dt_begin = q.report_begin
@@ -339,9 +344,10 @@ async def get_report(q: ReportRequest) -> ReportResponse:
     if dt_end - dt_begin > timedelta(days=report_max_days):
         raise HTTPException(400, detail='Слишком большой период для отчета')
 
-    cubes = await engine.find(
-        Cube, query.and_(Cube.created_at < dt_end,
-                         Cube.created_at >= dt_begin), limit=report_max_cubes)
+    cubes = await engine.find(Cube,
+                              query.and_(Cube.created_at < dt_end,
+                                         Cube.created_at >= dt_begin),
+                              limit=report_max_cubes)
 
     cubes_report = [
         parse_obj_as(CubeReportItem, cube.dict()) for cube in cubes
