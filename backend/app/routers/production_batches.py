@@ -17,15 +17,15 @@ light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
 @light_logger_router.get("/batches_params",
-                        response_model=List[ProductionBatchParams])
+                         response_model=List[ProductionBatchParams])
 @version(1, 0)
 async def get_all_params():
     all_params = await engine.find(ProductionBatchParams)
     return all_params
 
 
-@deep_logger_router.put("/batches_params",
-                        response_model=ProductionBatchParams)
+@light_logger_router.put("/batches_params",
+                         response_model=ProductionBatchParams)
 @version(1, 0)
 async def create_params(params: ProductionBatchParams):
     await engine.save(params)
@@ -33,7 +33,7 @@ async def create_params(params: ProductionBatchParams):
 
 
 @deep_logger_router.patch("/batches_params/{id}",
-                          response_model=ProductionBatchParams)
+                           response_model=ProductionBatchParams)
 @version(1, 0)
 async def update_params_by_id(id: ObjectId, patch: PatchParamsScheme):
     params = await get_by_id_or_404(ProductionBatchParams, id)
@@ -45,7 +45,7 @@ async def update_params_by_id(id: ObjectId, patch: PatchParamsScheme):
     return params
 
 
-@deep_logger_router.put("/batches", response_model=ProductionBatch)
+@light_logger_router.put("/batches", response_model=ProductionBatch)
 @version(1, 0)
 async def create_batch(batch: ProductionBatchInput):
     params = await get_by_id_or_404(ProductionBatchParams, batch.params_id)
@@ -68,7 +68,7 @@ async def get_all_batches():
     return all_batches
 
 
-@deep_logger_router.get('/batches/{id}', response_model=ProductionBatch)
+@light_logger_router.get('/batches/{id}', response_model=ProductionBatch)
 @version(1, 0)
 async def get_batch_by_id(id: ObjectId):
     batch = await get_by_id_or_404(ProductionBatch, id)
