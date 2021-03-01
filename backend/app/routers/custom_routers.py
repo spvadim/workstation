@@ -7,7 +7,8 @@ from fastapi import Request, Response
 from fastapi.routing import APIRoute
 from loguru import logger
 
-camera_logger = logger.bind(name='camera')
+deep_logger = logger.bind(name='deep')
+light_logger = logger.bind(name='light')
 
 
 async def retrieve_queues():
@@ -23,47 +24,63 @@ async def retrieve_queues():
 async def log_queues():
     packs_queue, multipacks_queue, cubes_queue = await retrieve_queues()
 
-    camera_logger.info(f'\t Packs in queue: {len(packs_queue)}')
+    deep_logger.info(f'\t Packs in queue: {len(packs_queue)}')
     for pack in packs_queue:
-        camera_logger.info(f'\t \t Pack: {pack.json()}')
+        deep_logger.info(f'\t \t Pack: {pack.json()}')
 
-    camera_logger.info(f'\t Multipacks in queue: {len(multipacks_queue)}')
+    deep_logger.info(f'\t Multipacks in queue: {len(multipacks_queue)}')
     for multipack in multipacks_queue:
-        camera_logger.info(f'\t \t Multipack: {multipack.json()}')
+        deep_logger.info(f'\t \t Multipack: {multipack.json()}')
 
-    camera_logger.info(f'\t Cubes in queue: {len(cubes_queue)}')
+    deep_logger.info(f'\t Cubes in queue: {len(cubes_queue)}')
     if cubes_queue:
-        camera_logger.info(f'\t \t Last cube: {cubes_queue[-1].json()}')
+        deep_logger.info(f'\t \t Last cube: {cubes_queue[-1].json()}')
 
 
-class CameraRoute(APIRoute):
+class DeepLoggerRoute(APIRoute):
     def get_route_handler(self) -> Callable:
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:
 
-            camera_logger.info(
+            deep_logger.info(
                 f"{request.method} {request.url}; client: {request.client.host}"
             )
             body = await request.body()
             if body:
                 body = await request.json()
             if body:
-                camera_logger.info(f'request_body: {body}')
-            camera_logger.info("Params:")
+                deep_logger.info(f'request_body: {body}')
+            deep_logger.info("Params:")
             for name, value in request.path_params.items():
-                camera_logger.info(f"\t{name}: {value}")
+                deep_logger.info(f"\t{name}: {value}")
 
-            camera_logger.info('Before request: ')
+            deep_logger.info('Before request: ')
             await log_queues()
 
             response: Response = await original_route_handler(request)
-            camera_logger.info(
+            deep_logger.info(
                 f'Response {response.status_code}: {orjson.loads(response.body)}'
             )
 
-            camera_logger.info('After request: ')
+            deep_logger.info('After request: ')
             await log_queues()
+            return response
+
+        return custom_route_handler
+
+
+class LightLoggerRoute(APIRoute):
+    def get_route_handler(self) -> Callable:
+        original_route_handler = super().get_route_handler()
+
+        async def custom_route_handler(request: Request) -> Response:
+
+            light_logger.info(
+                f"{request.method} {request.url}; client: {request.client.host}"
+            )
+
+            response: Response = await original_route_handler(request)
             return response
 
         return custom_route_handler

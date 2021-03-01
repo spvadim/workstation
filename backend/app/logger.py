@@ -81,10 +81,17 @@ def init_logging():
             "format": format_record
         },
         {
-            "sink": "logs/camera_logs.log",
+            "sink": "logs/deep_logs.log",
             "level": logging.DEBUG,
             "format": format_record,
-            "filter": make_filter('camera'),
+            "filter": make_filter('deep'),
             "rotation": '1 day'
         },
+        {
+            "sink": "logs/light_logs.log",
+            "level": logging.DEBUG,
+            "format": format_record,
+            "filter": make_filter('light'),
+            "rotation": '1 day'
+        }
     ])
