@@ -11,38 +11,41 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
 
-router = APIRouter()
+from .custom_routers import DeepLoggerRoute, LightLoggerRoute
+
+deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
+light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
-@router.get('/packs_queue', response_model=List[PackOutput])
+@light_logger_router.get('/packs_queue', response_model=List[PackOutput])
 @version(1, 0)
 async def get_current_packs():
     packs_queue = await get_packs_queue()
     return packs_queue
 
 
-@router.get('/packs/{id}', response_model=Pack)
+@light_logger_router.get('/packs/{id}', response_model=Pack)
 @version(1, 0)
 async def get_pack_by_id(id: ObjectId):
     pack = await get_by_id_or_404(Pack, id)
     return pack
 
 
-@router.get('/packs/', response_model=Pack)
+@light_logger_router.get('/packs/', response_model=Pack)
 @version(1, 0)
 async def get_pack_by_qr(qr: str = Query(None)):
     pack = await get_by_qr_or_404(Pack, qr)
     return pack
 
 
-@router.get('/not_shipped_pack/', response_model=Pack)
+@light_logger_router.get('/not_shipped_pack/', response_model=Pack)
 @version(1, 0)
 async def get_not_shipped_pack_by_qr(qr: str = Query(None)):
     pack = await find_not_shipped_pack_by_qr(qr)
     return pack
 
 
-@router.put('/packs', response_model=Pack)
+@deep_logger_router.put('/packs', response_model=Pack)
 @version(1, 0)
 async def create_pack(pack: Pack):
     batch = await get_batch_by_number_or_return_last(
@@ -58,7 +61,7 @@ async def create_pack(pack: Pack):
     return pack
 
 
-@router.delete('/packs/{id}', response_model=Pack)
+@deep_logger_router.delete('/packs/{id}', response_model=Pack)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
     pack = await get_by_id_or_404(Pack, id)
@@ -66,7 +69,7 @@ async def delete_pack_by_id(id: ObjectId):
     return pack
 
 
-@router.patch('/packs/{id}', response_model=Pack)
+@deep_logger_router.patch('/packs/{id}', response_model=Pack)
 @version(1, 0)
 async def update_pack_by_id(id: ObjectId, patch: PackPatchSchema):
     pack = await get_by_id_or_404(Pack, id)

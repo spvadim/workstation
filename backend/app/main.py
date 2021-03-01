@@ -9,15 +9,27 @@ from .logger import init_logging
 from .routers import (cameras, cubes, multipacks, packs, production_batches,
                       system_settings, system_status)
 
-app = FastAPI(docs_url="/docs", redoc_url=None, openapi_url="/openapi.json",
+app = FastAPI(docs_url="/docs",
+              redoc_url=None,
+              openapi_url="/openapi.json",
               debug=True)
-app.include_router(production_batches.router, tags=['batches_frontend'])
-app.include_router(packs.router, tags=['packs_frontend'])
-app.include_router(multipacks.router, tags=['multipacks_frontend'])
-app.include_router(cubes.router, tags=['cubes_frontend'])
-app.include_router(system_status.router, tags=['state_and_mode'])
-app.include_router(cameras.router, tags=['camera'])
-app.include_router(system_settings.router, tags=['system_settings'])
+app.include_router(production_batches.deep_logger_router,
+                   tags=['batches_frontend'])
+app.include_router(production_batches.light_logger_router,
+                   tags=['batches_frontend'])
+app.include_router(packs.deep_logger_router, tags=['packs_frontend'])
+app.include_router(packs.light_logger_router, tags=['packs_frontend'])
+app.include_router(multipacks.deep_logger_router, tags=['multipacks_frontend'])
+app.include_router(multipacks.light_logger_router,
+                   tags=['multipacks_frontend'])
+app.include_router(cubes.deep_logger_router, tags=['cubes_frontend'])
+app.include_router(cubes.light_logger_router, tags=['cubes_frontend'])
+app.include_router(system_status.deep_logger_router, tags=['state_and_mode'])
+app.include_router(system_status.light_logger_router, tags=['state_and_mode'])
+app.include_router(cameras.deep_logger_router, tags=['camera'])
+app.include_router(cameras.light_logger_router, tags=['camera'])
+app.include_router(system_settings.deep_logger_router, tags=['system_settings'])
+app.include_router(system_settings.light_logger_router, tags=['system_settings'])
 
 app = VersionedFastAPI(app, prefix_format='/api/v{major}_{minor}')
 

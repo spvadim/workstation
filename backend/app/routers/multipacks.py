@@ -14,10 +14,13 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
 
-router = APIRouter()
+from .custom_routers import DeepLoggerRoute, LightLoggerRoute
+
+deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
+light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
-@router.put('/multipacks', response_model=Multipack)
+@deep_logger_router.put('/multipacks', response_model=Multipack)
 @version(1, 0)
 async def create_multipack(multipack: Multipack):
     batch = await get_batch_by_number_or_return_last(
@@ -45,35 +48,36 @@ async def create_multipack(multipack: Multipack):
     return multipack
 
 
-@router.get('/multipacks_queue', response_model=List[MultipackOutput])
+@light_logger_router.get('/multipacks_queue',
+                        response_model=List[MultipackOutput])
 @version(1, 0)
 async def get_current_multipacks():
     multipacks_queue = await get_multipacks_queue()
     return multipacks_queue
 
 
-@router.get('/multipacks/{id}', response_model=Multipack)
+@light_logger_router.get('/multipacks/{id}', response_model=Multipack)
 @version(1, 0)
 async def get_multipack_by_id(id: ObjectId):
     multipack = await get_by_id_or_404(Multipack, id)
     return multipack
 
 
-@router.get('/multipacks/', response_model=Multipack)
+@light_logger_router.get('/multipacks/', response_model=Multipack)
 @version(1, 0)
 async def get_multipack_by_qr(qr: str = Query(None)):
     multipack = await get_by_qr_or_404(Multipack, qr)
     return multipack
 
 
-@router.delete('/multipacks/{id}', response_model=Multipack)
+@deep_logger_router.delete('/multipacks/{id}', response_model=Multipack)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
     return await delete_multipack(id)
 
 
-@router.delete('/remove_multipacks_to_refresh_wrapper',
-               response_model=List[Multipack])
+@deep_logger_router.delete('/remove_multipacks_to_refresh_wrapper',
+                           response_model=List[Multipack])
 @version(1, 0)
 async def remove_multipacks_to_refresh_wrapper():
     multipacks_amount = await get_last_packing_table_amount()
@@ -93,7 +97,7 @@ async def remove_multipacks_to_refresh_wrapper():
     return multipacks_to_delete
 
 
-@router.patch('/multipacks/{id}', response_model=Multipack)
+@deep_logger_router.patch('/multipacks/{id}', response_model=Multipack)
 @version(1, 0)
 async def update_pack_by_id(id: ObjectId, patch: MultipackPatchSchema):
     multipack = await get_by_id_or_404(Multipack, id)
