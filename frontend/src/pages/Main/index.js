@@ -243,11 +243,10 @@ function Main() {
         const request2 = () => {
             axios.get(address + "/api/v1_0/packing_table_records")
                 .then(res => {
-                    console.log(res.data.multipacks_amount, batchSettings.multipacks, mode)
                     setPackingTableRecords(res.data);
-                    if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
-                        setNotificationText("Надо отсканировать QR куба")
-                    } 
+                    // if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
+                    //     setNotificationText("Надо отсканировать QR куба")
+                    // } 
             });
         }
         
@@ -800,6 +799,8 @@ function Main() {
                     <Text className={classes.tableTitle} type="title2">Очередь кубов</Text>
                     <TableAddress
                         columns={tableProps.cube.columns}
+                        setNotification={n => setNotificationText(n)}
+                        notification={notificationText}
                         setError={() => setModalError(true)}
                         setModal={setModalDeletion}
                         type="cubes"
