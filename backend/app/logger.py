@@ -85,10 +85,10 @@ def init_logging():
         "filter": make_filter('deep'),
         "rotation": '1 day'
     }, {
-        "sink": "logs/wdfe_logs.log",
+        "sink": "logs/wdiot_logs.log",
         "level": logging.DEBUG,
         "format": format_record,
-        "filter": make_filter('wdfe'),
+        "filter": make_filter('wdiot'),
         "rotation": '1 day'
     }, {
         "sink": "logs/erd_logs.log",
