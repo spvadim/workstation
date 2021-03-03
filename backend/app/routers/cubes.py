@@ -17,10 +17,13 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
 
-router = APIRouter()
+from .custom_routers import DeepLoggerRoute, LightLoggerRoute
+
+deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
+light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
-@router.put('/cubes', response_model=Cube)
+@deep_logger_router.put('/cubes', response_model=Cube)
 @version(1, 0)
 async def create_cube(cube_input: CubeInput):
     batch = await get_batch_by_number_or_return_last(
@@ -60,7 +63,7 @@ async def create_cube(cube_input: CubeInput):
     return cube
 
 
-@router.put('/cube_with_new_content', response_model=Cube)
+@deep_logger_router.put('/cube_with_new_content', response_model=Cube)
 @version(1, 0)
 async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     batch_number = cube_input.batch_number
@@ -135,7 +138,7 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     return cube
 
 
-@router.put('/cube_finish_manual', response_model=Cube)
+@deep_logger_router.put('/cube_finish_manual', response_model=Cube)
 @version(1, 0)
 async def finish_cube(qr: str):
     batch = await get_last_batch()
@@ -202,28 +205,29 @@ async def finish_cube(qr: str):
     return cube
 
 
-@router.get('/cubes_queue', response_model=List[CubeOutput])
+@light_logger_router.get('/cubes_queue', response_model=List[CubeOutput])
 @version(1, 0)
 async def get_current_cubes():
     cubes_queue = await get_cubes_queue()
     return cubes_queue
 
 
-@router.get('/cubes/{id}', response_model=Cube)
+@light_logger_router.get('/cubes/{id}', response_model=Cube)
 @version(1, 0)
 async def get_cube_by_id(id: ObjectId):
     cube = await get_by_id_or_404(Cube, id)
     return cube
 
 
-@router.get('/cubes/', response_model=Cube)
+@light_logger_router.get('/cubes/', response_model=Cube)
 @version(1, 0)
 async def get_cube_by_qr(qr: str = Query(None)):
     cube = await get_by_qr_or_404(Cube, qr)
     return cube
 
 
-@router.patch('/add_qr_to_first_unidentified_cube/', response_model=Cube)
+@deep_logger_router.patch('/add_qr_to_first_unidentified_cube/',
+                          response_model=Cube)
 @version(1, 0)
 async def add_qr_to_first_unidentified_cube(qr: str):
     if not await check_qr_unique(Cube, qr):
@@ -236,7 +240,7 @@ async def add_qr_to_first_unidentified_cube(qr: str):
     return cube
 
 
-@router.get('/find_cube_by_included_qr/', response_model=Cube)
+@light_logger_router.get('/find_cube_by_included_qr/', response_model=Cube)
 @version(1, 0)
 async def get_cube_by_included_qr(qr: str = Query(None)):
     multipack_or_pack = await engine.find_one(Multipack, Multipack.qr == qr)
@@ -260,13 +264,13 @@ async def get_cube_by_included_qr(qr: str = Query(None)):
     raise HTTPException(404)
 
 
-@router.delete('/cubes/{id}', response_model=Cube)
+@deep_logger_router.delete('/cubes/{id}', response_model=Cube)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
     return await delete_cube(id)
 
 
-@router.patch('/cubes/{id}', response_model=Cube)
+@deep_logger_router.patch('/cubes/{id}', response_model=Cube)
 @version(1, 0)
 async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
     cube = await get_by_id_or_404(Cube, id)
@@ -285,7 +289,7 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
     return cube
 
 
-@router.patch('/edit_cube/{id}', response_model=Cube)
+@deep_logger_router.patch('/edit_cube/{id}', response_model=Cube)
 @version(1, 0)
 async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
     cube = await get_by_id_or_404(Cube, id)

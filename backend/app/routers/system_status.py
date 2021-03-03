@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.db.db_utils import (
     change_coded_setting, check_qr_unique, delete_cube, delete_multipack,
     flush_packing_table, flush_pintset, flush_state, flush_withdrawal_pintset,
@@ -20,11 +22,14 @@ from app.utils.pintset import off_pintset, on_pintset
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 from fastapi_versioning import version
 from pydantic import parse_obj_as
-from datetime import datetime
-router = APIRouter()
+
+from .custom_routers import DeepLoggerRoute, LightLoggerRoute
+
+deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
+light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
-@router.patch("/set_mode", response_model=Mode)
+@deep_logger_router.patch("/set_mode", response_model=Mode)
 @version(1, 0)
 async def set_mode(mode: Mode):
     current_status = await get_current_status()
@@ -33,56 +38,57 @@ async def set_mode(mode: Mode):
     return mode
 
 
-@router.get("/get_mode", response_model=Mode)
+@light_logger_router.get("/get_mode", response_model=Mode)
 @version(1, 0)
 async def get_mode():
     return await get_current_workmode()
 
 
-@router.get("/get_state", response_model=SystemState)
+@light_logger_router.get("/get_state", response_model=SystemState)
 @version(1, 0)
 async def get_state():
     return await get_current_state()
 
 
-@router.get("/get_multipack_coded_setting",
-            response_model=SystemStatus,
-            response_model_exclude={"id", "mode", "system_state"})
+@light_logger_router.get("/get_multipack_coded_setting",
+                        response_model=SystemStatus,
+                        response_model_exclude={"id", "mode", "system_state"})
 @version(1, 0)
 async def get_multipack_coded_by_qr_setting():
     return await get_current_status()
 
 
-@router.patch("/change_multipack_coded_setting",
-              response_model=SystemStatus,
-              response_model_exclude={"id", "mode", "system_state"})
+@deep_logger_router.patch(
+    "/change_multipack_coded_setting",
+    response_model=SystemStatus,
+    response_model_exclude={"id", "mode", "system_state"})
 @version(1, 0)
 async def set_multipack_coded_by_qr_setting(coded: bool):
     return await change_coded_setting(coded)
 
 
-@router.patch("/set_column_yellow", response_model=SystemState)
+@deep_logger_router.patch("/set_column_yellow", response_model=SystemState)
 @version(1, 0)
 async def set_warning_state(error_msg: str, background_tasks: BackgroundTasks):
     background_tasks.add_task(send_warning)
     return await set_column_yellow(error_msg)
 
 
-@router.patch("/set_column_red", response_model=SystemState)
+@deep_logger_router.patch("/set_column_red", response_model=SystemState)
 @version(1, 0)
 async def set_error_state(error_msg: str, background_tasks: BackgroundTasks):
     background_tasks.add_task(send_error)
     return await set_column_red(error_msg)
 
 
-@router.patch("/flush_state", response_model=SystemState)
+@deep_logger_router.patch("/flush_state", response_model=SystemState)
 @version(1, 0)
 async def set_normal_state(background_tasks: BackgroundTasks):
     background_tasks.add_task(flush_to_normal)
     return await flush_state()
 
 
-@router.patch("/set_pintset_error", response_model=SystemState)
+@deep_logger_router.patch("/set_pintset_error", response_model=SystemState)
 @version(1, 0)
 async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
     current_settings = await get_system_settings()
@@ -93,7 +99,7 @@ async def set_pintset_error(error_msg: str, background_tasks: BackgroundTasks):
     return await pintset_error(error_msg)
 
 
-@router.patch("/flush_pintset", response_model=SystemState)
+@deep_logger_router.patch("/flush_pintset", response_model=SystemState)
 @version(1, 0)
 async def set_pinset_normal(background_tasks: BackgroundTasks):
     background_tasks.add_task(flush_to_normal)
@@ -104,7 +110,8 @@ async def set_pinset_normal(background_tasks: BackgroundTasks):
     return await flush_pintset()
 
 
-@router.patch("/set_pintset_withdrawal_error", response_model=SystemState)
+@deep_logger_router.patch("/set_pintset_withdrawal_error",
+                          response_model=SystemState)
 @version(1, 0)
 async def set_pintset_withdrawal_error(error_msg: str,
                                        background_tasks: BackgroundTasks):
@@ -112,7 +119,8 @@ async def set_pintset_withdrawal_error(error_msg: str,
     return await pintset_withdrawal_error(error_msg)
 
 
-@router.patch("/flush_pintset_withdrawal", response_model=SystemState)
+@deep_logger_router.patch("/flush_pintset_withdrawal",
+                          response_model=SystemState)
 @version(1, 0)
 async def set_pintset_withdrawal_normal(background_tasks: BackgroundTasks):
     background_tasks.add_task(flush_to_normal)
@@ -120,7 +128,8 @@ async def set_pintset_withdrawal_normal(background_tasks: BackgroundTasks):
     return await flush_withdrawal_pintset()
 
 
-@router.patch("/set_packing_table_error", response_model=SystemState)
+@deep_logger_router.patch("/set_packing_table_error",
+                          response_model=SystemState)
 @version(1, 0)
 async def set_packing_table_error(error_msg: str, multipacks_on_error: int,
                                   background_tasks: BackgroundTasks):
@@ -128,14 +137,15 @@ async def set_packing_table_error(error_msg: str, multipacks_on_error: int,
     return await packing_table_error(error_msg, multipacks_on_error)
 
 
-@router.patch("/flush_packing_table", response_model=SystemState)
+@deep_logger_router.patch("/flush_packing_table", response_model=SystemState)
 @version(1, 0)
 async def set_packing_table_normal(background_tasks: BackgroundTasks):
     background_tasks.add_task(flush_to_normal)
     return await flush_packing_table()
 
 
-@router.patch("/flush_packing_table_with_remove", response_model=SystemState)
+@deep_logger_router.patch("/flush_packing_table_with_remove",
+                          response_model=SystemState)
 @version(1, 0)
 async def set_packing_table_normal_with_remove(
         background_tasks: BackgroundTasks):
@@ -148,7 +158,8 @@ async def set_packing_table_normal_with_remove(
     return await flush_packing_table()
 
 
-@router.patch("/flush_packing_table_with_identify", response_model=SystemState)
+@deep_logger_router.patch("/flush_packing_table_with_identify",
+                          response_model=SystemState)
 @version(1, 0)
 async def set_packing_table_normal_with_identify(
         qr: str, background_tasks: BackgroundTasks):
@@ -167,13 +178,13 @@ async def set_packing_table_normal_with_identify(
     return await flush_packing_table()
 
 
-@router.post("/get_report", response_model=ReportResponse)
+@deep_logger_router.post("/get_report", response_model=ReportResponse)
 @version(1, 0)
 async def get_system_report(report_query: ReportRequest) -> ReportResponse:
     return await get_report(report_query)
 
 
-@router.get("/get_report/", response_model=ReportResponse)
+@deep_logger_router.get("/get_report/", response_model=ReportResponse)
 async def get_system_report_with_query(
         report_begin: str = "01.01.1970 00:00",
         report_end: str = "01.01.2050 00:00") -> ReportResponse:
@@ -186,7 +197,7 @@ async def get_system_report_with_query(
     return await get_report(report_query)
 
 
-@router.post("/send_message", response_model=bool)
+@deep_logger_router.post("/send_message", response_model=bool)
 async def send_tg_message(text: str,
                           timestamp: bool = False,
                           img: UploadFile = File(None)) -> bool:

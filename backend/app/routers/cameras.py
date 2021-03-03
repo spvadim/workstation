@@ -29,12 +29,15 @@ from fastapi.responses import JSONResponse
 from fastapi_versioning import version
 from loguru import logger
 
-router = APIRouter()
+from .custom_routers import DeepLoggerRoute, LightLoggerRoute
+
+deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
+light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
-@router.put('/new_pack_after_applikator',
-            response_model=PackCameraInput,
-            response_model_exclude={"id"})
+@deep_logger_router.put('/new_pack_after_applikator',
+                        response_model=PackCameraInput,
+                        response_model_exclude={"id"})
 @version(1, 0)
 async def new_pack_after_applikator(pack: PackCameraInput,
                                     background_tasks: BackgroundTasks):
@@ -59,17 +62,17 @@ async def new_pack_after_applikator(pack: PackCameraInput,
         error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        logger.warning(error_msg)
         current_settings = await get_system_settings()
         if current_settings.general_settings.send_applikator_tg_message.value:
             background_tasks.add_task(send_telegram_message,
                                       TGMessage(text=error_msg))
         background_tasks.add_task(send_warning_and_back_to_normal, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
+
     return pack
 
 
-@router.put('/new_pack_after_pintset', response_model=Pack)
+@deep_logger_router.put('/new_pack_after_pintset', response_model=Pack)
 @version(1, 0)
 async def new_pack_after_pintset(pack: PackCameraInput,
                                  background_tasks: BackgroundTasks):
@@ -93,7 +96,6 @@ async def new_pack_after_pintset(pack: PackCameraInput,
         error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        logger.error(error_msg)
         background_tasks.add_task(send_telegram_message,
                                   TGMessage(text=error_msg))
         current_settings = await get_system_settings()
@@ -115,7 +117,7 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     return pack
 
 
-@router.patch('/pintset_reverse', response_model=List[PackOutput])
+@deep_logger_router.patch('/pintset_reverse', response_model=List[PackOutput])
 @version(1, 0)
 async def pintset_reverse(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
@@ -156,7 +158,8 @@ async def pintset_reverse(background_tasks: BackgroundTasks):
     return await get_packs_queue()
 
 
-@router.delete('/remove_packs_from_pintset', response_model=List[PackOutput])
+@deep_logger_router.delete('/remove_packs_from_pintset',
+                           response_model=List[PackOutput])
 @version(1, 0)
 async def remove_packs_from_pintset():
     mode = await get_current_workmode()
@@ -171,7 +174,8 @@ async def remove_packs_from_pintset():
     return packs
 
 
-@router.put('/pintset_finish', response_model=List[MultipackOutput])
+@deep_logger_router.put('/pintset_finish',
+                        response_model=List[MultipackOutput])
 @version(1, 0)
 async def pintset_finish(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
@@ -190,7 +194,6 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     if len(packs_queue) < needed_packs:
         error_msg = f'{current_time} пинцет начал формирование {multipacks_after_pintset} мультипаков, но пачек в очереди меньше чем {needed_packs}'
         background_tasks.add_task(send_error)
-        logger.error(error_msg)
         background_tasks.add_task(set_column_red, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
@@ -215,7 +218,7 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     return new_multipacks
 
 
-@router.patch('/multipack_wrapping_auto', response_model=Multipack)
+@deep_logger_router.patch('/multipack_wrapping_auto', response_model=Multipack)
 @version(1, 0)
 async def multipack_wrapping_auto():
     mode = await get_current_workmode()
@@ -235,7 +238,8 @@ async def multipack_wrapping_auto():
     return wrapping_multipack
 
 
-@router.delete('/remove_multipack_from_wrapping', response_model=Multipack)
+@deep_logger_router.delete('/remove_multipack_from_wrapping',
+                           response_model=Multipack)
 @version(1, 0)
 async def remove_multipack_from_wrapping(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
@@ -259,7 +263,8 @@ async def remove_multipack_from_wrapping(background_tasks: BackgroundTasks):
     return multipack
 
 
-@router.patch('/multipack_identification_auto', response_model=Multipack)
+@deep_logger_router.patch('/multipack_identification_auto',
+                          response_model=Multipack)
 @version(1, 0)
 async def multipack_identification_auto(
         identification: MultipackIdentificationAuto,
@@ -303,7 +308,7 @@ async def multipack_identification_auto(
     return multipack_to_update
 
 
-@router.patch('/cube_identification_auto', response_model=Cube)
+@deep_logger_router.patch('/cube_identification_auto', response_model=Cube)
 @version(1, 0)
 async def cube_identification_auto(identification: CubeIdentificationAuto,
                                    background_tasks: BackgroundTasks):
@@ -349,7 +354,7 @@ async def cube_identification_auto(identification: CubeIdentificationAuto,
     return cube_to_update
 
 
-@router.put('/cube_finish_auto', response_model=Cube)
+@deep_logger_router.put('/cube_finish_auto', response_model=Cube)
 @version(1, 0)
 async def cube_finish_auto(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
@@ -388,7 +393,8 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     return cube
 
 
-@router.put('/packing_table_records', response_model=PackingTableRecord)
+@deep_logger_router.put('/packing_table_records',
+                        response_model=PackingTableRecord)
 @version(1, 0)
 async def add_packing_table_record(record: PackingTableRecordInput,
                                    background_tasks: BackgroundTasks):
@@ -444,7 +450,8 @@ async def add_packing_table_record(record: PackingTableRecordInput,
     return record
 
 
-@router.get('/packing_table_records', response_model=PackingTableRecords)
+@light_logger_router.get('/packing_table_records',
+                         response_model=PackingTableRecords)
 @version(1, 0)
 async def get_packing_table_records():
     multipacks_amount = await get_last_packing_table_amount()
