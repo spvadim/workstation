@@ -74,24 +74,32 @@ def init_logging():
     logging.getLogger("uvicorn").handlers = [intercept_handler]
 
     # set logs output, level and format
-    logger.configure(handlers=[
-        {
-            "sink": sys.stdout,
-            "level": logging.DEBUG,
-            "format": format_record
-        },
-        {
-            "sink": "logs/deep_logs.log",
-            "level": logging.DEBUG,
-            "format": format_record,
-            "filter": make_filter('deep'),
-            "rotation": '1 day'
-        },
-        {
-            "sink": "logs/light_logs.log",
-            "level": logging.DEBUG,
-            "format": format_record,
-            "filter": make_filter('light'),
-            "rotation": '1 day'
-        }
-    ])
+    logger.configure(handlers=[{
+        "sink": sys.stdout,
+        "level": logging.DEBUG,
+        "format": format_record
+    }, {
+        "sink": "logs/deep_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('deep'),
+        "rotation": '1 day'
+    }, {
+        "sink": "logs/wdfe_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('wdfe'),
+        "rotation": '1 day'
+    }, {
+        "sink": "logs/erd_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('erd'),
+        "rotation": '1 day'
+    }, {
+        "sink": "logs/tg_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('tg'),
+        "rotation": '1 day'
+    }])
