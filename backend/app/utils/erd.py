@@ -2,6 +2,7 @@ from app.db.system_settings import get_system_settings
 from loguru import logger
 from pysnmp.hlapi.asyncio import *
 
+erd_logger = logger.bind(name='erd')
 on = Integer(1)
 off = Integer(0)
 
@@ -44,7 +45,7 @@ async def snmp_get(key):
 
 
 async def snmp_set_yellow_on():
-    logger.info('Включение желтого цвета на колонне')
+    erd_logger.info('Включение желтого цвета на колонне')
 
     current_settings = await get_system_settings()
     yellow_oid = current_settings.erd_settings.erd_yellow_oid.value
@@ -52,7 +53,7 @@ async def snmp_set_yellow_on():
 
 
 async def snmp_set_yellow_off():
-    logger.info('Выключение желтого цвета на колонне')
+    erd_logger.info('Выключение желтого цвета на колонне')
 
     current_settings = await get_system_settings()
     yellow_oid = current_settings.erd_settings.erd_yellow_oid.value
@@ -60,7 +61,7 @@ async def snmp_set_yellow_off():
 
 
 async def snmp_set_red_on():
-    logger.info('Включение красного цвета на колонне')
+    erd_logger.info('Включение красного цвета на колонне')
 
     current_settings = await get_system_settings()
     red_oid = current_settings.erd_settings.erd_red_oid.value
@@ -68,7 +69,7 @@ async def snmp_set_red_on():
 
 
 async def snmp_set_red_off():
-    logger.info('Выключение красного цвета на колонне')
+    erd_logger.info('Выключение красного цвета на колонне')
 
     current_settings = await get_system_settings()
     red_oid = current_settings.erd_settings.erd_red_oid.value
@@ -76,7 +77,7 @@ async def snmp_set_red_off():
 
 
 async def snmp_set_green_on():
-    logger.info('Включение зеленого цвета на колонне')
+    erd_logger.info('Включение зеленого цвета на колонне')
 
     current_settings = await get_system_settings()
     green_oid = current_settings.erd_settings.erd_green_oid.value
@@ -84,7 +85,7 @@ async def snmp_set_green_on():
 
 
 async def snmp_set_green_off():
-    logger.info('Выключение зеленого цвета на колонне')
+    erd_logger.info('Выключение зеленого цвета на колонне')
 
     current_settings = await get_system_settings()
     green_oid = current_settings.erd_settings.erd_green_oid.value
@@ -92,7 +93,7 @@ async def snmp_set_green_off():
 
 
 async def snmp_set_buzzer_on():
-    logger.info('Включение зуммера')
+    erd_logger.info('Включение зуммера')
 
     current_settings = await get_system_settings()
     buzzer_oid = current_settings.erd_settings.erd_buzzer_oid.value
@@ -100,7 +101,7 @@ async def snmp_set_buzzer_on():
 
 
 async def snmp_set_buzzer_off():
-    logger.info('Выключение зуммера')
+    erd_logger.info('Выключение зуммера')
 
     current_settings = await get_system_settings()
     buzzer_oid = current_settings.erd_settings.erd_buzzer_oid.value
