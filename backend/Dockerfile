@@ -20,9 +20,12 @@ RUN pip install poetry
 # Copy only requirements to cache them in docker layer
 WORKDIR /app
 COPY poetry.lock pyproject.toml /app/
-
 # disable virtualenv for peotry
 RUN poetry config virtualenvs.create false
+
+# copy migration script and make script executable
+COPY migrate.sh /migrate.sh
+RUN chmod +x /migrate.sh
 
 # install dependencies
 RUN poetry install --no-dev --no-interaction --no-ansi

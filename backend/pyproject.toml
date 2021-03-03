@@ -16,6 +16,7 @@ loguru = "^0.5.3"
 httpx = "^0.16.1"
 python-snap7 = "^0.11"
 python-multipart = "^0.0.5"
+pymongo-migrate = "^0.11.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.1"
