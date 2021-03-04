@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Union
-from datetime import timedelta
+
 from app.models.cube import Cube
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack
+from app.models.pack import Status as PackStatus
 from app.models.packing_table import PackingTableRecord
 from app.models.production_batch import ProductionBatch, ProductionBatchNumber
 from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
@@ -259,6 +260,21 @@ async def get_packs_queue() -> List[Pack]:
 async def count_packs_queue() -> int:
     packs_amount = await engine.count(Pack, Pack.in_queue == True)
     return packs_amount
+
+
+async def get_packs_under_pintset() -> List[Pack]:
+    packs_under_pintset = await engine.find(
+        Pack, Pack.status == PackStatus.UNDER_PINTSET, sort=query.asc(Pack.id))
+    return packs_under_pintset
+
+
+async def get_packs_on_assembly() -> List[Pack]:
+    packs_on_assembly = await engine.find(
+        Pack,
+        Pack.status == PackStatus.ON_ASSEMBLY,
+        Pack.in_queue == True,
+        sort=query.asc(Pack.id))
+    return packs_on_assembly
 
 
 async def get_multipacks_queue() -> List[Multipack]:
