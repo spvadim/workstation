@@ -5,8 +5,9 @@ from app.db.db_utils import (
     get_all_wrapping_multipacks, get_current_workmode,
     get_first_exited_pintset_multipack, get_first_multipack_without_qr,
     get_first_wrapping_multipack, get_last_batch, get_last_cube_in_queue,
-    get_last_packing_table_amount, get_multipacks_queue, get_packs_queue,
-    packing_table_error, pintset_error, set_column_red)
+    get_last_packing_table_amount, get_multipacks_queue, get_packs_on_assembly,
+    get_packs_queue, get_packs_under_pintset, packing_table_error,
+    pintset_error, set_column_red)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -14,6 +15,7 @@ from app.models.message import TGMessage
 from app.models.multipack import (Multipack, MultipackIdentificationAuto,
                                   MultipackOutput, Status)
 from app.models.pack import Pack, PackCameraInput, PackOutput
+from app.models.pack import Status as PackStatus
 from app.models.packing_table import (PackingTableRecord,
                                       PackingTableRecordInput,
                                       PackingTableRecords)
@@ -33,6 +35,7 @@ from .custom_routers import DeepLoggerRoute, LightLoggerRoute
 
 deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
 light_logger_router = APIRouter(route_class=LightLoggerRoute)
+wdiot_logger = logger.bind(name='wdiot')
 
 
 @deep_logger_router.put('/new_pack_after_applikator',
@@ -117,6 +120,50 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     return pack
 
 
+@deep_logger_router.patch('/pintset_receive', response_model=List[Pack])
+@version(1, 0)
+async def pintset_receive():
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400,
+                            detail='В данный момент используется ручной режим')
+
+    batch = await get_last_batch()
+    multipacks_after_pintset = batch.params.multipacks_after_pintset
+    packs_under_pintset = await get_packs_under_pintset()
+    delta = len(packs_under_pintset) - multipacks_after_pintset
+    to_process = False
+
+    if delta < 0:
+        to_process = True
+        wdiot_logger.error('Расхождение, нужно проверить пачки')
+        for i in range(abs(delta)):
+            current_datetime = await get_naive_datetime()
+            new_pack = Pack(
+                qr=
+                f'skipped pack {current_datetime.strftime("%d.%m.%Y %H:%M")} {i}',
+                barcode='0000000000000',
+                batch_number=batch.number,
+                created_at=current_datetime)
+            packs_under_pintset.append(new_pack)
+            wdiot_logger.info(f'Добавил пачку {new_pack.json()}')
+
+    if delta > 0:
+        to_process = True
+        wdiot_logger.error('Расхождение, нужно проверить пачки')
+        packs_under_pintset, packs_to_delete = (packs_under_pintset[:-delta],
+                                                packs_under_pintset[-delta:])
+        for pack in packs_to_delete:
+            await engine.delete(pack)
+            wdiot_logger.info(f'Удалил пачку {pack.json()}')
+
+    for pack in packs_under_pintset:
+        pack.to_process = to_process
+        pack.status = PackStatus.ON_ASSEMBLY
+
+    return await engine.save_all(packs_under_pintset)
+
+
 @deep_logger_router.patch('/pintset_reverse', response_model=List[PackOutput])
 @version(1, 0)
 async def pintset_reverse(background_tasks: BackgroundTasks):
@@ -188,28 +235,55 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     needed_packs = batch.params.packs * multipacks_after_pintset
     number = batch.number
 
-    packs_queue = await get_packs_queue()
+    packs_on_assembly = await get_packs_on_assembly()
+    delta = len(packs_on_assembly) - needed_packs
     current_time = await get_naive_datetime()
+    to_process = False
 
-    if len(packs_queue) < needed_packs:
-        error_msg = f'{current_time} пинцет начал формирование {multipacks_after_pintset} мультипаков, но пачек в очереди меньше чем {needed_packs}'
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
-        return JSONResponse(status_code=400, content={'detail': error_msg})
+    if delta < 0:
+        packs_under_pintset = await get_packs_under_pintset()
+
+        while packs_under_pintset and delta < 0:
+
+            for pack in packs_under_pintset[:multipacks_after_pintset]:
+                wdiot_logger.info(f'Перевел пачку {pack.json()} в сборку')
+                pack.status = PackStatus.ON_ASSEMBLY
+                packs_on_assembly.append(pack)
+
+            packs_under_pintset = packs_under_pintset[
+                multipacks_after_pintset:]
+
+            delta = len(packs_on_assembly) - needed_packs
+
+        if delta < 0:
+            to_process = True
+            for i in range(abs(delta)):
+                new_pack = Pack(
+                    qr=
+                    f'skipped pack {current_time.strftime("%d.%m.%Y %H:%M")} {i}',
+                    barcode='0000000000000',
+                    batch_number=batch.number,
+                    created_at=current_time,
+                    status=PackStatus.ON_ASSEMBLY,
+                    to_process=to_process)
+                packs_on_assembly.append(new_pack)
+                wdiot_logger.info(f'Добавил пачку {new_pack.json()}')
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
     for i in range(needed_packs):
-        packs_queue[i].in_queue = False
-        all_pack_ids[i % multipacks_after_pintset].append(packs_queue[i].id)
+        packs_on_assembly[i].in_queue = False
+        all_pack_ids[i % multipacks_after_pintset].append(
+            packs_on_assembly[i].id)
 
-    await engine.save_all(packs_queue)
+    await engine.save_all(packs_on_assembly)
 
     new_multipacks = []
     for pack_ids in all_pack_ids:
         multipack = Multipack(pack_ids=pack_ids)
         multipack.batch_number = number
         multipack.created_at = current_time
+        multipack.to_process = to_process
         new_multipacks.append(multipack)
     await engine.save_all(new_multipacks)
 
