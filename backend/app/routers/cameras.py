@@ -1,14 +1,19 @@
 from typing import List
 
-from app.db.db_utils import (
-    check_qr_unique, form_cube_from_n_multipacks, generate_multipack,
-    generate_packs, get_100_last_packing_records, get_all_wrapping_multipacks,
-    get_current_workmode, get_first_exited_pintset_multipack,
-    get_first_multipack_without_qr, get_first_wrapping_multipack,
-    get_last_batch, get_last_cube_in_queue, get_last_packing_table_amount,
-    get_multipacks_queue, get_packs_on_assembly, get_packs_queue,
-    get_packs_under_pintset, packing_table_error, pintset_error,
-    set_column_red)
+from app.db.db_utils import (check_qr_unique, form_cube_from_n_multipacks,
+                             generate_multipack, generate_packs,
+                             get_100_last_packing_records,
+                             get_all_wrapping_multipacks, get_current_workmode,
+                             get_first_exited_pintset_multipack,
+                             get_first_multipack_without_qr,
+                             get_first_wrapping_multipack, get_last_batch,
+                             get_last_cube_in_queue,
+                             get_last_packing_table_amount,
+                             get_multipacks_entered_pitchfork,
+                             get_multipacks_queue, get_packs_on_assembly,
+                             get_packs_queue, get_packs_under_pintset,
+                             packing_table_error, pintset_error,
+                             set_column_red)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -326,6 +331,19 @@ async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
     entered_pitchfork_multipack = await get_first_wrapping_multipack()
     entered_pitchfork_multipack.status = Status.ENTER_PITCHFORK
     return await engine.save(entered_pitchfork_multipack)
+
+
+@deep_logger_router.patch('/pitchfork_worked', response_model=List[Multipack])
+@version(1, 0)
+async def pitchfork_worked(background_tasks: BackgroundTasks):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400,
+                            detail='В данный момент используется ручной режим')
+    on_packing_table_multipacks = await get_multipacks_entered_pitchfork()
+    for multipack in on_packing_table_multipacks:
+        multipack.status = Status.ON_PACKING_TABLE
+    return await engine.save_all(on_packing_table_multipacks)
 
 
 @deep_logger_router.delete('/remove_multipack_from_wrapping',
