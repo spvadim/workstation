@@ -1,13 +1,15 @@
 from typing import List
 
 from app.db.db_utils import (
-    check_qr_unique, form_cube_from_n_multipacks, get_100_last_packing_records,
-    get_all_wrapping_multipacks, get_current_workmode,
-    get_first_exited_pintset_multipack, get_first_multipack_without_qr,
-    get_first_wrapping_multipack, get_last_batch, get_last_cube_in_queue,
-    get_last_packing_table_amount, get_multipacks_queue, get_packs_on_assembly,
-    get_packs_queue, get_packs_under_pintset, packing_table_error,
-    pintset_error, set_column_red)
+    check_qr_unique, form_cube_from_n_multipacks, generate_multipack,
+    generate_packs, get_100_last_packing_records, get_all_wrapping_multipacks,
+    get_current_workmode, get_first_exited_pintset_multipack,
+    get_first_multipack_without_qr, get_first_wrapping_multipack,
+    get_last_batch, get_last_cube_in_queue, get_last_packing_table_amount,
+    get_multipacks_entered_pitchfork, get_multipacks_on_packing_table,
+    get_multipacks_queue, get_packs_on_assembly, get_packs_queue,
+    get_packs_under_pintset, packing_table_error, pintset_error,
+    set_column_red)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -137,16 +139,11 @@ async def pintset_receive():
     if delta < 0:
         to_process = True
         wdiot_logger.error('Расхождение, нужно проверить пачки')
-        for i in range(abs(delta)):
-            current_datetime = await get_naive_datetime()
-            new_pack = Pack(
-                qr=
-                f'skipped pack {current_datetime.strftime("%d.%m.%Y %H:%M")} {i}',
-                barcode='0000000000000',
-                batch_number=batch.number,
-                created_at=current_datetime)
-            packs_under_pintset.append(new_pack)
-            wdiot_logger.info(f'Добавил пачку {new_pack.json()}')
+        packs_under_pintset = await generate_packs(abs(delta),
+                                                   batch.number,
+                                                   await get_naive_datetime(),
+                                                   wdiot_logger,
+                                                   result=packs_under_pintset)
 
     if delta > 0:
         to_process = True
@@ -257,17 +254,9 @@ async def pintset_finish(background_tasks: BackgroundTasks):
 
         if delta < 0:
             to_process = True
-            for i in range(abs(delta)):
-                new_pack = Pack(
-                    qr=
-                    f'skipped pack {current_time.strftime("%d.%m.%Y %H:%M")} {i}',
-                    barcode='0000000000000',
-                    batch_number=batch.number,
-                    created_at=current_time,
-                    status=PackStatus.ON_ASSEMBLY,
-                    to_process=to_process)
-                packs_on_assembly.append(new_pack)
-                wdiot_logger.info(f'Добавил пачку {new_pack.json()}')
+            packs_on_assembly = await generate_packs(
+                abs(delta), number, current_time, wdiot_logger,
+                PackStatus.ON_ASSEMBLY, to_process, packs_on_assembly)
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
@@ -294,22 +283,63 @@ async def pintset_finish(background_tasks: BackgroundTasks):
 
 @deep_logger_router.patch('/multipack_wrapping_auto', response_model=Multipack)
 @version(1, 0)
-async def multipack_wrapping_auto():
+async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
 
-    wrapped_multipacks = await get_all_wrapping_multipacks()
-    for i in range(len(wrapped_multipacks)):
-        wrapped_multipacks[i].status = Status.WRAPPED
-
     wrapping_multipack = await get_first_exited_pintset_multipack()
+    if not wrapping_multipack:
+
+        batch = await get_last_batch()
+        multipacks_after_pintset = batch.params.multipacks_after_pintset
+        needed_packs = batch.params.packs * multipacks_after_pintset
+
+        packs_on_assembly = await get_packs_on_assembly()
+        delta = len(packs_on_assembly) - needed_packs
+
+        if delta >= 0:
+            await pintset_finish(background_tasks=background_tasks)
+            return await multipack_wrapping_auto(
+                background_tasks=background_tasks)
+
+        else:
+            current_time = await get_naive_datetime()
+            wrapping_multipack = await generate_multipack(
+                batch.number, multipacks_after_pintset, current_time,
+                wdiot_logger, True)
+
     wrapping_multipack.status = Status.WRAPPING
 
-    await engine.save_all(wrapped_multipacks)
     await engine.save(wrapping_multipack)
     return wrapping_multipack
+
+
+@deep_logger_router.patch('/multipack_enter_pitchfork_auto',
+                          response_model=Multipack)
+@version(1, 0)
+async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400,
+                            detail='В данный момент используется ручной режим')
+    entered_pitchfork_multipack = await get_first_wrapping_multipack()
+    entered_pitchfork_multipack.status = Status.ENTER_PITCHFORK
+    return await engine.save(entered_pitchfork_multipack)
+
+
+@deep_logger_router.patch('/pitchfork_worked', response_model=List[Multipack])
+@version(1, 0)
+async def pitchfork_worked(background_tasks: BackgroundTasks):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400,
+                            detail='В данный момент используется ручной режим')
+    on_packing_table_multipacks = await get_multipacks_entered_pitchfork()
+    for multipack in on_packing_table_multipacks:
+        multipack.status = Status.ON_PACKING_TABLE
+    return await engine.save_all(on_packing_table_multipacks)
 
 
 @deep_logger_router.delete('/remove_multipack_from_wrapping',
@@ -441,21 +471,22 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     needed_multipacks = batch.params.multipacks
     number = batch.number
 
-    multipacks_queue = await get_multipacks_queue()
+    multipacks_on_packing_table = await get_multipacks_on_packing_table()
 
     current_time = await get_naive_datetime()
-    if len(multipacks_queue) < needed_multipacks:
-        error_msg = f'{current_time} попытка формирования куба, когда в очереди меньше {needed_multipacks} мультипаков'
+    if len(multipacks_on_packing_table) < needed_multipacks:
+        error_msg = f'{current_time} попытка формирования куба, когда на упаковочном столе меньше {needed_multipacks} мультипаков'
         background_tasks.add_task(send_error)
         background_tasks.add_task(set_column_red, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_ids_with_pack_ids = {}
     for i in range(needed_multipacks):
-        multipacks_queue[i].status = Status.IN_CUBE
+        multipacks_on_packing_table[i].status = Status.IN_CUBE
         multipack_ids_with_pack_ids[str(
-            multipacks_queue[i].id)] = multipacks_queue[i].pack_ids
-    await engine.save_all(multipacks_queue)
+            multipacks_on_packing_table[i].id
+        )] = multipacks_on_packing_table[i].pack_ids
+    await engine.save_all(multipacks_on_packing_table)
 
     cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
                 batch_number=number,
@@ -493,11 +524,12 @@ async def add_packing_table_record(record: PackingTableRecordInput,
         background_tasks.add_task(check_packs_max_amount, 16)
         background_tasks.add_task(check_multipacks_max_amount, 4)
 
-        # if not cube:
-        #     error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
-        #     error_msg += 'Чтобы собрать куб, введите его QR.'
-        #     new_cube = await form_cube_from_n_multipacks(prev_record_amount)
-        #     wrong_cube_id = new_cube.id
+        if not cube:
+            error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
+            error_msg += 'Чтобы собрать куб, введите его QR.'
+            new_cube = await form_cube_from_n_multipacks(prev_record_amount)
+            wdiot_logger.info(f'Сформировал куб {new_cube.json()}')
+            wrong_cube_id = new_cube.id
 
         if prev_record_amount == needed_multipacks and not cube.qr:
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
@@ -509,11 +541,12 @@ async def add_packing_table_record(record: PackingTableRecordInput,
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
             wrong_cube_id = cube.id
 
-        # if multipacks_in_cube != prev_record_amount:
-        #     error_msg = f'{current_datetime} количество паллет на упаковочном столе и в последнем кубе не совпадают. '
-        #     error_msg += 'Чтобы собрать куб, введите его QR.'
-        #     new_cube = await form_cube_from_n_multipacks(prev_record_amount)
-        #     wrong_cube_id = new_cube.id
+        if multipacks_in_cube != prev_record_amount:
+            error_msg = f'{current_datetime} количество паллет на упаковочном столе и в последнем кубе не совпадают. '
+            error_msg += 'Чтобы собрать куб, введите его QR.'
+            new_cube = await form_cube_from_n_multipacks(prev_record_amount)
+            wdiot_logger.info(f'Сформировал куб {new_cube.json()}')
+            wrong_cube_id = new_cube.id
 
     if error_msg:
         background_tasks.add_task(send_error)

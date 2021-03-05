@@ -13,10 +13,9 @@ from .production_batch import ProductionBatchNumber
 class Status(str, Enum):
     EXIT_PINTSET = 'вышел из пинцета'
     WRAPPING = 'в обмотке'
-    WRAPPED = 'обмотан'
     ADDED_QR = 'нанесен QR'
     ENTER_PITCHFORK = 'зашел на вилы'
-    IN_UNFINISHED_CUBE = 'в незавершенном кубе'
+    ON_PACKING_TABLE = 'на упаковочном столе'
     IN_CUBE = 'в кубе'
 
 
