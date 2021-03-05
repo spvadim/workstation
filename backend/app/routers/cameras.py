@@ -315,6 +315,19 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
     return wrapping_multipack
 
 
+@deep_logger_router.patch('/multipack_enter_pitchfork_auto',
+                          response_model=Multipack)
+@version(1, 0)
+async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400,
+                            detail='В данный момент используется ручной режим')
+    entered_pitchfork_multipack = await get_first_wrapping_multipack()
+    entered_pitchfork_multipack.status = Status.ENTER_PITCHFORK
+    return await engine.save(entered_pitchfork_multipack)
+
+
 @deep_logger_router.delete('/remove_multipack_from_wrapping',
                            response_model=Multipack)
 @version(1, 0)
