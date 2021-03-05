@@ -355,6 +355,12 @@ async def get_multipacks_entered_pitchfork() -> List[Multipack]:
                              sort=query.asc(Multipack.id))
 
 
+async def get_multipacks_on_packing_table() -> List[Multipack]:
+    return await engine.find(Multipack,
+                             Multipack.status == Status.ON_PACKING_TABLE,
+                             sort=query.asc(Multipack.id))
+
+
 async def get_first_multipack_without_qr() -> Union[Multipack, None]:
     multipack = await engine.find_one(Multipack,
                                       Multipack.status != Status.IN_CUBE,
