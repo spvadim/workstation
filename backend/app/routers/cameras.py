@@ -295,11 +295,10 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
         multipacks_after_pintset = batch.params.multipacks_after_pintset
         needed_packs = batch.params.packs * multipacks_after_pintset
 
-        packs_under_pintset = await get_packs_under_pintset()
-        delta = len(packs_under_pintset) - needed_packs
+        packs_on_assembly = await get_packs_on_assembly()
+        delta = len(packs_on_assembly) - needed_packs
 
         if delta >= 0:
-            wdiot_logger.info('Запускаю /pintset_finish')
             await pintset_finish(background_tasks=background_tasks)
             return await multipack_wrapping_auto(
                 background_tasks=background_tasks)
