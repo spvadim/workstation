@@ -1,19 +1,15 @@
 from typing import List
 
-from app.db.db_utils import (check_qr_unique, form_cube_from_n_multipacks,
-                             generate_multipack, generate_packs,
-                             get_100_last_packing_records,
-                             get_all_wrapping_multipacks, get_current_workmode,
-                             get_first_exited_pintset_multipack,
-                             get_first_multipack_without_qr,
-                             get_first_wrapping_multipack, get_last_batch,
-                             get_last_cube_in_queue,
-                             get_last_packing_table_amount,
-                             get_multipacks_entered_pitchfork,
-                             get_multipacks_queue, get_packs_on_assembly,
-                             get_packs_queue, get_packs_under_pintset,
-                             packing_table_error, pintset_error,
-                             set_column_red)
+from app.db.db_utils import (
+    check_qr_unique, form_cube_from_n_multipacks, generate_multipack,
+    generate_packs, get_100_last_packing_records, get_all_wrapping_multipacks,
+    get_current_workmode, get_first_exited_pintset_multipack,
+    get_first_multipack_without_qr, get_first_wrapping_multipack,
+    get_last_batch, get_last_cube_in_queue, get_last_packing_table_amount,
+    get_multipacks_entered_pitchfork, get_multipacks_on_packing_table,
+    get_multipacks_queue, get_packs_on_assembly, get_packs_queue,
+    get_packs_under_pintset, packing_table_error, pintset_error,
+    set_column_red)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -475,21 +471,22 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     needed_multipacks = batch.params.multipacks
     number = batch.number
 
-    multipacks_queue = await get_multipacks_queue()
+    multipacks_on_packing_table = await get_multipacks_on_packing_table()
 
     current_time = await get_naive_datetime()
-    if len(multipacks_queue) < needed_multipacks:
-        error_msg = f'{current_time} попытка формирования куба, когда в очереди меньше {needed_multipacks} мультипаков'
+    if len(multipacks_on_packing_table) < needed_multipacks:
+        error_msg = f'{current_time} попытка формирования куба, когда на упаковочном столе меньше {needed_multipacks} мультипаков'
         background_tasks.add_task(send_error)
         background_tasks.add_task(set_column_red, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_ids_with_pack_ids = {}
     for i in range(needed_multipacks):
-        multipacks_queue[i].status = Status.IN_CUBE
+        multipacks_on_packing_table[i].status = Status.IN_CUBE
         multipack_ids_with_pack_ids[str(
-            multipacks_queue[i].id)] = multipacks_queue[i].pack_ids
-    await engine.save_all(multipacks_queue)
+            multipacks_on_packing_table[i].id
+        )] = multipacks_on_packing_table[i].pack_ids
+    await engine.save_all(multipacks_on_packing_table)
 
     cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
                 batch_number=number,
