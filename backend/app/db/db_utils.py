@@ -242,6 +242,49 @@ async def form_cube_from_n_multipacks(n: int) -> Cube:
     return cube
 
 
+async def generate_packs(n: int,
+                         batch_number,
+                         current_datetime,
+                         logger,
+                         status: PackStatus = PackStatus.ON_ASSEMBLY,
+                         to_process: bool = False,
+                         result: List[Pack] = []) -> List[Pack]:
+    for i in range(n):
+        new_pack = Pack(
+            qr=
+            f'skipped pack {current_datetime.strftime("%d.%m.%Y %H:%M")} {i}',
+            barcode='0000000000000',
+            status=status,
+            to_process=to_process,
+            batch_number=batch_number,
+            created_at=current_datetime)
+        result.append(new_pack)
+        logger.info(f'Добавил пачку {new_pack.json()}')
+    return result
+
+
+async def generate_multipack(batch_number, multipacks_after_pintset,
+                             current_datetime, logger,
+                             to_process) -> Multipack:
+    packs = await generate_packs(n=multipacks_after_pintset,
+                                 batch_number=batch_number,
+                                 current_datetime=current_datetime,
+                                 logger=logger,
+                                 to_process=to_process)
+    pack_ids = []
+    for pack in packs:
+        pack.in_queue = False
+        pack_ids.append(pack.id)
+    await engine.save_all(packs)
+
+    multipack = Multipack(pack_ids=pack_ids)
+    multipack.batch_number = batch_number
+    multipack.created_at = current_datetime
+    multipack.to_process = to_process
+    logger.info(f'Добавил мультипак {multipack.json()}')
+    return multipack
+
+
 async def get_100_last_packing_records() -> List[PackingTableRecord]:
     records = await engine.find(PackingTableRecord,
                                 sort=query.desc(PackingTableRecord.id),
