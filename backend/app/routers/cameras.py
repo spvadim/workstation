@@ -97,8 +97,8 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     elif not pack.barcode:
         error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался'
 
-    elif not await check_qr_unique(Pack, pack.qr):
-        error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+    # elif not await check_qr_unique(Pack, pack.qr):
+    #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
         background_tasks.add_task(send_telegram_message,

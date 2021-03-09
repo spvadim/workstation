@@ -51,6 +51,7 @@ async def check_multipacks_max_amount(max_amount: int):
         tasks = []
         tasks.append(set_column_red(error_msg))
         tasks.append(send_telegram_message(TGMessage(text=error_msg)))
+        await asyncio.gather(*tasks)
 
 
 async def send_warning():
