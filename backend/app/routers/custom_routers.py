@@ -55,9 +55,6 @@ class DeepLoggerRoute(APIRoute):
             for name, value in request.path_params.items():
                 deep_logger.info(f"\t{name}: {value}")
 
-            deep_logger.info('Before request: ')
-            await log_queues()
-
             response: Response = await original_route_handler(request)
             deep_logger.info(
                 f'Response {response.status_code}: {orjson.loads(response.body)}'
