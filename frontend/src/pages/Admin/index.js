@@ -11,6 +11,7 @@ import { Notification, NotificationImage } from "../../components/Notification/i
 import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
+import imgHint from "src/assets/images/hint.png";
 
 const useStyles = createUseStyles({
     tableContainer: {
@@ -30,15 +31,19 @@ const useStyles = createUseStyles({
     row: {
         display: "flex",
         alignItems: "center",
-        gap: 5,
-        border: "1px solid #A4A4A4",
-        borderRadius: 7,
+        gap: 5,        
         width: "100%",
+        position: "relative",
     },
     cell1: {
-        borderRight: "1px solid #A4A4A4",
+        minWidth: "50%",
         width: "50%",
         padding: "5px 5px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        border: "1px solid #A4A4A4",
+        borderRadius: 7,
     },
     input: {
         padding: "6px 5px",
@@ -60,6 +65,26 @@ const useStyles = createUseStyles({
     container: {
         display: "flex",
         justifyContent: "space-between",
+    },
+    hintCell: {
+        borderLeftStyle: 'none !important',
+        height: 24,
+        width: 48,
+        backgroundImage: `url(${imgHint})`,
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 21,
+        backgroundPosition: 'center',
+        cursor: 'pointer',
+    },
+    fullDescription: {
+        position: "fixed",
+        right: 50,
+        bottom: 50,
+        maxWidth: 300,
+        backgroundColor: "white",
+        borderRadius: 7,
+        padding: "10px",
+        paddingTop: 0,
     },
 })
 
@@ -88,6 +113,7 @@ function Admin() {
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [editSettings, setEditSettings] = useState({});
+    const [choosedSetting, setChoosedSetting] = useState("");
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/settings")
@@ -129,7 +155,10 @@ function Admin() {
                                             null :
                                             (
                                                 <div className={classes.row}>
-                                                    <span className={classes.cell1} title={setting[key].desc}>{setting[key].title}:</span>
+                                                    
+                                                    <span className={classes.cell1} title={setting[key].desc}>{setting[key].title}:
+                                                        <ToolTip text={setting[key].desc} style={{marginLeft: 5}} />
+                                                    </span>
                                                     {typeof (editSettings[sKey][key].value) === "boolean" ? 
                                                         <select className={classes.input}
                                                                 onChange={(e) => {
@@ -287,6 +316,13 @@ function Admin() {
                 </div>
                 
             </div>
+
+            {choosedSetting && 
+                <div className={classes.fullDescription}>
+                    <p style={{fontWeight: 500}}>{choosedSetting.title}</p>
+                    <span>{choosedSetting.desc}</span>
+                </div>
+            }
             
         </div>
     );

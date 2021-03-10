@@ -244,16 +244,16 @@ function Main() {
             axios.get(address + "/api/v1_0/packing_table_records")
                 .then(res => {
                     setPackingTableRecords(res.data);
-                    if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
-                        setNotificationText("Надо отсканировать QR Куба")
-                    } 
+                    // if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
+                    //     setNotificationText("Надо отсканировать QR куба")
+                    // } 
             });
         }
         
         request2();
         const interval1 = setInterval(() => request2(), 1000);
         return () => clearInterval(interval1);
-    }, [batchSettings]);
+    }, [batchSettings, mode]);
 
     useEffect(() => {
         const request = () => {
@@ -415,7 +415,7 @@ function Main() {
             {modalChangePack && 
                 <ModalWindow
                     title="Замена пачки"
-                    description="Введите QR заменяемой и новой пачек"
+                    description="На постах упаковки одну пачку можно заменить на другую. Для этого введите сначала QR старой пачки, потом QR новой пачки. Далее подтвердите свое действие"
                 >
                     <Button onClick={() => {setModalChangePack(false); setForceFocus("inputQr")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
@@ -527,9 +527,9 @@ function Main() {
             {modalDisassemble && 
                 <ModalWindow
                     title="Разобрать куб?"
-                    description="Введите QR куба для разбора"
+                    description="Информация про куб и пачки в нем будет удалена из системы. Куб нужно будет распаковать, необходимые пачки нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
                 >
-                    <Button onClick={() => {setModalDisassemble(false)}}>
+                    <Button onClick={() => {setModalDisassemble(false); setForceFocus("inputQr")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Отмена
                     </Button>
@@ -683,7 +683,7 @@ function Main() {
             {modalDeletion && (
                 <ModalWindow
                     title="Удаление объекта"
-                    description="Вы действительно хотите удалить данный объект?"
+                    description="Информация про данную упаковку и составляющие будет удалена из системы. Пачку(и) нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
                 >
                     <Button onClick={() => {
                         setModalDeletion(false);
@@ -709,7 +709,7 @@ function Main() {
             {modalCube && (
                 <ModalWindow
                     title="Формирование неполного куба"
-                    description="Вы действительно хотите создать неполный куб?"
+                    description="Из всех паллет и пачек в очереди будет сформирован куб. Подтверждаете?"
                 >
                     <div style={{ display: "grid", gap: "2rem" }}>
                         <div>
@@ -799,6 +799,8 @@ function Main() {
                     <Text className={classes.tableTitle} type="title2">Очередь кубов</Text>
                     <TableAddress
                         columns={tableProps.cube.columns}
+                        setNotification={n => setNotificationText(n)}
+                        notification={notificationText}
                         setError={() => setModalError(true)}
                         setModal={setModalDeletion}
                         type="cubes"

@@ -7,7 +7,7 @@ import Table from './index';
 import baseAddress from 'src/address';
 
 const TableAddress = React.memo(({
-    address, type, setError, setModal, extended, columns, buttonEdit, buttonDelete
+    address, type, setError, setNotification, notification, setModal, extended, columns, buttonEdit, buttonDelete
 }) => {
     const [tableData, setTableData] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -18,6 +18,12 @@ const TableAddress = React.memo(({
             let request = axios.get(baseAddress + address);
             request.then(res => {
                 let rows = [];
+                if (setNotification && res.data.length !== 0 && !res.data[res.data.length - 1].qr) {
+                    setNotification("Надо отсканировать QR куба");
+                } else if (notification === "Надо отсканировать QR куба") {
+                    setNotification("");
+                }
+
                 for (let i = res.data.length - 1; i >= 0; i--) {
                     let row = {};
                     Object.assign(row, res.data[i]);
@@ -39,7 +45,7 @@ const TableAddress = React.memo(({
         request();
         const interval = setInterval(request, 1000);
         return () => clearInterval(interval);
-    }, [address]);
+    }, [address, setNotification, notification]);
 
     const deleteRow = (id) => {
         axios.delete(baseAddress + "/api/v1_0/" + type + "/" + id)
