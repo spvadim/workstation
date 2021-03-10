@@ -16,7 +16,7 @@ from app.models.cube import Cube, CubeIdentificationAuto
 from app.models.message import TGMessage
 from app.models.multipack import (Multipack, MultipackIdentificationAuto,
                                   MultipackOutput, Status)
-from app.models.pack import Pack, PackCameraInput, PackOutput
+from app.models.pack import Pack, PackCameraInput, PackInReport, PackOutput
 from app.models.pack import Status as PackStatus
 from app.models.packing_table import (PackingTableRecord,
                                       PackingTableRecordInput,
@@ -116,6 +116,7 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     batch = await get_last_batch()
     pack.batch_number = batch.number
     pack.created_at = current_datetime
+    await engine.save(PackInReport(**pack.dict(exclude={'id'})))
     await engine.save(pack)
     background_tasks.add_task(check_packs_max_amount, 16)
     background_tasks.add_task(check_multipacks_max_amount, 12)

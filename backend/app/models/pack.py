@@ -27,6 +27,14 @@ class Pack(Model):
     Config = ModelConfig
 
 
+class PackInReport(Model):
+    qr: str
+    barcode: str
+    created_at: datetime
+
+    Config = ModelConfig
+
+
 class PackOutput(BaseModel):
     id: ObjectId
     qr: str

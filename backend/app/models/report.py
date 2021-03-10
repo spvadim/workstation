@@ -7,7 +7,6 @@ from .model_config import ModelConfig
 
 class PackReportItem(BaseModel):
     created_at: Optional[datetime]
-    batch_number: Optional[ProductionBatchNumber]
     qr: str
     barcode: str
 
@@ -16,7 +15,6 @@ class PackReportItem(BaseModel):
 
 class MPackReportItem(BaseModel):
     created_at: Optional[datetime]
-    batch_number: Optional[ProductionBatchNumber]
     qr: Optional[str]
     barcode: Optional[str]
     packs: List[PackReportItem] = []

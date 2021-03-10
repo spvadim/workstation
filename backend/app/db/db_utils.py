@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 from app.models.cube import Cube
 from app.models.multipack import Multipack, Status
-from app.models.pack import Pack
+from app.models.pack import Pack, PackInReport
 from app.models.pack import Status as PackStatus
 from app.models.packing_table import PackingTableRecord
 from app.models.production_batch import ProductionBatch, ProductionBatchNumber
@@ -222,7 +222,7 @@ async def form_cube_from_n_multipacks(n: int) -> Cube:
     needed_multipacks = batch.params.multipacks
     needed_packs = batch.params.packs
     current_time = await get_naive_datetime()
-    multipacks = await get_multipacks_queue()
+    multipacks = await get_multipacks_on_packing_table()
     multipacks_for_cube = multipacks[:n]
     multipack_ids_with_pack_ids = {}
 
@@ -400,6 +400,24 @@ async def get_cubes_queue() -> List[Cube]:
 async def count_cubes_queue() -> int:
     last_batch = await get_last_batch()
     return await engine.count(Cube, Cube.batch_number == last_batch.number)
+
+
+async def get_packs_report(q: ReportRequest) -> List[PackInReport]:
+
+    dt_begin = q.report_begin
+    dt_end = q.report_end
+
+    current_settings = await get_system_settings()
+    general_settings = current_settings.general_settings
+    report_max_days = general_settings.report_max_days.value
+
+    if dt_end - dt_begin > timedelta(days=report_max_days):
+        raise HTTPException(400, detail='Слишком большой период для отчета')
+
+    return await engine.find(
+        PackInReport,
+        query.and_(PackInReport.created_at < dt_end,
+                   PackInReport.created_at >= dt_begin))
 
 
 async def get_report(q: ReportRequest) -> ReportResponse:
