@@ -307,7 +307,10 @@ async def count_packs_queue() -> int:
 
 async def get_packs_under_pintset() -> List[Pack]:
     packs_under_pintset = await engine.find(
-        Pack, Pack.status == PackStatus.UNDER_PINTSET, sort=query.asc(Pack.id))
+        Pack,
+        Pack.status == PackStatus.UNDER_PINTSET,
+        Pack.in_queue == True,
+        sort=query.asc(Pack.id))
     return packs_under_pintset
 
 
