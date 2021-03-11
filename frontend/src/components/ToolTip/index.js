@@ -1,25 +1,26 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { createUseStyles } from 'react-jss';
 
 const useStyles = createUseStyles({
     container: {
         display: 'flex',
-        width: 'max-content',
         alignItems: "center",
         position: "relative",
-    },
-    image: {
-        width: 16,
-        "&:hover + div": {
-            opacity: 1,
+        
+        "&:hover": {
+            cursor: "pointer",
         }
     },
+    image: {
+        width: 24,
+        outline: "none",
+    },
     body: {
+        outlined: "none",
         position: "absolute",
         border: "1px solid black",
-        left: 25,
-        maxWidth: 500,
         overflowWrap: "break-word",
+        width: "300px",
         borderRadius: 7,
         padding: "4px 6px",
         whiteSpace: "pre-line",
@@ -27,13 +28,21 @@ const useStyles = createUseStyles({
     },
 });
 
-const ToolTip = React.memo(({ text }) => {
+const ToolTip = React.memo(({ text, ...restProps }) => {
     let classes = useStyles();
     
+    const [hidden, setHidden] = useState(true);
+    const ref = useRef(null);
+    
     return (
-        <div className={classes.container}>
-            <img src="./questionMark.svg" alt="questionMark" className={classes.image} />
-            <div style={{position: "relative", opacity: 0}}>
+        <div ref={ref} className={classes.container} {...restProps}>
+            <img src="./questionMark.svg"
+                 alt="questionMark"
+                 className={classes.image}
+                 onClick={() => {setHidden(!hidden)}}
+                 onBlur={() => {setHidden(true)}}
+                 tabIndex={ 0 } />
+            <div style={{position: "relative", zIndex: 99, display: hidden ? "none" : null}}>
                 <span className={classes.body}>{text}</span>
             </div>
         </div>
