@@ -1,15 +1,20 @@
 from typing import List
 
-from app.db.db_utils import (
-    check_qr_unique, form_cube_from_n_multipacks, generate_multipack,
-    generate_packs, get_100_last_packing_records, get_all_wrapping_multipacks,
-    get_current_workmode, get_first_exited_pintset_multipack,
-    get_first_multipack_without_qr, get_first_wrapping_multipack,
-    get_last_batch, get_last_cube_in_queue, get_last_packing_table_amount,
-    get_multipacks_entered_pitchfork, get_multipacks_on_packing_table,
-    get_multipacks_queue, get_packs_on_assembly, get_packs_queue,
-    get_packs_under_pintset, packing_table_error, pintset_error,
-    set_column_red)
+from app.db.db_utils import (check_qr_unique, form_cube_from_n_multipacks,
+                             generate_multipack, generate_packs,
+                             get_100_last_packing_records,
+                             get_all_wrapping_multipacks, get_current_workmode,
+                             get_first_exited_pintset_multipack,
+                             get_first_multipack_without_qr,
+                             get_first_wrapping_multipack, get_last_batch,
+                             get_last_cube_in_queue,
+                             get_last_packing_table_amount,
+                             get_multipacks_entered_pitchfork,
+                             get_multipacks_on_packing_table,
+                             get_multipacks_queue, get_packs_on_assembly,
+                             get_packs_queue, get_packs_under_pintset,
+                             packing_table_error, pintset_error,
+                             set_column_red)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -308,7 +313,7 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
         else:
             current_time = await get_naive_datetime()
             wrapping_multipack = await generate_multipack(
-                batch.number, multipacks_after_pintset, current_time,
+                batch.number, batch.params.packs, current_time,
                 wdiot_logger, True)
 
     wrapping_multipack.status = Status.WRAPPING
