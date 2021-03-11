@@ -477,7 +477,9 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     needed_multipacks = batch.params.multipacks
     number = batch.number
 
-    multipacks_on_packing_table = await get_multipacks_on_packing_table()
+    # TODO: вернуть обратно, когда все протестируем
+    # multipacks_on_packing_table = await get_multipacks_on_packing_table()
+    multipacks_on_packing_table = await get_multipacks_queue()
 
     current_time = await get_naive_datetime()
     if len(multipacks_on_packing_table) < needed_multipacks:
