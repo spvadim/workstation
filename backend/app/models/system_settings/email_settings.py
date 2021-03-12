@@ -76,7 +76,7 @@ class MailTo(EmbeddedModel):
 
 
 class MailSettings(EmbeddedModel):
-    title: str = 'Настройки '
+    title: str = 'Настройки электронной почты'
     advanced: bool = True
     send_email: SendEmail = SendEmail()
     use_credentials: UseCredentials = UseCredentials()
