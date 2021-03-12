@@ -263,10 +263,10 @@ async def generate_packs(n: int,
     return result
 
 
-async def generate_multipack(batch_number, multipacks_after_pintset,
+async def generate_multipack(batch_number, packs_in_multipacks,
                              current_datetime, logger,
                              to_process) -> Multipack:
-    packs = await generate_packs(n=multipacks_after_pintset,
+    packs = await generate_packs(n=packs_in_multipacks,
                                  batch_number=batch_number,
                                  current_datetime=current_datetime,
                                  logger=logger,
@@ -307,7 +307,10 @@ async def count_packs_queue() -> int:
 
 async def get_packs_under_pintset() -> List[Pack]:
     packs_under_pintset = await engine.find(
-        Pack, Pack.status == PackStatus.UNDER_PINTSET, sort=query.asc(Pack.id))
+        Pack,
+        Pack.status == PackStatus.UNDER_PINTSET,
+        Pack.in_queue == True,
+        sort=query.asc(Pack.id))
     return packs_under_pintset
 
 

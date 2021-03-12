@@ -241,7 +241,8 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     if delta < 0:
         packs_under_pintset = await get_packs_under_pintset()
 
-        while packs_under_pintset and delta < 0:
+        while len(
+                packs_under_pintset) >= multipacks_after_pintset and delta < 0:
 
             for pack in packs_under_pintset[:multipacks_after_pintset]:
                 wdiot_logger.info(f'Перевел пачку {pack.json()} в сборку')
@@ -254,10 +255,13 @@ async def pintset_finish(background_tasks: BackgroundTasks):
             delta = len(packs_on_assembly) - needed_packs
 
         if delta < 0:
-            to_process = True
-            packs_on_assembly = await generate_packs(
-                abs(delta), number, current_time, wdiot_logger,
-                PackStatus.ON_ASSEMBLY, to_process, packs_on_assembly)
+            raise HTTPException(400,
+                                detail='Не получилось сформировать паллеты')
+        # TODO: uncomment this in future
+        #     to_process = True
+        #     packs_on_assembly = await generate_packs(
+        #         abs(delta), number, current_time, wdiot_logger,
+        #         PackStatus.ON_ASSEMBLY, to_process, packs_on_assembly)
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
@@ -306,10 +310,15 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
                 background_tasks=background_tasks)
 
         else:
-            current_time = await get_naive_datetime()
-            wrapping_multipack = await generate_multipack(
-                batch.number, multipacks_after_pintset, current_time,
-                wdiot_logger, True)
+            raise HTTPException(
+                400,
+                detail=
+                'В очереди нет паллеты, вышедшей из пинцета и при этом недостаточно пачек'
+            )
+            # current_time = await get_naive_datetime()
+            # wrapping_multipack = await generate_multipack(
+            #     batch.number, batch.params.packs, current_time, wdiot_logger,
+            #     True)
 
     wrapping_multipack.status = Status.WRAPPING
 
@@ -472,7 +481,9 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     needed_multipacks = batch.params.multipacks
     number = batch.number
 
-    multipacks_on_packing_table = await get_multipacks_on_packing_table()
+    # TODO: вернуть обратно, когда все протестируем
+    # multipacks_on_packing_table = await get_multipacks_on_packing_table()
+    multipacks_on_packing_table = await get_multipacks_queue()
 
     current_time = await get_naive_datetime()
     if len(multipacks_on_packing_table) < needed_multipacks:
