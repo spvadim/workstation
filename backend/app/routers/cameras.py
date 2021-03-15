@@ -26,6 +26,7 @@ from app.utils.background_tasks import (check_multipacks_max_amount,
                                         send_error_with_buzzer,
                                         send_warning_and_back_to_normal)
 from app.utils.io import send_telegram_message
+from app.utils.email import send_email
 from app.utils.naive_current_datetime import get_naive_datetime
 from app.utils.pintset import off_pintset
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -125,7 +126,7 @@ async def new_pack_after_pintset(pack: PackCameraInput,
 
 @deep_logger_router.patch('/pintset_receive', response_model=List[Pack])
 @version(1, 0)
-async def pintset_receive():
+async def pintset_receive(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
@@ -140,11 +141,14 @@ async def pintset_receive():
     if delta < 0:
         to_process = True
         wdiot_logger.error('Расхождение, нужно проверить пачки')
-        packs_under_pintset = await generate_packs(abs(delta),
-                                                   batch.number,
-                                                   await get_naive_datetime(),
-                                                   wdiot_logger,
-                                                   result=packs_under_pintset)
+        packs_under_pintset, email_body = await generate_packs(
+            abs(delta),
+            batch.number,
+            await get_naive_datetime(),
+            wdiot_logger,
+            result=packs_under_pintset)
+        background_tasks.add_task(send_email, 'Сгениророваны пачки',
+                                  email_body)
 
     if delta > 0:
         to_process = True
@@ -257,11 +261,14 @@ async def pintset_finish(background_tasks: BackgroundTasks):
         if delta < 0:
             raise HTTPException(400,
                                 detail='Не получилось сформировать паллеты')
-        # TODO: uncomment this in future
-        #     to_process = True
-        #     packs_on_assembly = await generate_packs(
-        #         abs(delta), number, current_time, wdiot_logger,
-        #         PackStatus.ON_ASSEMBLY, to_process, packs_on_assembly)
+            # TODO: uncomment this in future
+            # to_process = True
+            # packs_on_assembly, email_body = await generate_packs(
+            #     abs(delta), number, current_time, wdiot_logger,
+            #     PackStatus.ON_ASSEMBLY, to_process, packs_on_assembly)
+
+            # background_tasks.add_task(send_email, 'Сгениророваны пачки',
+            #                           email_body)
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
@@ -315,11 +322,14 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
                 detail=
                 'В очереди нет паллеты, вышедшей из пинцета и при этом недостаточно пачек'
             )
+            # TODO: uncomment this in future
             # current_time = await get_naive_datetime()
-            # wrapping_multipack = await generate_multipack(
+            # wrapping_multipack, email_body = await generate_multipack(
             #     batch.number, batch.params.packs, current_time, wdiot_logger,
             #     True)
 
+            # background_tasks.add_task(send_email, 'Сгенирорована паллета',
+            #                           email_body)
     wrapping_multipack.status = Status.WRAPPING
 
     await engine.save(wrapping_multipack)
