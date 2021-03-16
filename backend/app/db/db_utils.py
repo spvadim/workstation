@@ -248,7 +248,8 @@ async def generate_packs(n: int,
                          logger,
                          status: PackStatus = PackStatus.ON_ASSEMBLY,
                          to_process: bool = False,
-                         result: List[Pack] = []) -> List[Pack]:
+                         result: List[Pack] = []):
+    email_body = ''
     for i in range(n):
         new_pack = Pack(
             qr=
@@ -259,18 +260,21 @@ async def generate_packs(n: int,
             batch_number=batch_number,
             created_at=current_datetime)
         result.append(new_pack)
-        logger.info(f'Добавил пачку {new_pack.json()}')
-    return result
+        msg = (f'Добавил пачку с QR={new_pack.qr}, '
+               f'id={new_pack.id}, '
+               f'status={new_pack.status}')
+        logger.info(msg)
+        email_body += f'<br> {msg} '
+    return (result, email_body)
 
 
 async def generate_multipack(batch_number, packs_in_multipacks,
-                             current_datetime, logger,
-                             to_process) -> Multipack:
-    packs = await generate_packs(n=packs_in_multipacks,
-                                 batch_number=batch_number,
-                                 current_datetime=current_datetime,
-                                 logger=logger,
-                                 to_process=to_process)
+                             current_datetime, logger, to_process):
+    packs, email_body = await generate_packs(n=packs_in_multipacks,
+                                             batch_number=batch_number,
+                                             current_datetime=current_datetime,
+                                             logger=logger,
+                                             to_process=to_process)
     pack_ids = []
     for pack in packs:
         pack.in_queue = False
@@ -281,8 +285,12 @@ async def generate_multipack(batch_number, packs_in_multipacks,
     multipack.batch_number = batch_number
     multipack.created_at = current_datetime
     multipack.to_process = to_process
-    logger.info(f'Добавил мультипак {multipack.json()}')
-    return multipack
+    msg = (f'Добавил паллету с QR={multipack.qr}, '
+           f'id={multipack.id}, '
+           f'status={multipack.status}')
+    logger.info(msg)
+    email_body += f'<br> {msg}'
+    return (multipack, email_body)
 
 
 async def get_100_last_packing_records() -> List[PackingTableRecord]:
