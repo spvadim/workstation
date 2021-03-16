@@ -7,8 +7,9 @@ from app.models.pack import Pack, PackInReport
 from app.models.pack import Status as PackStatus
 from app.models.packing_table import PackingTableRecord
 from app.models.production_batch import ProductionBatch, ProductionBatchNumber
-from app.models.report import (CubeReportItem, MPackReportItem, PackReportItem,
-                               ReportRequest, ReportResponse)
+from app.models.report import (AnotherCubeReportItem, CubeReportItem,
+                               MPackReportItem, PackReportItem, ReportRequest,
+                               ReportResponse, ReportWithoutMPacksResponse)
 from app.models.system_status import Mode, State, SystemState, SystemStatus
 from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import HTTPException
@@ -480,5 +481,47 @@ async def get_report(q: ReportRequest) -> ReportResponse:
             mpacks_report[j].packs = packs_report
 
     report = ReportResponse(**q.dict(), cubes=cubes_report)
+
+    return report
+
+
+async def get_report_without_mpacks(
+        q: ReportRequest) -> ReportWithoutMPacksResponse:
+
+    dt_begin = q.report_begin
+    dt_end = q.report_end
+
+    current_settings = await get_system_settings()
+    general_settings = current_settings.general_settings
+    report_max_days = general_settings.report_max_days.value
+    report_max_cubes = general_settings.report_max_cubes.value
+
+    if dt_end - dt_begin > timedelta(days=report_max_days):
+        raise HTTPException(400, detail='Слишком большой период для отчета')
+
+    cubes = await engine.find(Cube,
+                              query.and_(Cube.created_at < dt_end,
+                                         Cube.created_at >= dt_begin),
+                              limit=report_max_cubes)
+
+    cubes_report = [
+        parse_obj_as(AnotherCubeReportItem, cube.dict()) for cube in cubes
+    ]
+
+    for i, cube in enumerate(cubes):
+        list_of_ids = [
+            inner for outer in cube.multipack_ids_with_pack_ids.values()
+            for inner in outer
+        ]
+
+        packs = await engine.find(Pack, Pack.id.in_(list_of_ids))
+
+        packs_report = [
+            parse_obj_as(PackReportItem, pack.dict()) for pack in packs
+        ]
+
+        cubes_report[i].packs = packs_report
+
+    report = ReportWithoutMPacksResponse(**q.dict(), cubes=cubes_report)
 
     return report

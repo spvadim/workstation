@@ -40,6 +40,20 @@ class CubeReportItem(BaseModel):
     Config = ReportModelConfig
 
 
+class AnotherCubeReportItem(BaseModel):
+    created_at: datetime
+    batch_number: ProductionBatchNumber
+    qr: Optional[str]
+    barcode: Optional[str]
+    multipacks_in_cubes: int
+    packs_in_multipacks: int
+    to_process: bool
+    comments: List[str]
+    packs: List[PackReportItem] = []
+
+    Config = ReportModelConfig
+
+
 class ReportRequest(BaseModel):
     report_begin: datetime
     report_end: datetime
@@ -49,3 +63,7 @@ class ReportRequest(BaseModel):
 
 class ReportResponse(ReportRequest):
     cubes: List[CubeReportItem] = []
+
+
+class ReportWithoutMPacksResponse(ReportRequest):
+    cubes: List[AnotherCubeReportItem] = []
