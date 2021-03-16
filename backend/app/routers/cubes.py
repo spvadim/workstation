@@ -4,8 +4,8 @@ from app.db.db_utils import (check_qr_unique, delete_cube,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
                              get_cubes_queue, get_first_cube_without_qr,
-                             get_last_batch, get_multipacks_queue,
-                             get_packs_queue)
+                             get_last_batch, get_last_cube_without_qr,
+                             get_multipacks_queue, get_packs_queue)
 from app.db.engine import engine
 from app.models.cube import (Cube, CubeEditSchema, CubeInput, CubeOutput,
                              CubePatchSchema, CubeWithNewContent)
@@ -233,6 +233,20 @@ async def add_qr_to_first_unidentified_cube(qr: str):
     if not await check_qr_unique(Cube, qr):
         raise HTTPException(400, detail=f'В системе есть куб с QR={qr}')
     cube = await get_first_cube_without_qr()
+    if not cube:
+        raise HTTPException(400, detail='В очереди нет кубов без QR')
+    cube.qr = qr
+    await engine.save(cube)
+    return cube
+
+
+@deep_logger_router.patch('/add_qr_to_last_unidentified_cube/',
+                          response_model=Cube)
+@version(1, 0)
+async def add_qr_to_last_unidentified_cube(qr: str):
+    if not await check_qr_unique(Cube, qr):
+        raise HTTPException(400, detail=f'В системе есть куб с QR={qr}')
+    cube = await get_last_cube_without_qr()
     if not cube:
         raise HTTPException(400, detail='В очереди нет кубов без QR')
     cube.qr = qr
