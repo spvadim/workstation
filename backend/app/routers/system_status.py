@@ -18,6 +18,7 @@ from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
                                         send_error_with_buzzer, send_warning)
 from app.utils.io import send_telegram_message
+from app.utils.email import send_email
 from app.utils.naive_current_datetime import get_naive_datetime
 from app.utils.pintset import off_pintset, on_pintset
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
@@ -179,8 +180,8 @@ async def set_packing_table_normal_with_identify(
     return await flush_packing_table()
 
 
-@deep_logger_router.get("/get_packs_report/",
-                        response_model=List[PackReportItem])
+@light_logger_router.get("/get_packs_report/",
+                         response_model=List[PackReportItem])
 async def get_plain_packs_report_with_query(
         report_begin: str = "01.01.1970 00:00",
         report_end: str = "01.01.2050 00:00") -> ReportResponse:
@@ -193,7 +194,7 @@ async def get_plain_packs_report_with_query(
     return await get_packs_report(report_query)
 
 
-@deep_logger_router.get("/get_report/", response_model=ReportResponse)
+@light_logger_router.get("/get_report/", response_model=ReportResponse)
 async def get_system_report_with_query(
         report_begin: str = "01.01.1970 00:00",
         report_end: str = "01.01.2050 00:00") -> ReportResponse:
@@ -206,9 +207,14 @@ async def get_system_report_with_query(
     return await get_report(report_query)
 
 
-@deep_logger_router.post("/send_message", response_model=bool)
+@light_logger_router.post("/send_message", response_model=bool)
 async def send_tg_message(text: str,
                           timestamp: bool = False,
                           img: UploadFile = File(None)) -> bool:
     return await send_telegram_message(
         TGMessage(text=text, timestamp=timestamp), img)
+
+
+@light_logger_router.post("/send_email", response_model=bool)
+async def send_email_message(subject: str, body: str) -> bool:
+    return await send_email(subject, body)
