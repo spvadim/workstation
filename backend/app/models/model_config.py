@@ -15,3 +15,12 @@ class ModelConfig:
     }
     json_loads = orjson.loads
     json_dumps = orjson_dumps
+
+
+class ReportModelConfig:
+    json_encoders = {
+        **BSON_TYPES_ENCODERS, datetime:
+        lambda v: v.strftime("%d.%m.%Y %H:%M:%S.%f")[:-3]
+    }
+    json_loads = orjson.loads
+    json_dumps = orjson_dumps
