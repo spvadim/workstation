@@ -389,6 +389,15 @@ async def get_first_cube_without_qr() -> Union[Cube, None]:
     return cube
 
 
+async def get_last_cube_without_qr() -> Union[Cube, None]:
+    last_batch = await get_last_batch()
+    cube = await engine.find_one(Cube,
+                                 Cube.batch_number == last_batch.number,
+                                 Cube.qr == None,
+                                 sort=query.desc(Cube.id))
+    return cube
+
+
 async def get_last_cube_in_queue() -> Cube:
     last_batch = await get_last_batch()
     cube = await engine.find_one(Cube,
