@@ -7,18 +7,20 @@ from app.db.db_utils import (
     get_by_id_or_404, get_current_state, get_current_status,
     get_current_workmode, get_last_batch, get_last_cube_in_queue,
     get_multipacks_queue, get_packs_report, get_report, packing_table_error,
-    pintset_error, pintset_withdrawal_error, set_column_red, set_column_yellow)
+    pintset_error, pintset_withdrawal_error, set_column_red, set_column_yellow,
+    get_report_without_mpacks)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
 from app.models.message import TGMessage
 from app.models.multipack import Status
-from app.models.report import PackReportItem, ReportRequest, ReportResponse
+from app.models.report import (PackReportItem, ReportRequest, ReportResponse,
+                               ReportWithoutMPacksResponse)
 from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
                                         send_error_with_buzzer, send_warning)
-from app.utils.io import send_telegram_message
 from app.utils.email import send_email
+from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_naive_datetime
 from app.utils.pintset import off_pintset, on_pintset
 from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
@@ -205,6 +207,20 @@ async def get_system_report_with_query(
         "report_end": report_end
     })
     return await get_report(report_query)
+
+
+@light_logger_router.get("/report/",
+                         response_model=ReportWithoutMPacksResponse)
+async def get_report_with_query(
+        report_begin: str = "01.01.1970 00:00",
+        report_end: str = "01.01.2050 00:00") -> ReportWithoutMPacksResponse:
+    report_begin = datetime.strptime(report_begin, "%d.%m.%Y %H:%M")
+    report_end = datetime.strptime(report_end, "%d.%m.%Y %H:%M")
+    report_query = parse_obj_as(ReportRequest, {
+        "report_begin": report_begin,
+        "report_end": report_end
+    })
+    return await get_report_without_mpacks(report_query)
 
 
 @light_logger_router.post("/send_message", response_model=bool)
