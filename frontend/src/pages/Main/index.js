@@ -169,6 +169,7 @@ function Main() {
     const [modalChangePack, setModalChangePack] = useState(false);
     const [modalChangePackAgree, setModalChangePackAgree] = useState(false);
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
+    const [modalDesync, setModalDesync] = useState(true);
 
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
@@ -182,6 +183,7 @@ function Main() {
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
     const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
+    const [notificationDesyncErrorText, setNotificationDesyncErrorText] = useState("");
     const classes = useStyles({ mode, redBackground });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
 
@@ -370,6 +372,21 @@ function Main() {
 
     return (
         <div className={classes.Main}>
+            {modalDesync && 
+                <ModalWindow
+                    title="Оповещение о рассинхронизации"
+                    description={"Описание"}
+                >
+                    <Button onClick={() => {
+                        setNotificationDesyncErrorText("Рассинхрон")
+                        setModalDesync(false);
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Понял
+                    </Button>
+                </ModalWindow>
+            }
+
             {modalWithdrawal && 
                 <ModalWindow
                     title="Подтверждение выемки из-под пинцета"
@@ -897,6 +914,14 @@ function Main() {
                                             description={notificationColumnErrorText}
                                             error
                                         > <Button onClick={() => flushStateColumn()}>Сбросить ошибку</Button>  </Notification>
+                                    ),
+
+                                    notificationDesyncErrorText && (
+                                        <Notification
+                                            title="Десинхронизация"
+                                            description={notificationDesyncErrorText}
+                                            error
+                                        > <Button onClick={() => setNotificationDesyncErrorText("")}>Сбросить ошибку</Button>  </Notification>
                                     )
                                 ]
                             }
