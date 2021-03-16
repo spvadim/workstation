@@ -169,7 +169,7 @@ function Main() {
     const [modalChangePack, setModalChangePack] = useState(false);
     const [modalChangePackAgree, setModalChangePackAgree] = useState(false);
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
-    const [modalDesync, setModalDesync] = useState(true);
+    const [modalDesync, setModalDesync] = useState(false);
 
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
@@ -270,6 +270,8 @@ function Main() {
                     else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg); setRedBackground(true)}
                 if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("") 
                     else {setModalWithdrawal(temp.pintset_withdrawal_error_msg); setRedBackground(true)}
+                if (temp.resync_error === "normal") setModalDesync("") 
+                    else {setModalDesync(temp.resync_error_msg); setRedBackground(true)}
 
                 if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal") setRedBackground(false);    
             })
@@ -283,8 +285,6 @@ function Main() {
     useEffect (() => {
         let interval;
         let isExist = Object.keys(dictRefs).indexOf(forceFocus) !== -1;
-
-        console.log(forceFocus)
 
         if (forceFocus && isExist) {
             interval = setInterval(() => {
@@ -372,14 +372,18 @@ function Main() {
 
     return (
         <div className={classes.Main}>
-            {modalDesync && 
+            {modalDesync &&
                 <ModalWindow
                     title="Оповещение о рассинхронизации"
-                    description={"Описание"}
+                    description={modalDesync}
                 >
                     <Button onClick={() => {
-                        setNotificationDesyncErrorText("Рассинхрон")
-                        setModalDesync(false);
+                        axios.patch(address + "/api/v1_0/flush_error_to_fixing")
+                            .then(() => {
+                                setNotificationDesyncErrorText("Рассинхрон");
+                                setModalDesync(false);
+                                setRedBackground(false);
+                            })
                     }}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Понял
@@ -921,7 +925,12 @@ function Main() {
                                             title="Десинхронизация"
                                             description={notificationDesyncErrorText}
                                             error
-                                        > <Button onClick={() => setNotificationDesyncErrorText("")}>Сбросить ошибку</Button>  </Notification>
+                                        > <Button onClick={() => {
+                                            axios.patch(address + "/api/v1_0/flush_fixing_to_normal")
+                                                .then(() => {
+                                                    setNotificationDesyncErrorText("");
+                                                })
+                                        }}>Сбросить ошибку</Button>  </Notification>
                                     )
                                 ]
                             }
