@@ -228,6 +228,8 @@ async def form_cube_from_n_multipacks(n: int) -> Cube:
     current_time = await get_naive_datetime()
     multipacks = await get_multipacks_on_packing_table()
     multipacks_for_cube = multipacks[:n]
+    if len(multipacks_for_cube) < n:
+        raise HTTPException(400, detail='Недостаточно паллет для формирования куба')
     multipack_ids_with_pack_ids = {}
 
     for i in range(len(multipacks_for_cube)):
