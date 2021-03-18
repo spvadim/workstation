@@ -8,8 +8,11 @@ from app.models.pack import Status as PackStatus
 from app.models.packing_table import PackingTableRecord
 from app.models.production_batch import ProductionBatch, ProductionBatchNumber
 from app.models.report import (AnotherCubeReportItem, CubeReportItem,
-                               MPackReportItem, PackReportItem, ReportRequest,
-                               ReportResponse, ReportWithoutMPacksResponse)
+                               CubeReportItemExtended, ExtendedReportResponse,
+                               MPackReportItem, MPackReportItemExtended,
+                               PackReportItem, PackReportItemExtended,
+                               ReportRequest, ReportResponse,
+                               ReportWithoutMPacksResponse)
 from app.models.system_status import Mode, State, SystemState, SystemStatus
 from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import HTTPException
@@ -481,6 +484,52 @@ async def get_report(q: ReportRequest) -> ReportResponse:
             mpacks_report[j].packs = packs_report
 
     report = ReportResponse(**q.dict(), cubes=cubes_report)
+
+    return report
+
+
+async def get_extended_report(q: ReportRequest) -> ExtendedReportResponse:
+
+    dt_begin = q.report_begin
+    dt_end = q.report_end
+
+    current_settings = await get_system_settings()
+    general_settings = current_settings.general_settings
+    report_max_days = general_settings.report_max_days.value
+    report_max_cubes = general_settings.report_max_cubes.value
+
+    if dt_end - dt_begin > timedelta(days=report_max_days):
+        raise HTTPException(400, detail='Слишком большой период для отчета')
+
+    cubes = await engine.find(Cube,
+                              query.and_(Cube.created_at < dt_end,
+                                         Cube.created_at >= dt_begin),
+                              limit=report_max_cubes)
+
+    cubes_report = [
+        parse_obj_as(CubeReportItemExtended, cube.dict()) for cube in cubes
+    ]
+
+    for i, cube in enumerate(cubes):
+        list_of_ids = [ObjectId(i) for i in cube.multipack_ids_with_pack_ids]
+        multipacks = await engine.find(Multipack,
+                                       Multipack.id.in_(list_of_ids))
+        mpacks_report = [
+            parse_obj_as(MPackReportItemExtended, mpack.dict())
+            for mpack in multipacks
+        ]
+
+        cubes_report[i].multipacks = mpacks_report
+
+        for j, multipack in enumerate(multipacks):
+            packs = await engine.find(Pack, Pack.id.in_(multipack.pack_ids))
+            packs_report = [
+                parse_obj_as(PackReportItemExtended, pack.dict())
+                for pack in packs
+            ]
+            mpacks_report[j].packs = packs_report
+
+    report = ExtendedReportResponse(**q.dict(), cubes=cubes_report)
 
     return report
 
