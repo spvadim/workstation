@@ -34,6 +34,7 @@ class MPackReportItem(BaseModel):
 
 
 class MPackReportItemExtended(MPackReportItem):
+    packs: List[PackReportItemExtended] = []
     id: ObjectId
 
 
@@ -52,6 +53,7 @@ class CubeReportItem(BaseModel):
 
 
 class CubeReportItemExtended(CubeReportItem):
+    multipacks: List[MPackReportItemExtended] = []
     id: ObjectId
 
 
@@ -81,7 +83,7 @@ class ReportResponse(ReportRequest):
 
 
 class ExtendedReportResponse(ReportRequest):
-    cubes: List[CubeReportItem] = []
+    cubes: List[CubeReportItemExtended] = []
 
 
 class ReportWithoutMPacksResponse(ReportRequest):
