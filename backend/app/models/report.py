@@ -1,8 +1,11 @@
-from typing import List, Optional
-from .production_batch import ProductionBatchNumber
 from datetime import datetime
+from typing import List, Optional
+
+from odmantic.bson import ObjectId
 from pydantic import BaseModel
+
 from .model_config import ReportModelConfig
+from .production_batch import ProductionBatchNumber
 
 
 class PackReportItem(BaseModel):
@@ -15,6 +18,10 @@ class PackReportItem(BaseModel):
     Config = ReportModelConfig
 
 
+class PackReportItemExtended(PackReportItem):
+    id: ObjectId
+
+
 class MPackReportItem(BaseModel):
     created_at: datetime
     qr: Optional[str]
@@ -24,6 +31,11 @@ class MPackReportItem(BaseModel):
     packs: List[PackReportItem] = []
 
     Config = ReportModelConfig
+
+
+class MPackReportItemExtended(MPackReportItem):
+    packs: List[PackReportItemExtended] = []
+    id: ObjectId
 
 
 class CubeReportItem(BaseModel):
@@ -38,6 +50,11 @@ class CubeReportItem(BaseModel):
     multipacks: List[MPackReportItem] = []
 
     Config = ReportModelConfig
+
+
+class CubeReportItemExtended(CubeReportItem):
+    multipacks: List[MPackReportItemExtended] = []
+    id: ObjectId
 
 
 class AnotherCubeReportItem(BaseModel):
@@ -63,6 +80,10 @@ class ReportRequest(BaseModel):
 
 class ReportResponse(ReportRequest):
     cubes: List[CubeReportItem] = []
+
+
+class ExtendedReportResponse(ReportRequest):
+    cubes: List[CubeReportItemExtended] = []
 
 
 class ReportWithoutMPacksResponse(ReportRequest):

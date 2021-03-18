@@ -1,20 +1,21 @@
 from datetime import datetime
 from typing import List
 
-from app.db.db_utils import (
-    change_coded_setting, check_qr_unique, delete_cube, delete_multipack,
-    flush_packing_table, flush_pintset, flush_state, flush_withdrawal_pintset,
-    get_by_id_or_404, get_current_state, get_current_status,
-    get_current_workmode, get_last_batch, get_last_cube_in_queue,
-    get_multipacks_queue, get_packs_report, get_report, packing_table_error,
-    pintset_error, pintset_withdrawal_error, set_column_red, set_column_yellow,
-    get_report_without_mpacks)
+from app.db.db_utils import (change_coded_setting, check_qr_unique,
+                             delete_cube, flush_packing_table, flush_pintset,
+                             flush_state, flush_withdrawal_pintset,
+                             get_by_id_or_404, get_current_state,
+                             get_current_status, get_current_workmode,
+                             get_extended_report, get_packs_report, get_report,
+                             get_report_without_mpacks, packing_table_error,
+                             pintset_error, pintset_withdrawal_error,
+                             set_column_red, set_column_yellow)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
 from app.models.message import TGMessage
-from app.models.multipack import Status
-from app.models.report import (PackReportItem, ReportRequest, ReportResponse,
+from app.models.report import (ExtendedReportResponse, PackReportItem,
+                               ReportRequest, ReportResponse,
                                ReportWithoutMPacksResponse)
 from app.models.system_status import Mode, SystemState, SystemStatus
 from app.utils.background_tasks import (flush_to_normal, send_error,
@@ -207,6 +208,20 @@ async def get_system_report_with_query(
         "report_end": report_end
     })
     return await get_report(report_query)
+
+
+@light_logger_router.get("/get_extended_report/",
+                         response_model=ExtendedReportResponse)
+async def get_extended_system_report_with_query(
+        report_begin: str = "01.01.1970 00:00",
+        report_end: str = "01.01.2050 00:00") -> ExtendedReportResponse:
+    report_begin = datetime.strptime(report_begin, "%d.%m.%Y %H:%M")
+    report_end = datetime.strptime(report_end, "%d.%m.%Y %H:%M")
+    report_query = parse_obj_as(ReportRequest, {
+        "report_begin": report_begin,
+        "report_end": report_end
+    })
+    return await get_extended_report(report_query)
 
 
 @light_logger_router.get("/report/",
