@@ -1,8 +1,4 @@
 #!/bin/bash
-echo "Stopping everything"
-sudo docker-compose down
-echo "Delete all not needed docker objects"
-sudo docker system prune --force
 branch=$(git rev-parse --abbrev-ref HEAD)
 echo "Here all the branches"
 git branch
@@ -16,5 +12,12 @@ git pull origin $branch
 # if [[ "$delete_all" == "delete_all" ]]; then
 #     echo "try to delete"
 # fi
-read -p "Than rebuild docker containers and run them. Press Enter to continue"
-sudo COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build -d
+read -p "Than rebuild docker containers. Press Enter to continue"
+sudo COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build
+echo "Delete all not needed docker objects"
+sudo docker system prune --force
+read -p "Than restarting docker containers. Press Enter to continue"
+echo "Restarting"
+sudo docker-compose down && sudo COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up -d
+read -p "Than running migrations. Press Enter to continue"
+sudo docker-compose run --entrypoint /migrate.sh --rm docker-fastapi
