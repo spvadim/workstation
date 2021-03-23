@@ -17,6 +17,12 @@ class State(str, Enum):
     ERROR = 'error'
 
 
+class SyncState(str, Enum):
+    NORMAL = 'normal'
+    ERROR = 'error'
+    FIXING = 'fixing'
+
+
 class Mode(EmbeddedModel):
     work_mode: WorkMode = WorkMode.AUTO
 
@@ -26,10 +32,12 @@ class SystemState(EmbeddedModel):
     pintset_state: State = State.NORMAL
     pintset_withdrawal_state: State = State.NORMAL
     packing_table_state: State = State.NORMAL
+    sync_state: State = SyncState.NORMAL
     error_msg: Optional[str]
     pintset_error_msg: Optional[str]
     packing_table_error_msg: Optional[str]
     pintset_withdrawal_error_msg: Optional[str]
+    sync_state_error_msg: Optional[str]
     wrong_cube_id: Optional[ObjectId]
 
 
