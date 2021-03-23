@@ -19,5 +19,5 @@ sudo docker system prune --force
 read -p "Than restarting docker containers. Press Enter to continue"
 echo "Restarting"
 sudo docker-compose down && sudo COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up -d
-read -p "Than running migrations. Press Enter to continue"
+echo "Running migrations"
 sudo docker-compose run --entrypoint /migrate.sh --rm docker-fastapi
