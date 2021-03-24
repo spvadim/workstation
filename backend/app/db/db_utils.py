@@ -14,7 +14,8 @@ from app.models.report import (AnotherCubeReportItem, CubeReportItem,
                                PackReportItem, PackReportItemExtended,
                                ReportRequest, ReportResponse,
                                ReportWithoutMPacksResponse)
-from app.models.system_status import Mode, State, SystemState, SystemStatus
+from app.models.system_status import (Mode, State, SyncState, SystemState,
+                                      SystemStatus)
 from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import HTTPException
 from odmantic import Model, ObjectId, query
@@ -133,6 +134,29 @@ async def flush_state() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.state = State.NORMAL
     current_status.system_state.error_msg = None
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def sync_error(error_msg: str) -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.sync_state = SyncState.ERROR
+    current_status.system_state.sync_error_msg = error_msg
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def sync_fixing() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.sync_state = SyncState.FIXING
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def flush_sync() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.sync_state = SyncState.NORMAL
+    current_status.system_state.sync_error_msg = None
     await engine.save(current_status)
     return current_status.system_state
 

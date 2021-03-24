@@ -37,7 +37,7 @@ class SystemState(EmbeddedModel):
     pintset_error_msg: Optional[str]
     packing_table_error_msg: Optional[str]
     pintset_withdrawal_error_msg: Optional[str]
-    sync_state_error_msg: Optional[str]
+    sync_error_msg: Optional[str]
     wrong_cube_id: Optional[ObjectId]
 
 
