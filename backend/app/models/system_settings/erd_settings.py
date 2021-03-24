@@ -52,7 +52,7 @@ class ERDBuzzerOID(EmbeddedModel):
 
 
 class ERDFirstOID(EmbeddedModel):
-    title: str = 'ID первого порта в ERD контроллере'
+    title: str = 'ID шторки в ERD контроллере'
     desc: str = 'Введите ID порта в ерд контроллере'
     value: Optional[str]
     value_type: str = 'string'
