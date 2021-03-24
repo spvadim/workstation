@@ -27,7 +27,8 @@ from app.models.pintset_record import (PintsetRecord, PintsetRecordInput,
 from app.utils.background_tasks import (check_multipacks_max_amount,
                                         check_packs_max_amount, send_error,
                                         send_error_with_buzzer,
-                                        send_warning_and_back_to_normal)
+                                        send_warning_and_back_to_normal,
+                                        drop_pack)
 from app.utils.email import send_email
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_naive_datetime
@@ -76,6 +77,39 @@ async def new_pack_after_applikator(pack: PackCameraInput,
             background_tasks.add_task(send_telegram_message,
                                       TGMessage(text=error_msg))
         background_tasks.add_task(send_warning_and_back_to_normal, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
+
+    return pack
+
+
+@deep_logger_router.put('/new_pack_before_ejector',
+                        response_model=PackCameraInput,
+                        response_model_exclude={"id"})
+@version(1, 0)
+async def new_pack_before_ejector(pack: PackCameraInput,
+                                  background_tasks: BackgroundTasks):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400,
+                            detail='В данный момент используется ручной режим')
+
+    current_datetime = await get_naive_datetime()
+
+    error_msg = None
+    if not pack.qr and not pack.barcode:
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с которой не смогли считать ни одного кода!'
+
+    elif not pack.qr:
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с ШК={pack.barcode}, но QR не считался'
+
+    elif not pack.barcode:
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
+
+    elif not await check_qr_unique(Pack, pack.qr):
+        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
+
+    if error_msg:
+        background_tasks.add_task(drop_pack)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     return pack
