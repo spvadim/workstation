@@ -52,14 +52,14 @@ class ERDBuzzerOID(EmbeddedModel):
 
 
 class ERDFirstOID(EmbeddedModel):
-    title: str = 'ID первого порта в ERD контроллере'
+    title: str = 'ID шторки в ERD контроллере'
     desc: str = 'Введите ID порта в ерд контроллере'
     value: Optional[str]
     value_type: str = 'string'
 
 
 class ERDSecondOID(EmbeddedModel):
-    title: str = 'ID второго порта в ERD контроллере'
+    title: str = 'ID сбрасывателя в ERD контроллере'
     desc: str = 'Введите ID порта в ерд контроллере'
     value: Optional[str]
     value_type: str = 'string'
@@ -86,6 +86,27 @@ class ERDFifthOID(EmbeddedModel):
     value_type: str = 'string'
 
 
+class DelayBeforeDamper(EmbeddedModel):
+    title: str = 'Задержка перед поднятием шторки'
+    desc: str = 'Введите задержку в секундах перед открытием шторки'
+    value: float = 1.0
+    value_type: str = 'float'
+
+
+class DelayBeforeEjector(EmbeddedModel):
+    title: str = 'Задержка перед поднятием сбрасывателя'
+    desc: str = 'Введите задержку в секундах перед поднятием сбрасывателя'
+    value: float = 0.3
+    value_type: str = 'float'
+
+
+class DelayAfterEjector(EmbeddedModel):
+    title: str = 'Задержка после поднятия сбрасывателя'
+    desc: str = 'Введите задержку в секундах после поднятия сбрасывателя'
+    value: float = 2
+    value_type: str = 'float'
+
+
 class ERDSettings(EmbeddedModel):
     title: str = 'Настройки ERD контроллера'
     advanced: bool = True
@@ -110,3 +131,6 @@ class SecondERDSettings(EmbeddedModel):
     erd_third_oid: ERDThirdOID
     erd_fourth_oid: ERDFourthOID
     erd_fifth_oid: ERDFifthOID
+    delay_before_damper: DelayBeforeDamper = DelayBeforeDamper()
+    delay_before_ejector: DelayBeforeEjector = DelayBeforeEjector()
+    delay_after_ejector: DelayAfterEjector = DelayAfterEjector()

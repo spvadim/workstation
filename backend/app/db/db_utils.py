@@ -6,6 +6,7 @@ from app.models.multipack import Multipack, Status
 from app.models.pack import Pack, PackInReport
 from app.models.pack import Status as PackStatus
 from app.models.packing_table import PackingTableRecord
+from app.models.pintset_record import PintsetRecord
 from app.models.production_batch import ProductionBatch, ProductionBatchNumber
 from app.models.report import (AnotherCubeReportItem, CubeReportItem,
                                CubeReportItemExtended, ExtendedReportResponse,
@@ -13,7 +14,8 @@ from app.models.report import (AnotherCubeReportItem, CubeReportItem,
                                PackReportItem, PackReportItemExtended,
                                ReportRequest, ReportResponse,
                                ReportWithoutMPacksResponse)
-from app.models.system_status import Mode, State, SystemState, SystemStatus
+from app.models.system_status import (Mode, State, SyncState, SystemState,
+                                      SystemStatus)
 from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import HTTPException
 from odmantic import Model, ObjectId, query
@@ -136,6 +138,29 @@ async def flush_state() -> SystemState:
     return current_status.system_state
 
 
+async def sync_error(error_msg: str) -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.sync_state = SyncState.ERROR
+    current_status.system_state.sync_error_msg = error_msg
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def sync_fixing() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.sync_state = SyncState.FIXING
+    await engine.save(current_status)
+    return current_status.system_state
+
+
+async def flush_sync() -> SystemState:
+    current_status = await get_current_status()
+    current_status.system_state.sync_state = SyncState.NORMAL
+    current_status.system_state.sync_error_msg = None
+    await engine.save(current_status)
+    return current_status.system_state
+
+
 async def pintset_error(error_msg: str) -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.pintset_state = State.ERROR
@@ -206,6 +231,15 @@ async def get_last_packing_table_amount() -> int:
     return multipacks_amount
 
 
+async def get_last_pintset_amount() -> int:
+    last_record = await engine.find_one(PintsetRecord,
+                                        sort=query.desc(PintsetRecord.id))
+    if not last_record:
+        return 0
+    packs_amount = last_record.packs_amount
+    return packs_amount
+
+
 async def get_batch_by_number_or_return_last(
         batch_number: Optional[ProductionBatchNumber]) -> ProductionBatch:
     if batch_number:
@@ -229,7 +263,8 @@ async def form_cube_from_n_multipacks(n: int) -> Cube:
     multipacks = await get_multipacks_on_packing_table()
     multipacks_for_cube = multipacks[:n]
     if len(multipacks_for_cube) < n:
-        raise HTTPException(400, detail='Недостаточно паллет для формирования куба')
+        raise HTTPException(400,
+                            detail='Недостаточно паллет для формирования куба')
     multipack_ids_with_pack_ids = {}
 
     for i in range(len(multipacks_for_cube)):
@@ -302,6 +337,13 @@ async def generate_multipack(batch_number, packs_in_multipacks,
 async def get_100_last_packing_records() -> List[PackingTableRecord]:
     records = await engine.find(PackingTableRecord,
                                 sort=query.desc(PackingTableRecord.id),
+                                limit=100)
+    return records
+
+
+async def get_100_last_pintset_records() -> List[PintsetRecord]:
+    records = await engine.find(PintsetRecord,
+                                sort=query.desc(PintsetRecord.id),
                                 limit=100)
     return records
 
