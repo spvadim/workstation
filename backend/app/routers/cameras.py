@@ -2,10 +2,11 @@ from typing import List
 
 from app.db.db_utils import (
     check_qr_unique, form_cube_from_n_multipacks, generate_multipack,
-    generate_packs, get_100_last_packing_records, get_all_wrapping_multipacks,
-    get_current_workmode, get_first_exited_pintset_multipack,
-    get_first_multipack_without_qr, get_first_wrapping_multipack,
-    get_last_batch, get_last_cube_in_queue, get_last_packing_table_amount,
+    generate_packs, get_100_last_packing_records, get_100_last_pintset_records,
+    get_all_wrapping_multipacks, get_current_workmode,
+    get_first_exited_pintset_multipack, get_first_multipack_without_qr,
+    get_first_wrapping_multipack, get_last_batch, get_last_cube_in_queue,
+    get_last_packing_table_amount, get_last_pintset_amount,
     get_multipacks_entered_pitchfork, get_multipacks_on_packing_table,
     get_multipacks_queue, get_packs_on_assembly, get_packs_queue,
     get_packs_under_pintset, packing_table_error, pintset_error,
@@ -21,12 +22,14 @@ from app.models.pack import Status as PackStatus
 from app.models.packing_table import (PackingTableRecord,
                                       PackingTableRecordInput,
                                       PackingTableRecords)
+from app.models.pintset_record import (PintsetRecord, PintsetRecordInput,
+                                       PintsetRecords)
 from app.utils.background_tasks import (check_multipacks_max_amount,
                                         check_packs_max_amount, send_error,
                                         send_error_with_buzzer,
                                         send_warning_and_back_to_normal)
-from app.utils.io import send_telegram_message
 from app.utils.email import send_email
+from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_naive_datetime
 from app.utils.pintset import off_pintset
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -594,3 +597,26 @@ async def get_packing_table_records():
     records = await get_100_last_packing_records()
     return PackingTableRecords(multipacks_amount=multipacks_amount,
                                records=records)
+
+
+@deep_logger_router.put('/pintset_records', response_model=PintsetRecord)
+@version(1, 0)
+async def add_pintset_record(record: PintsetRecordInput):
+    current_datetime = await get_naive_datetime()
+    record = PintsetRecord(**record.dict(), recorded_at=current_datetime)
+
+    prev_record_amount = await get_last_pintset_amount()
+    current_amount = record.packs_amount
+
+    if current_amount != prev_record_amount:
+        await engine.save(record)
+
+    return record
+
+
+@light_logger_router.get('/pintset_records', response_model=PintsetRecords)
+@version(1, 0)
+async def get_pintset_records():
+    packs_amount = await get_last_pintset_amount()
+    records = await get_100_last_pintset_records()
+    return PintsetRecords(packs_amount=packs_amount, records=records)
