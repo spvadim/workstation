@@ -24,11 +24,9 @@ from app.models.packing_table import (PackingTableRecord,
                                       PackingTableRecords)
 from app.models.pintset_record import (PintsetRecord, PintsetRecordInput,
                                        PintsetRecords)
-from app.utils.background_tasks import (check_multipacks_max_amount,
-                                        check_packs_max_amount, send_error,
+from app.utils.background_tasks import (drop_pack, send_error,
                                         send_error_with_buzzer,
-                                        send_warning_and_back_to_normal,
-                                        drop_pack)
+                                        send_warning_and_back_to_normal)
 from app.utils.email import send_email
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_naive_datetime
@@ -156,8 +154,7 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     pack.created_at = current_datetime
     await engine.save(PackInReport(**pack.dict(exclude={'id'})))
     await engine.save(pack)
-    background_tasks.add_task(check_packs_max_amount, 16)
-    background_tasks.add_task(check_multipacks_max_amount, 12)
+
     return pack
 
 
@@ -332,8 +329,6 @@ async def pintset_finish(background_tasks: BackgroundTasks):
         new_multipacks.append(multipack)
     await engine.save_all(new_multipacks)
 
-    background_tasks.add_task(check_packs_max_amount, 4)
-    background_tasks.add_task(check_multipacks_max_amount, 12)
     return new_multipacks
 
 
@@ -586,9 +581,6 @@ async def add_packing_table_record(record: PackingTableRecordInput,
     needed_multipacks = current_batch.params.multipacks
 
     if current_amount == 0:
-
-        background_tasks.add_task(check_packs_max_amount, 16)
-        background_tasks.add_task(check_multipacks_max_amount, 4)
 
         if not cube:
             error_msg = f'{current_datetime} нет куба в очереди для вывоза! '

@@ -31,30 +31,6 @@ async def send_error_with_buzzer():
     await asyncio.gather(*tasks)
 
 
-async def check_packs_max_amount(max_amount: int):
-    packs_amount = await count_packs_queue()
-
-    if packs_amount > max_amount:
-        error_msg = f'В системе {packs_amount} пачек, сейчас должно быть <= {max_amount}'
-
-        tasks = []
-        tasks.append(set_column_red(error_msg))
-        tasks.append(send_telegram_message(TGMessage(text=error_msg)))
-        await asyncio.gather(*tasks)
-
-
-async def check_multipacks_max_amount(max_amount: int):
-    multipacks_amount = await count_multipacks_queue()
-
-    if multipacks_amount > max_amount:
-        error_msg = f'В системе {multipacks_amount} паллет, сейчас должно быть <= {max_amount}'
-
-        tasks = []
-        tasks.append(set_column_red(error_msg))
-        tasks.append(send_telegram_message(TGMessage(text=error_msg)))
-        await asyncio.gather(*tasks)
-
-
 async def send_warning():
     tasks = []
 
