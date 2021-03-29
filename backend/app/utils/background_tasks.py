@@ -1,16 +1,13 @@
 import asyncio
 
-from app.db.db_utils import (count_multipacks_queue, count_packs_queue,
-                             flush_state, get_current_state, set_column_red,
+from app.db.db_utils import (flush_state, get_current_state, set_column_red,
                              set_column_yellow)
 from app.db.system_settings import get_system_settings
-from app.models.message import TGMessage
 
 from .erd import (snmp_finish_damper, snmp_finish_ejector, snmp_raise_damper,
                   snmp_raise_ejector, snmp_set_buzzer_off, snmp_set_buzzer_on,
                   snmp_set_green_off, snmp_set_green_on, snmp_set_red_off,
                   snmp_set_red_on, snmp_set_yellow_off, snmp_set_yellow_on)
-from .io import send_telegram_message
 
 
 async def send_error():
