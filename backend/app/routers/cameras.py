@@ -26,7 +26,8 @@ from app.models.pintset_record import (PintsetRecord, PintsetRecordInput,
                                        PintsetRecords)
 from app.utils.background_tasks import (drop_pack, send_error,
                                         send_error_with_buzzer,
-                                        send_warning_and_back_to_normal)
+                                        send_warning_and_back_to_normal,
+                                        turn_default_error, turn_packing_table_error)
 from app.utils.email import send_email
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_naive_datetime
@@ -223,8 +224,7 @@ async def pintset_reverse(background_tasks: BackgroundTasks):
     packs_queue = await get_packs_queue()
     if len(packs_queue) < multipacks_after_pintset:
         error_msg = f'{current_datetime} пинцет положил пачку с переворотом, но пачек в очереди меньше чем {multipacks_after_pintset}'
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     last_packs = packs_queue[-multipacks_after_pintset:]
@@ -414,8 +414,7 @@ async def remove_multipack_from_wrapping(background_tasks: BackgroundTasks):
     multipack = await get_first_wrapping_multipack()
     if not multipack:
         error_msg = f'{current_datetime} при попытке изъятия мультипака из обмотки он не был обнаружен в системе'
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     for id in multipack.pack_ids:
@@ -458,8 +457,7 @@ async def multipack_identification_auto(
         error_msg = f'{current_datetime} при попытке присвоения внешнего кода мультипаку использован QR={qr} и он не уникален в системе'
 
     if error_msg:
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_to_update.qr = qr
@@ -505,8 +503,7 @@ async def cube_identification_auto(identification: CubeIdentificationAuto,
         error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и он не уникален в системе'
 
     if error_msg:
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     cube_to_update.qr = qr
@@ -537,8 +534,7 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     current_time = await get_naive_datetime()
     if len(multipacks_on_packing_table) < needed_multipacks:
         error_msg = f'{current_time} попытка формирования куба, когда на упаковочном столе меньше {needed_multipacks} мультипаков'
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_ids_with_pack_ids = {}
@@ -607,8 +603,7 @@ async def add_packing_table_record(record: PackingTableRecordInput,
             wrong_cube_id = new_cube.id
 
     if error_msg:
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(packing_table_error, error_msg,
+        background_tasks.add_task(turn_packing_table_error, error_msg,
                                   wrong_cube_id)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
