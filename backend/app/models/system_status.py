@@ -32,7 +32,7 @@ class SystemState(EmbeddedModel):
     pintset_state: State = State.NORMAL
     pintset_withdrawal_state: State = State.NORMAL
     packing_table_state: State = State.NORMAL
-    sync_state: State = SyncState.NORMAL
+    sync_state: SyncState = SyncState.NORMAL
     error_msg: Optional[str]
     pintset_error_msg: Optional[str]
     packing_table_error_msg: Optional[str]
