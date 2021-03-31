@@ -1,7 +1,9 @@
 import asyncio
 
-from app.db.db_utils import (flush_state, get_current_state, set_column_red,
-                             set_column_yellow)
+from app.db.db_utils import (flush_state, flush_sync, get_current_state,
+                             set_column_red, set_column_yellow, sync_error,
+                             sync_fixing, packing_table_error,
+                             flush_packing_table)
 from app.db.system_settings import get_system_settings
 
 from .erd import (snmp_finish_damper, snmp_finish_ejector, snmp_raise_damper,
@@ -82,3 +84,76 @@ async def drop_pack():
     await asyncio.sleep(delay_after_ejector)
     tasks_after_ejector = [snmp_finish_ejector(), snmp_finish_damper()]
     await asyncio.gather(*tasks_after_ejector)
+
+
+async def turn_default_error(message: str):
+    tasks = []
+    tasks.append(set_column_red(message))
+    tasks.append(send_error())
+    results = await asyncio.gather(*tasks)
+    return results[0]
+
+
+async def turn_default_warning(message: str):
+    tasks = []
+    tasks.append(set_column_yellow(message))
+    tasks.append(send_warning())
+    results = await asyncio.gather(*tasks)
+    return results[0]
+
+
+async def flush_default_state():
+    tasks = []
+    tasks.append(flush_state())
+    tasks.append(flush_to_normal())
+    results = await asyncio.gather(*tasks)
+    return results[0]
+
+
+async def turn_packing_table_error(message: str, cube_id):
+    tasks = []
+    tasks.append(packing_table_error(message, cube_id))
+    tasks.append(send_error())
+    results = await asyncio.gather(*tasks)
+    return results[0]
+
+
+async def flush_packing_table_error():
+    tasks = []
+    tasks.append(flush_packing_table())
+    tasks.append(send_error())
+    results = await asyncio.gather(*tasks)
+    return results[0]
+
+
+async def turn_sync_error(message: str):
+    current_settings = await get_system_settings()
+    if current_settings.general_settings.sync_request.value:
+        tasks = []
+        tasks.append(sync_error(message))
+        tasks.append(send_error_with_buzzer())
+        tasks.append(snmp_raise_damper())
+        results = await asyncio.gather(*tasks)
+
+        return results[0]
+
+
+async def turn_sync_fixing():
+    current_settings = await get_system_settings()
+    if current_settings.general_settings.sync_request.value:
+        tasks = []
+        tasks.append(sync_fixing())
+        tasks.append(snmp_set_buzzer_off())
+        results = await asyncio.gather(*tasks)
+
+        return results[0]
+
+
+async def flush_sync_to_normal():
+    tasks = []
+    tasks.append(flush_sync())
+    tasks.append(flush_to_normal())
+    tasks.append(snmp_finish_damper())
+
+    results = await asyncio.gather(*tasks)
+    return results[0]
