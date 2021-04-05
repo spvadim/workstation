@@ -1,7 +1,10 @@
 from typing import List
 
 from app.db.db_utils import (
-    check_qr_unique, form_cube_from_n_multipacks, generate_multipack,
+    check_qr_unique, count_exited_pintset_multipacks,
+    count_multipacks_entered_pitchfork, count_multipacks_on_packing_table,
+    count_multipacks_queue, count_packs_on_assembly, count_packs_queue,
+    count_wrapping_multipacks, form_cube_from_n_multipacks, generate_multipack,
     generate_packs, get_100_last_packing_records, get_100_last_pintset_records,
     get_all_wrapping_multipacks, get_current_workmode,
     get_first_exited_pintset_multipack, get_first_multipack_without_qr,
@@ -9,8 +12,7 @@ from app.db.db_utils import (
     get_last_packing_table_amount, get_last_pintset_amount,
     get_multipacks_entered_pitchfork, get_multipacks_on_packing_table,
     get_multipacks_queue, get_packs_on_assembly, get_packs_queue,
-    get_packs_under_pintset, packing_table_error, pintset_error,
-    set_column_red)
+    get_packs_under_pintset, pintset_error)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -24,11 +26,11 @@ from app.models.packing_table import (PackingTableRecord,
                                       PackingTableRecords)
 from app.models.pintset_record import (PintsetRecord, PintsetRecordInput,
                                        PintsetRecords)
-from app.utils.background_tasks import (check_multipacks_max_amount,
-                                        check_packs_max_amount, send_error,
-                                        send_error_with_buzzer,
+from app.utils.background_tasks import (drop_pack, send_error_with_buzzer,
                                         send_warning_and_back_to_normal,
-                                        drop_pack)
+                                        turn_default_error,
+                                        turn_packing_table_error,
+                                        turn_sync_error)
 from app.utils.email import send_email
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_naive_datetime
@@ -156,8 +158,11 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     pack.created_at = current_datetime
     await engine.save(PackInReport(**pack.dict(exclude={'id'})))
     await engine.save(pack)
-    background_tasks.add_task(check_packs_max_amount, 16)
-    background_tasks.add_task(check_multipacks_max_amount, 12)
+
+    max_packs = 8 * batch.params.multipacks_after_pintset
+    if await count_packs_queue() > max_packs:
+        background_tasks.add_task(turn_sync_error,
+                                  f'В очереди больше {max_packs} пачек')
     return pack
 
 
@@ -168,12 +173,16 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
-
+    sync_error_msg = None
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
     packs_under_pintset = await get_packs_under_pintset()
     delta = len(packs_under_pintset) - multipacks_after_pintset
     to_process = False
+    packs_on_assembly_amount = await count_packs_on_assembly()
+    packs_on_assembly_irl = await get_last_pintset_amount()
+    if packs_on_assembly_irl != packs_on_assembly_amount:
+        sync_error_msg = f'Рассинхрон физической ({packs_on_assembly_irl}) и логической ({packs_on_assembly_amount}) очереди пачек на сборке'
 
     if delta < 0:
         to_process = True
@@ -207,6 +216,12 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         pack.to_process = to_process
         pack.status = PackStatus.ON_ASSEMBLY
 
+    max_packs_on_assembly = 7 * multipacks_after_pintset
+    if packs_on_assembly_amount + multipacks_after_pintset > max_packs_on_assembly:
+        sync_error_msg = f'В сборке более {max_packs_on_assembly} пачек'
+
+    if sync_error_msg:
+        background_tasks.add_task(turn_sync_error, sync_error_msg)
     return await engine.save_all(packs_under_pintset)
 
 
@@ -226,8 +241,7 @@ async def pintset_reverse(background_tasks: BackgroundTasks):
     packs_queue = await get_packs_queue()
     if len(packs_queue) < multipacks_after_pintset:
         error_msg = f'{current_datetime} пинцет положил пачку с переворотом, но пачек в очереди меньше чем {multipacks_after_pintset}'
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     last_packs = packs_queue[-multipacks_after_pintset:]
@@ -332,8 +346,15 @@ async def pintset_finish(background_tasks: BackgroundTasks):
         new_multipacks.append(multipack)
     await engine.save_all(new_multipacks)
 
-    background_tasks.add_task(check_packs_max_amount, 4)
-    background_tasks.add_task(check_multipacks_max_amount, 12)
+    max_multipacks_exited_pintset = (2 * multipacks_after_pintset) + 1
+    multipacks_exited_pintset_amount = await count_exited_pintset_multipacks()
+
+    if multipacks_exited_pintset_amount > max_multipacks_exited_pintset:
+        background_tasks.add_task(turn_sync_error,
+                                  (f'Паллет, вышедших из пинцета, больше чем '
+                                   f'{max_multipacks_exited_pintset}: '
+                                   f'{multipacks_exited_pintset_amount}'))
+
     return new_multipacks
 
 
@@ -377,6 +398,10 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
     wrapping_multipack.status = Status.WRAPPING
 
     await engine.save(wrapping_multipack)
+
+    if await count_wrapping_multipacks() > 1:
+        background_tasks.add_task(turn_sync_error,
+                                  'В обмотке более одной паллеты')
     return wrapping_multipack
 
 
@@ -388,9 +413,21 @@ async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
+    batch = await get_last_batch()
+    multipacks_after_pintset = batch.params.multipacks_after_pintset
     entered_pitchfork_multipack = await get_first_wrapping_multipack()
     entered_pitchfork_multipack.status = Status.ENTER_PITCHFORK
-    return await engine.save(entered_pitchfork_multipack)
+
+    await engine.save(entered_pitchfork_multipack)
+
+    multipacks_entered_pitchfork = await count_multipacks_entered_pitchfork()
+    if multipacks_entered_pitchfork > multipacks_after_pintset:
+        background_tasks.add_task(turn_sync_error,
+                                  (f'На вилах более '
+                                   f'{multipacks_after_pintset} паллет:'
+                                   f'{multipacks_entered_pitchfork}'))
+
+    return entered_pitchfork_multipack
 
 
 @deep_logger_router.patch('/pitchfork_worked', response_model=List[Multipack])
@@ -400,10 +437,26 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
+
+    batch = await get_last_batch()
+    multipacks_after_pintset = batch.params.multipacks_after_pintset
+
     on_packing_table_multipacks = await get_multipacks_entered_pitchfork()
     for multipack in on_packing_table_multipacks:
         multipack.status = Status.ON_PACKING_TABLE
-    return await engine.save_all(on_packing_table_multipacks)
+
+    await engine.save_all(on_packing_table_multipacks)
+
+    max_multipacks_on_packing_table = multipacks_after_pintset * 4
+    multipacks_on_packing_table = await count_multipacks_on_packing_table()
+
+    if multipacks_on_packing_table > max_multipacks_on_packing_table:
+        background_tasks.add_task(turn_sync_error,
+                                   (f'На упаковочном столе '
+                                    f'более {max_multipacks_on_packing_table}:'
+                                    f'{multipacks_on_packing_table}'))
+
+    return on_packing_table_multipacks
 
 
 @deep_logger_router.delete('/remove_multipack_from_wrapping',
@@ -419,8 +472,7 @@ async def remove_multipack_from_wrapping(background_tasks: BackgroundTasks):
     multipack = await get_first_wrapping_multipack()
     if not multipack:
         error_msg = f'{current_datetime} при попытке изъятия мультипака из обмотки он не был обнаружен в системе'
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     for id in multipack.pack_ids:
@@ -463,8 +515,7 @@ async def multipack_identification_auto(
         error_msg = f'{current_datetime} при попытке присвоения внешнего кода мультипаку использован QR={qr} и он не уникален в системе'
 
     if error_msg:
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_to_update.qr = qr
@@ -510,8 +561,7 @@ async def cube_identification_auto(identification: CubeIdentificationAuto,
         error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и он не уникален в системе'
 
     if error_msg:
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     cube_to_update.qr = qr
@@ -542,8 +592,7 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     current_time = await get_naive_datetime()
     if len(multipacks_on_packing_table) < needed_multipacks:
         error_msg = f'{current_time} попытка формирования куба, когда на упаковочном столе меньше {needed_multipacks} мультипаков'
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(set_column_red, error_msg)
+        background_tasks.add_task(turn_default_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_ids_with_pack_ids = {}
@@ -586,10 +635,7 @@ async def add_packing_table_record(record: PackingTableRecordInput,
     needed_multipacks = current_batch.params.multipacks
 
     if current_amount == 0:
-
-        background_tasks.add_task(check_packs_max_amount, 16)
-        background_tasks.add_task(check_multipacks_max_amount, 4)
-
+      
         # TODO: uncomment this line in future when we fix nn
         if not cube:
             error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
@@ -616,8 +662,7 @@ async def add_packing_table_record(record: PackingTableRecordInput,
             # wrong_cube_id = new_cube.id
 
     if error_msg:
-        background_tasks.add_task(send_error)
-        background_tasks.add_task(packing_table_error, error_msg,
+        background_tasks.add_task(turn_packing_table_error, error_msg,
                                   wrong_cube_id)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 

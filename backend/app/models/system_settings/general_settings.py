@@ -16,6 +16,13 @@ class PintsetStop(EmbeddedModel):
     value_type: str = 'bool'
 
 
+class SyncRequest(EmbeddedModel):
+    title: str = 'Запрос синхронизации'
+    desc: str = 'Выберите, запрашивать ли синхронизацию в случае ошибок'
+    value: bool = True
+    value_type: str = 'bool'
+
+
 class SendApplikatorTgMessage(EmbeddedModel):
     title: str = 'Отправка сообщения в тг после ошибки на аппликаторе'
     desc: str = ('Выберите, отправлять ли сообщение в тг в случае '
@@ -49,6 +56,7 @@ class GeneralSettings(EmbeddedModel):
     title: str = 'Общие настройки'
     advanced: bool = False
     pintset_stop: PintsetStop
+    sync_request: SyncRequest = SyncRequest()
     send_applikator_tg_message: SendApplikatorTgMessage
     report_max_days: ReportMaxDays
     report_max_cubes: ReportMaxCubes

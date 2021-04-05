@@ -3,13 +3,12 @@ from typing import List
 
 from app.db.db_utils import (change_coded_setting, check_qr_unique,
                              delete_cube, flush_packing_table, flush_pintset,
-                             flush_state, flush_withdrawal_pintset,
-                             get_by_id_or_404, get_current_state,
-                             get_current_status, get_current_workmode,
-                             get_extended_report, get_packs_report, get_report,
+                             flush_withdrawal_pintset, get_by_id_or_404,
+                             get_current_state, get_current_status,
+                             get_current_workmode, get_extended_report,
+                             get_packs_report, get_report,
                              get_report_without_mpacks, packing_table_error,
-                             pintset_error, pintset_withdrawal_error,
-                             set_column_red, set_column_yellow)
+                             pintset_error, pintset_withdrawal_error)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
@@ -18,8 +17,12 @@ from app.models.report import (ExtendedReportResponse, PackReportItem,
                                ReportRequest, ReportResponse,
                                ReportWithoutMPacksResponse)
 from app.models.system_status import Mode, SystemState, SystemStatus
-from app.utils.background_tasks import (flush_to_normal, send_error,
-                                        send_error_with_buzzer, send_warning)
+from app.utils.background_tasks import (flush_default_state,
+                                        flush_sync_to_normal, flush_to_normal,
+                                        send_error, send_error_with_buzzer,
+                                        turn_default_error,
+                                        turn_default_warning, turn_sync_error,
+                                        turn_sync_fixing)
 from app.utils.email import send_email
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_naive_datetime
@@ -74,23 +77,38 @@ async def set_multipack_coded_by_qr_setting(coded: bool):
 
 @deep_logger_router.patch("/set_column_yellow", response_model=SystemState)
 @version(1, 0)
-async def set_warning_state(error_msg: str, background_tasks: BackgroundTasks):
-    background_tasks.add_task(send_warning)
-    return await set_column_yellow(error_msg)
+async def set_warning_state(error_msg: str):
+    return await turn_default_warning(error_msg)
 
 
 @deep_logger_router.patch("/set_column_red", response_model=SystemState)
 @version(1, 0)
-async def set_error_state(error_msg: str, background_tasks: BackgroundTasks):
-    background_tasks.add_task(send_error)
-    return await set_column_red(error_msg)
+async def set_error_state(error_msg: str):
+    return await turn_default_error(error_msg)
 
 
 @deep_logger_router.patch("/flush_state", response_model=SystemState)
 @version(1, 0)
-async def set_normal_state(background_tasks: BackgroundTasks):
-    background_tasks.add_task(flush_to_normal)
-    return await flush_state()
+async def set_normal_state():
+    return await flush_default_state()
+
+
+@deep_logger_router.patch("/set_sync_error", response_model=SystemState)
+@version(1, 0)
+async def set_sync_error(error_msg: str):
+    return await turn_sync_error(error_msg)
+
+
+@deep_logger_router.patch("/set_sync_fixing", response_model=SystemState)
+@version(1, 0)
+async def set_sync_fixing():
+    return await turn_sync_fixing()
+
+
+@deep_logger_router.patch("/flush_sync", response_model=SystemState)
+@version(1, 0)
+async def flush_sync():
+    return await flush_sync_to_normal()
 
 
 @deep_logger_router.patch("/set_pintset_error", response_model=SystemState)
