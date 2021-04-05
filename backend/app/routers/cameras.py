@@ -353,7 +353,7 @@ async def pintset_finish(background_tasks: BackgroundTasks):
         background_tasks.add_task(turn_sync_error,
                                   (f'Паллет, вышедших из пинцета, больше чем '
                                    f'{max_multipacks_exited_pintset}: '
-                                   f'{multipacks_exited_pintset_amount}'))
+                                   f'их {multipacks_exited_pintset_amount}'))
 
     return new_multipacks
 
@@ -425,7 +425,7 @@ async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
         background_tasks.add_task(turn_sync_error,
                                   (f'На вилах более '
                                    f'{multipacks_after_pintset} паллет:'
-                                   f'{multipacks_entered_pitchfork}'))
+                                   f'их {multipacks_entered_pitchfork}'))
 
     return entered_pitchfork_multipack
 
@@ -451,10 +451,11 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
     multipacks_on_packing_table = await count_multipacks_on_packing_table()
 
     if multipacks_on_packing_table > max_multipacks_on_packing_table:
-        background_tasks.add_task(turn_sync_error,
-                                  (f'На упаковочном столе '
-                                   f'более {max_multipacks_on_packing_table}:'
-                                   f'{multipacks_on_packing_table}'))
+        background_tasks.add_task(
+            turn_sync_error,
+            (f'На упаковочном столе '
+             f'паллет более {max_multipacks_on_packing_table}:'
+             f' их {multipacks_on_packing_table}'))
 
     return on_packing_table_multipacks
 
