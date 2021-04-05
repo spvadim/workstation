@@ -270,10 +270,10 @@ function Main() {
                     else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg); setRedBackground(true)}
                 if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("") 
                     else {setModalWithdrawal(temp.pintset_withdrawal_error_msg); setRedBackground(true)}
-                if (temp.resync_error === "normal") setModalDesync("") 
-                    else {setModalDesync(temp.resync_error_msg); setRedBackground(true)}
+                if (temp.sync_state === "normal") setModalDesync("") 
+                    else {setModalDesync(temp.sync_error_msg); setRedBackground(true)}
 
-                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal") setRedBackground(false);    
+                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);    
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
@@ -378,7 +378,7 @@ function Main() {
                     description={modalDesync}
                 >
                     <Button onClick={() => {
-                        axios.patch(address + "/api/v1_0/flush_error_to_fixing")
+                        axios.patch(address + "/api/v1_0/set_sync_fixing")
                             .then(() => {
                                 setNotificationDesyncErrorText("Рассинхрон");
                                 setModalDesync(false);
@@ -926,7 +926,7 @@ function Main() {
                                             description={notificationDesyncErrorText}
                                             error
                                         > <Button onClick={() => {
-                                            axios.patch(address + "/api/v1_0/flush_fixing_to_normal")
+                                            axios.patch(address + "/api/v1_0/flush_sync")
                                                 .then(() => {
                                                     setNotificationDesyncErrorText("");
                                                 })
