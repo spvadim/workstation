@@ -83,29 +83,29 @@ def init_logging():
         "level": logging.DEBUG,
         "format": format_record,
         "filter": make_filter('deep'),
-        "rotation": '1 day'
+        "rotation": '00:00'
     }, {
         "sink": "logs/wdiot_logs.log",
         "level": logging.DEBUG,
         "format": format_record,
         "filter": make_filter('wdiot'),
-        "rotation": '1 day'
+        "rotation": '00:00'
     }, {
         "sink": "logs/erd_logs.log",
         "level": logging.DEBUG,
         "format": format_record,
         "filter": make_filter('erd'),
-        "rotation": '1 day'
+        "rotation": '00:00'
     }, {
         "sink": "logs/tg_logs.log",
         "level": logging.DEBUG,
         "format": format_record,
         "filter": make_filter('tg'),
-        "rotation": '1 day'
+        "rotation": '00:00'
     }, {
         "sink": "logs/email_logs.log",
         "level": logging.DEBUG,
         "format": format_record,
         "filter": make_filter('email'),
-        "rotation": '1 day'
+        "rotation": '00:00'
     }])
