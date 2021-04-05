@@ -1,17 +1,16 @@
 import asyncio
 
-from app.db.db_utils import (flush_packing_table, flush_state, flush_sync,
+from app.db.db_utils import (flush_packing_table, flush_state,
                              get_current_state, packing_table_error,
-                             set_column_red, set_column_yellow, sync_error,
-                             sync_fixing)
+                             set_column_red, set_column_yellow, sync_error)
 from app.db.system_settings import get_system_settings
+from loguru import logger
 
 from .email import send_email
 from .erd import (snmp_finish_damper, snmp_finish_ejector, snmp_raise_damper,
                   snmp_raise_ejector, snmp_set_buzzer_off, snmp_set_buzzer_on,
                   snmp_set_green_off, snmp_set_green_on, snmp_set_red_off,
                   snmp_set_red_on, snmp_set_yellow_off, snmp_set_yellow_on)
-from loguru import logger
 
 wdiot_logger = logger.bind(name='wdiot')
 
@@ -148,21 +147,14 @@ async def turn_sync_error(message: str):
 
 
 async def turn_sync_fixing():
-    current_settings = await get_system_settings()
-    if current_settings.general_settings.sync_request.value:
-        tasks = []
-        tasks.append(sync_fixing())
-        tasks.append(snmp_set_buzzer_off())
-        results = await asyncio.gather(*tasks)
-
-        return results[0]
+    tasks = []
+    tasks.append(snmp_set_buzzer_off())
+    await asyncio.gather(*tasks)
 
 
 async def flush_sync_to_normal():
     tasks = []
-    tasks.append(flush_sync())
     tasks.append(flush_to_normal())
     tasks.append(snmp_finish_damper())
 
-    results = await asyncio.gather(*tasks)
-    return results[0]
+    await asyncio.gather(*tasks)

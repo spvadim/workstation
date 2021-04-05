@@ -1,14 +1,13 @@
 from datetime import datetime
 from typing import List
 
-from app.db.db_utils import (change_coded_setting, check_qr_unique,
-                             delete_cube, flush_packing_table, flush_pintset,
-                             flush_withdrawal_pintset, get_by_id_or_404,
-                             get_current_state, get_current_status,
-                             get_current_workmode, get_extended_report,
-                             get_packs_report, get_report,
-                             get_report_without_mpacks, packing_table_error,
-                             pintset_error, pintset_withdrawal_error)
+from app.db.db_utils import (
+    change_coded_setting, check_qr_unique, delete_cube, flush_packing_table,
+    flush_pintset, flush_sync, flush_withdrawal_pintset, get_by_id_or_404,
+    get_current_state, get_current_status, get_current_workmode,
+    get_extended_report, get_packs_report, get_report,
+    get_report_without_mpacks, packing_table_error, pintset_error,
+    pintset_withdrawal_error, sync_fixing)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
@@ -101,14 +100,16 @@ async def set_sync_error(error_msg: str):
 
 @deep_logger_router.patch("/set_sync_fixing", response_model=SystemState)
 @version(1, 0)
-async def set_sync_fixing():
-    return await turn_sync_fixing()
+async def set_sync_fixing(background_tasks: BackgroundTasks):
+    background_tasks.add_task(turn_sync_fixing)
+    return await sync_fixing()
 
 
 @deep_logger_router.patch("/flush_sync", response_model=SystemState)
 @version(1, 0)
-async def flush_sync():
-    return await flush_sync_to_normal()
+async def flush_sync_state(background_tasks: BackgroundTasks):
+    background_tasks.add_task(flush_sync_to_normal)
+    return await flush_sync()
 
 
 @deep_logger_router.patch("/set_pintset_error", response_model=SystemState)
