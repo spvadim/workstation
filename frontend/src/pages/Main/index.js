@@ -169,6 +169,7 @@ function Main() {
     const [modalChangePack, setModalChangePack] = useState(false);
     const [modalChangePackAgree, setModalChangePackAgree] = useState(false);
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
+    const [modalDesync, setModalDesync] = useState(false);
 
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
@@ -182,6 +183,7 @@ function Main() {
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
     const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
+    const [notificationDesyncErrorText, setNotificationDesyncErrorText] = useState("");
     const classes = useStyles({ mode, redBackground });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
 
@@ -268,6 +270,8 @@ function Main() {
                     else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg); setRedBackground(true)}
                 if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("") 
                     else {setModalWithdrawal(temp.pintset_withdrawal_error_msg); setRedBackground(true)}
+                if (temp.resync_error === "normal") setModalDesync("") 
+                    else {setModalDesync(temp.resync_error_msg); setRedBackground(true)}
 
                 if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal") setRedBackground(false);    
             })
@@ -281,8 +285,6 @@ function Main() {
     useEffect (() => {
         let interval;
         let isExist = Object.keys(dictRefs).indexOf(forceFocus) !== -1;
-
-        console.log(forceFocus)
 
         if (forceFocus && isExist) {
             interval = setInterval(() => {
@@ -370,6 +372,25 @@ function Main() {
 
     return (
         <div className={classes.Main}>
+            {modalDesync &&
+                <ModalWindow
+                    title="Оповещение о рассинхронизации"
+                    description={modalDesync}
+                >
+                    <Button onClick={() => {
+                        axios.patch(address + "/api/v1_0/flush_error_to_fixing")
+                            .then(() => {
+                                setNotificationDesyncErrorText("Рассинхрон");
+                                setModalDesync(false);
+                                setRedBackground(false);
+                            })
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Понял
+                    </Button>
+                </ModalWindow>
+            }
+
             {modalWithdrawal && 
                 <ModalWindow
                     title="Подтверждение выемки из-под пинцета"
@@ -897,6 +918,19 @@ function Main() {
                                             description={notificationColumnErrorText}
                                             error
                                         > <Button onClick={() => flushStateColumn()}>Сбросить ошибку</Button>  </Notification>
+                                    ),
+
+                                    notificationDesyncErrorText && (
+                                        <Notification
+                                            title="Десинхронизация"
+                                            description={notificationDesyncErrorText}
+                                            error
+                                        > <Button onClick={() => {
+                                            axios.patch(address + "/api/v1_0/flush_fixing_to_normal")
+                                                .then(() => {
+                                                    setNotificationDesyncErrorText("");
+                                                })
+                                        }}>Сбросить ошибку</Button>  </Notification>
                                     )
                                 ]
                             }
