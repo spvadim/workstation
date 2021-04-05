@@ -452,9 +452,9 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
 
     if multipacks_on_packing_table > max_multipacks_on_packing_table:
         background_tasks.add_task(turn_sync_error,
-                                   (f'На упаковочном столе '
-                                    f'более {max_multipacks_on_packing_table}:'
-                                    f'{multipacks_on_packing_table}'))
+                                  (f'На упаковочном столе '
+                                   f'более {max_multipacks_on_packing_table}:'
+                                   f'{multipacks_on_packing_table}'))
 
     return on_packing_table_multipacks
 
@@ -635,7 +635,7 @@ async def add_packing_table_record(record: PackingTableRecordInput,
     needed_multipacks = current_batch.params.multipacks
 
     if current_amount == 0:
-      
+
         # TODO: uncomment this line in future when we fix nn
         if not cube:
             error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
