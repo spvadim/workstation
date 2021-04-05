@@ -102,4 +102,10 @@ def init_logging():
         "format": format_record,
         "filter": make_filter('tg'),
         "rotation": '1 day'
+    }, {
+        "sink": "logs/email_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('email'),
+        "rotation": '1 day'
     }])
