@@ -370,6 +370,12 @@ async def get_packs_under_pintset() -> List[Pack]:
     return packs_under_pintset
 
 
+async def count_packs_under_pintset() -> int:
+    packs_under_pintset_amount = await engine.count(
+        Pack, Pack.status == PackStatus.UNDER_PINTSET, Pack.in_queue == True)
+    return packs_under_pintset_amount
+
+
 async def get_packs_on_assembly() -> List[Pack]:
     packs_on_assembly = await engine.find(
         Pack,
@@ -377,6 +383,12 @@ async def get_packs_on_assembly() -> List[Pack]:
         Pack.in_queue == True,
         sort=query.asc(Pack.id))
     return packs_on_assembly
+
+
+async def count_packs_on_assembly() -> int:
+    packs_on_assembly_amount = await engine.count(
+        Pack, Pack.status == PackStatus.ON_ASSEMBLY, Pack.in_queue == True)
+    return packs_on_assembly_amount
 
 
 async def get_multipacks_queue() -> List[Multipack]:
@@ -400,6 +412,11 @@ async def get_first_exited_pintset_multipack() -> Multipack:
     return multipack
 
 
+async def count_exited_pintset_multipacks() -> int:
+    return await engine.count(Multipack,
+                              Multipack.status == Status.EXIT_PINTSET)
+
+
 async def get_first_wrapping_multipack() -> Multipack:
     multipack = await engine.find_one(Multipack,
                                       Multipack.status == Status.WRAPPING,
@@ -408,16 +425,30 @@ async def get_first_wrapping_multipack() -> Multipack:
     return multipack
 
 
+async def count_wrapping_multipacks() -> int:
+    return await engine.count(Multipack, Multipack.status == Status.WRAPPING)
+
+
 async def get_multipacks_entered_pitchfork() -> List[Multipack]:
     return await engine.find(Multipack,
                              Multipack.status == Status.ENTER_PITCHFORK,
                              sort=query.asc(Multipack.id))
 
 
+async def count_multipacks_entered_pitchfork() -> int:
+    return await engine.count(Multipack,
+                              Multipack.status == Status.ENTER_PITCHFORK)
+
+
 async def get_multipacks_on_packing_table() -> List[Multipack]:
     return await engine.find(Multipack,
                              Multipack.status == Status.ON_PACKING_TABLE,
                              sort=query.asc(Multipack.id))
+
+
+async def count_multipacks_on_packing_table() -> int:
+    return await engine.count(Multipack,
+                              Multipack.status == Status.ON_PACKING_TABLE)
 
 
 async def get_first_multipack_without_qr() -> Union[Multipack, None]:
