@@ -635,13 +635,14 @@ async def add_packing_table_record(record: PackingTableRecordInput,
     needed_multipacks = current_batch.params.multipacks
 
     if current_amount == 0:
-
+      
+        # TODO: uncomment this line in future when we fix nn
         if not cube:
             error_msg = f'{current_datetime} нет куба в очереди для вывоза! '
             error_msg += 'Чтобы собрать куб, введите его QR.'
-            new_cube = await form_cube_from_n_multipacks(prev_record_amount)
-            wdiot_logger.info(f'Сформировал куб {new_cube.json()}')
-            wrong_cube_id = new_cube.id
+            # new_cube = await form_cube_from_n_multipacks(prev_record_amount)
+            # wdiot_logger.info(f'Сформировал куб {new_cube.json()}')
+            # wrong_cube_id = new_cube.id
 
         if prev_record_amount == needed_multipacks and not cube.qr:
             error_msg = f'{current_datetime} вывозимый куб не идентифицирован'
@@ -656,9 +657,9 @@ async def add_packing_table_record(record: PackingTableRecordInput,
         if multipacks_in_cube != prev_record_amount:
             error_msg = f'{current_datetime} количество паллет на упаковочном столе и в последнем кубе не совпадают. '
             error_msg += 'Чтобы собрать куб, введите его QR.'
-            new_cube = await form_cube_from_n_multipacks(prev_record_amount)
-            wdiot_logger.info(f'Сформировал куб {new_cube.json()}')
-            wrong_cube_id = new_cube.id
+            # new_cube = await form_cube_from_n_multipacks(prev_record_amount)
+            # wdiot_logger.info(f'Сформировал куб {new_cube.json()}')
+            # wrong_cube_id = new_cube.id
 
     if error_msg:
         background_tasks.add_task(turn_packing_table_error, error_msg,
