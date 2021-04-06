@@ -23,6 +23,13 @@ class SyncRequest(EmbeddedModel):
     value_type: str = 'bool'
 
 
+class SyncRaiseDamper(EmbeddedModel):
+    title: str = 'Поднимать ли шторку во время синхронизации'
+    desc: str = 'Выберите, поднимать ли шторку во время синхронизации'
+    value: bool = False
+    value_type: str = 'bool'
+
+
 class SendApplikatorTgMessage(EmbeddedModel):
     title: str = 'Отправка сообщения в тг после ошибки на аппликаторе'
     desc: str = ('Выберите, отправлять ли сообщение в тг в случае '
@@ -57,6 +64,7 @@ class GeneralSettings(EmbeddedModel):
     advanced: bool = False
     pintset_stop: PintsetStop
     sync_request: SyncRequest = SyncRequest()
+    sync_raise_damper: SyncRaiseDamper = SyncRaiseDamper()
     send_applikator_tg_message: SendApplikatorTgMessage
     report_max_days: ReportMaxDays
     report_max_cubes: ReportMaxCubes
