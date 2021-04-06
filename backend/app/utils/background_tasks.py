@@ -137,7 +137,8 @@ async def turn_sync_error(message: str):
         email_message += '<br> Перевел синхронизацию в статус ERROR.'
         tasks.append(sync_error(message))
         tasks.append(send_error_with_buzzer())
-        tasks.append(snmp_raise_damper())
+        if current_settings.general_settings.sync_raise_damper.value:
+            tasks.append(snmp_raise_damper())
 
     tasks.append(send_email('Рассинхрон', email_message))
 
