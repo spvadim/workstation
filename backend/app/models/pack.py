@@ -31,6 +31,7 @@ class PackInReport(Model):
     qr: str
     barcode: str
     created_at: datetime
+    ftp_url: Optional[str]
 
     Config = ModelConfig
 
