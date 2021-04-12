@@ -2,6 +2,13 @@ from odmantic import EmbeddedModel
 from typing import Optional
 
 
+class FtpUrl(EmbeddedModel):
+    title: str = 'Ссылка на FTP сервер'
+    desc: str = 'Введите ссылку на FTP сервер'
+    value: str = 'ftp://10.14.2.21/empty'
+    value_type: str = 'string'
+
+
 class DaysToDelete(EmbeddedModel):
     title: str = 'Период хранения данных в базе'
     desc: str = 'Введите количество дней хранения данных в базе'
@@ -71,3 +78,4 @@ class GeneralSettings(EmbeddedModel):
     applikator_curtain_opening_delay: CurtainOpeningDelay
     camera_counter_curtain_opening_delay: CurtainOpeningDelay
     dropping_mechanism_opening_delay: CurtainOpeningDelay
+    ftp_url: FtpUrl = FtpUrl()

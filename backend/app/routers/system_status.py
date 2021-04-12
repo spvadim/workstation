@@ -11,6 +11,7 @@ from app.db.db_utils import (
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
+from app.models.pack import PackInReport
 from app.models.message import TGMessage
 from app.models.report import (ExtendedReportResponse, PackReportItem,
                                ReportRequest, ReportResponse,
@@ -203,7 +204,7 @@ async def set_packing_table_normal_with_identify(
 
 
 @light_logger_router.get("/get_packs_report/",
-                         response_model=List[PackReportItem])
+                         response_model=List[PackInReport])
 async def get_plain_packs_report_with_query(
         report_begin: str = "01.01.1970 00:00",
         report_end: str = "01.01.2050 00:00") -> ReportResponse:

@@ -25,6 +25,12 @@ from .engine import engine
 from .system_settings import get_system_settings
 
 
+async def form_url(qr: str) -> str:
+    current_settings = await get_system_settings()
+    ftp_url = current_settings.general_settings.ftp_url.value
+    return f'{ftp_url}/{qr}'
+
+
 async def get_by_id_or_404(model, id: ObjectId) -> Model:
     instance = await engine.find_one(model, model.id == id)
     if instance is None:

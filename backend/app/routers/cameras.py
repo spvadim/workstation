@@ -4,15 +4,16 @@ from app.db.db_utils import (
     check_qr_unique, count_exited_pintset_multipacks,
     count_multipacks_entered_pitchfork, count_multipacks_on_packing_table,
     count_multipacks_queue, count_packs_on_assembly, count_packs_queue,
-    count_wrapping_multipacks, form_cube_from_n_multipacks, generate_multipack,
-    generate_packs, get_100_last_packing_records, get_100_last_pintset_records,
-    get_all_wrapping_multipacks, get_current_workmode,
-    get_first_exited_pintset_multipack, get_first_multipack_without_qr,
-    get_first_wrapping_multipack, get_last_batch, get_last_cube_in_queue,
-    get_last_packing_table_amount, get_last_pintset_amount,
-    get_multipacks_entered_pitchfork, get_multipacks_on_packing_table,
-    get_multipacks_queue, get_packs_on_assembly, get_packs_queue,
-    get_packs_under_pintset, pintset_error)
+    count_wrapping_multipacks, form_cube_from_n_multipacks, form_url,
+    generate_multipack, generate_packs, get_100_last_packing_records,
+    get_100_last_pintset_records, get_all_wrapping_multipacks,
+    get_current_workmode, get_first_exited_pintset_multipack,
+    get_first_multipack_without_qr, get_first_wrapping_multipack,
+    get_last_batch, get_last_cube_in_queue, get_last_packing_table_amount,
+    get_last_pintset_amount, get_multipacks_entered_pitchfork,
+    get_multipacks_on_packing_table, get_multipacks_queue,
+    get_packs_on_assembly, get_packs_queue, get_packs_under_pintset,
+    pintset_error)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube, CubeIdentificationAuto
@@ -156,7 +157,11 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     batch = await get_last_batch()
     pack.batch_number = batch.number
     pack.created_at = current_datetime
-    await engine.save(PackInReport(**pack.dict(exclude={'id'})))
+    ftp_url = None
+    if 'empty' in pack.qr:
+        ftp_url = await form_url(pack.qr)
+    await engine.save(
+        PackInReport(**pack.dict(), ftp_url=ftp_url))
     await engine.save(pack)
 
     max_packs = 8 * batch.params.multipacks_after_pintset
