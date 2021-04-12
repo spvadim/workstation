@@ -160,8 +160,7 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     ftp_url = None
     if 'empty' in pack.qr:
         ftp_url = await form_url(pack.qr)
-    await engine.save(
-        PackInReport(**pack.dict(), ftp_url=ftp_url))
+    await engine.save(PackInReport(**pack.dict(), ftp_url=ftp_url))
     await engine.save(pack)
 
     max_packs = 8 * batch.params.multipacks_after_pintset
@@ -592,7 +591,12 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     number = batch.number
 
     # TODO: вернуть обратно, когда все протестируем
-    # multipacks_on_packing_table = await get_multipacks_on_packing_table()
+    future_multipacks_on_packing_table = await get_multipacks_on_packing_table(
+    )
+    if len(future_multipacks_on_packing_table) < needed_multipacks:
+        log_message = f'При сборке куба на упаковочном столе меньше {needed_multipacks} паллет, добрал паллеты с другими статусами'
+        wdiot_logger.info(log_message)
+        background_tasks.add_task(send_email, 'Недостаточно паллет на упаковочном столе', log_message)
     multipacks_on_packing_table = await get_multipacks_queue()
 
     current_time = await get_naive_datetime()
