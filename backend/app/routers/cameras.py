@@ -99,14 +99,15 @@ async def new_pack_before_ejector(pack: PackCameraInput,
     current_datetime = await get_naive_datetime()
 
     error_msg = None
-    if not pack.qr and not pack.barcode:
+    # TODO: return back "and" check
+    if not pack.qr:
         error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с которой не смогли считать ни одного кода!'
+    # TODO: return back when fix nn
+    # elif not pack.qr:
+    #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с ШК={pack.barcode}, но QR не считался'
 
-    elif not pack.qr:
-        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с ШК={pack.barcode}, но QR не считался'
-
-    elif not pack.barcode:
-        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
+    # elif not pack.barcode:
+    #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
 
     elif not await check_qr_unique(Pack, pack.qr):
         error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
