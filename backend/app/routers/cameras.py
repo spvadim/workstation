@@ -336,6 +336,8 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
     for i in range(needed_packs):
+        if not to_process:
+            to_process = packs_on_assembly[i].to_process
         packs_on_assembly[i].in_queue = False
         all_pack_ids[i % multipacks_after_pintset].append(
             packs_on_assembly[i].id)
@@ -590,6 +592,7 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     needed_packs = batch.params.packs
     needed_multipacks = batch.params.multipacks
     number = batch.number
+    to_process = False
 
     # TODO: вернуть обратно, когда все протестируем
     future_multipacks_on_packing_table = await get_multipacks_on_packing_table(
@@ -597,7 +600,9 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     if len(future_multipacks_on_packing_table) < needed_multipacks:
         log_message = f'При сборке куба на упаковочном столе меньше {needed_multipacks} паллет, добрал паллеты с другими статусами'
         wdiot_logger.info(log_message)
-        background_tasks.add_task(send_email, 'Недостаточно паллет на упаковочном столе', log_message)
+        background_tasks.add_task(send_email,
+                                  'Недостаточно паллет на упаковочном столе',
+                                  log_message)
     multipacks_on_packing_table = await get_multipacks_queue()
 
     current_time = await get_naive_datetime()
@@ -608,6 +613,8 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
 
     multipack_ids_with_pack_ids = {}
     for i in range(needed_multipacks):
+        if not to_process:
+            to_process = multipacks_on_packing_table[i].to_process
         multipacks_on_packing_table[i].status = Status.IN_CUBE
         multipack_ids_with_pack_ids[str(
             multipacks_on_packing_table[i].id
@@ -618,7 +625,8 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
                 batch_number=number,
                 created_at=current_time,
                 packs_in_multipacks=needed_packs,
-                multipacks_in_cubes=needed_multipacks)
+                multipacks_in_cubes=needed_multipacks,
+                to_process=to_process)
     await engine.save(cube)
 
     return cube
