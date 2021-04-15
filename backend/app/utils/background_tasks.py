@@ -2,7 +2,8 @@ import asyncio
 
 from app.db.db_utils import (flush_packing_table, flush_state,
                              get_current_state, packing_table_error,
-                             set_column_red, set_column_yellow, sync_error)
+                             set_column_red, set_column_yellow, sync_error,
+                             pintset_withdrawal_error)
 from app.db.system_settings import get_system_settings
 from loguru import logger
 
@@ -116,7 +117,10 @@ async def flush_default_state():
 async def turn_packing_table_error(message: str, cube_id):
     tasks = []
     tasks.append(packing_table_error(message, cube_id))
-    tasks.append(send_error())
+    tasks.append(send_error_with_buzzer())
+    email_message = f'<br> {message}.'
+    tasks.append(send_email('Ошибка на упаковочном столе', email_message))
+    wdiot_logger.error(message)
     results = await asyncio.gather(*tasks)
     return results[0]
 
@@ -124,7 +128,7 @@ async def turn_packing_table_error(message: str, cube_id):
 async def flush_packing_table_error():
     tasks = []
     tasks.append(flush_packing_table())
-    tasks.append(send_error())
+    tasks.append(flush_to_normal())
     results = await asyncio.gather(*tasks)
     return results[0]
 
@@ -159,3 +163,14 @@ async def flush_sync_to_normal():
     tasks.append(snmp_finish_damper())
 
     await asyncio.gather(*tasks)
+
+
+async def turn_pintset_withdrawal_error(message: str):
+    tasks = []
+    tasks.append(pintset_withdrawal_error(message))
+    tasks.append(send_error_with_buzzer())
+    email_message = f'<br> {message}.'
+    tasks.append(send_email('Выемка из под пинцета', email_message))
+    wdiot_logger.error(message)
+    results = await asyncio.gather(*tasks)
+    return results[0]
