@@ -7,7 +7,7 @@ from app.db.db_utils import (
     get_current_state, get_current_status, get_current_workmode,
     get_extended_report, get_packs_report, get_report,
     get_report_without_mpacks, packing_table_error, pintset_error,
-    pintset_withdrawal_error, sync_fixing)
+    pintset_withdrawal_error, sync_fixing, delete_packs_queue)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
@@ -150,6 +150,17 @@ async def set_pintset_withdrawal_error(error_msg: str,
 async def set_pintset_withdrawal_normal(background_tasks: BackgroundTasks):
     background_tasks.add_task(flush_to_normal)
 
+    return await flush_withdrawal_pintset()
+
+
+@deep_logger_router.patch("/flush_pintset_withdrawal_with_remove",
+                          response_model=SystemState)
+@version(1, 0)
+async def set_pintset_withdrawal_normal_with_remove(
+        background_tasks: BackgroundTasks):
+
+    await delete_packs_queue()
+    background_tasks.add_task(flush_to_normal)
     return await flush_withdrawal_pintset()
 
 
