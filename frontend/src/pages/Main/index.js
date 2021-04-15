@@ -399,12 +399,8 @@ function Main() {
                     description={modalWithdrawal}
                 >
                     <Button onClick={() => {
-                        axios.patch(address + "/api/v1_0/flush_pintset_withdrawal")
+                        axios.patch(address + "/api/v1_0/flush_pintset_withdrawal_with_remove")
                             .then(() => setModalWithdrawal(false))
-                        axios.delete(address + "/api/v1_0/remove_packs_from_pintset")
-                            .catch(e => {
-                                setNotificationErrorText(e.response.data.detail);
-                            })
                     }}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Вынимаю все
