@@ -31,6 +31,7 @@ from app.utils.background_tasks import (drop_pack, send_error_with_buzzer,
                                         send_warning_and_back_to_normal,
                                         turn_default_error,
                                         turn_packing_table_error,
+                                        turn_pintset_withdrawal_error,
                                         turn_sync_error)
 from app.utils.email import send_email
 from app.utils.io import send_telegram_message
@@ -270,20 +271,17 @@ async def pintset_reverse(background_tasks: BackgroundTasks):
     return await get_packs_queue()
 
 
-@deep_logger_router.delete('/remove_packs_from_pintset',
-                           response_model=List[PackOutput])
+@deep_logger_router.put('/pintset_withdrawal', response_model=bool)
 @version(1, 0)
-async def remove_packs_from_pintset():
+async def pintset_withdrawal(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == 'manual':
         raise HTTPException(400,
                             detail='В данный момент используется ручной режим')
+    background_tasks.add_task(turn_pintset_withdrawal_error,
+                              'Происходит выемка из-под пинцета')
 
-    packs = await get_packs_queue()
-    for pack in packs:
-        await engine.delete(pack)
-
-    return packs
+    return True
 
 
 @deep_logger_router.put('/pintset_finish',
