@@ -1,6 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import List, Optional, Union
 
+from app.db.events import add_events
 from app.models.cube import Cube
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack, PackInReport
@@ -139,6 +140,8 @@ async def set_column_red(error_msg: str) -> SystemState:
 async def flush_state() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.state = State.NORMAL
+    message = current_status.system_state.error_msg
+    await add_events('error', message, processed=True)
     current_status.system_state.error_msg = None
     await engine.save(current_status)
     return current_status.system_state
@@ -178,6 +181,8 @@ async def pintset_error(error_msg: str) -> SystemState:
 async def flush_pintset() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.pintset_state = State.NORMAL
+    message = current_status.system_state.pintset_error_msg
+    await add_events('error', message, processed=True)
     current_status.system_state.pintset_error_msg = None
     await engine.save(current_status)
     return current_status.system_state
@@ -194,6 +199,8 @@ async def pintset_withdrawal_error(error_msg: str) -> SystemState:
 async def flush_withdrawal_pintset() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.pintset_withdrawal_state = State.NORMAL
+    message = current_status.system_state.pintset_withdrawal_error_msg
+    await add_events('error', message, processed=True)
     current_status.system_state.pintset_withdrawal_error_msg = None
     await engine.save(current_status)
     return current_status.system_state
@@ -212,6 +219,8 @@ async def packing_table_error(error_msg: str,
 async def flush_packing_table() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.packing_table_state = State.NORMAL
+    message = current_status.system_state.packing_table_error_msg
+    await add_events('error', message, processed=True)
     current_status.system_state.packing_table_error_msg = None
     current_status.system_state.wrong_cube_id = None
     await engine.save(current_status)
