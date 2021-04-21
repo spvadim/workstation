@@ -1,5 +1,6 @@
+from typing import List, Optional
+
 from odmantic import EmbeddedModel
-from typing import Optional
 
 
 class FtpUrl(EmbeddedModel):
@@ -66,6 +67,20 @@ class ReportMaxCubes(EmbeddedModel):
     value_type: str = 'integer'
 
 
+class VideoTimeDelta(EmbeddedModel):
+    title: str = 'Дельта для поиска времени на видео'
+    desc: str = 'Введите дельту в секундах'
+    value: int = 60
+    value_type: str = 'integer'
+
+
+class CameraList(EmbeddedModel):
+    title: str = 'Список номеров камер'
+    desc: str = 'Введите список камер'
+    value: List[int] = [1, 2, 4, 6, 7]
+    value_type: str = 'list'
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = 'Общие настройки'
     advanced: bool = False
@@ -79,3 +94,5 @@ class GeneralSettings(EmbeddedModel):
     camera_counter_curtain_opening_delay: CurtainOpeningDelay
     dropping_mechanism_opening_delay: CurtainOpeningDelay
     ftp_url: FtpUrl = FtpUrl()
+    video_time_delta: VideoTimeDelta = VideoTimeDelta()
+    camera_list: CameraList = CameraList()
