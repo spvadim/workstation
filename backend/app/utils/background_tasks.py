@@ -2,8 +2,9 @@ import asyncio
 
 from app.db.db_utils import (flush_packing_table, flush_state,
                              get_current_state, packing_table_error,
-                             set_column_red, set_column_yellow, sync_error,
-                             pintset_withdrawal_error)
+                             pintset_withdrawal_error, set_column_red,
+                             set_column_yellow, sync_error)
+from app.db.events import add_events
 from app.db.system_settings import get_system_settings
 from loguru import logger
 
@@ -145,6 +146,7 @@ async def turn_sync_error(message: str):
             tasks.append(snmp_raise_damper())
 
     tasks.append(send_email('Рассинхрон', email_message))
+    tasks.append(add_events('desync', message))
 
     results = await asyncio.gather(*tasks)
     wdiot_logger.error(message)

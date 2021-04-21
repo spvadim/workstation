@@ -49,7 +49,6 @@ class PackOutput(BaseModel):
 class PackPatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
-    comments: Optional[List[str]]
     to_process: Optional[bool]
 
     Config = ModelConfig

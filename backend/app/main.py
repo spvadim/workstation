@@ -7,7 +7,7 @@ from .db.db_utils import create_status_if_not_exists
 from .db.system_settings import create_system_settings_if_not_exists
 from .logger import init_logging
 from .routers import (cameras, cubes, multipacks, packs, production_batches,
-                      system_settings, system_status)
+                      system_settings, system_status, events)
 
 app = FastAPI(docs_url="/docs",
               redoc_url=None,
@@ -28,8 +28,12 @@ app.include_router(system_status.deep_logger_router, tags=['state_and_mode'])
 app.include_router(system_status.light_logger_router, tags=['state_and_mode'])
 app.include_router(cameras.deep_logger_router, tags=['camera'])
 app.include_router(cameras.light_logger_router, tags=['camera'])
-app.include_router(system_settings.deep_logger_router, tags=['system_settings'])
-app.include_router(system_settings.light_logger_router, tags=['system_settings'])
+app.include_router(system_settings.deep_logger_router,
+                   tags=['system_settings'])
+app.include_router(system_settings.light_logger_router,
+                   tags=['system_settings'])
+app.include_router(events.deep_logger_router, tags=['events'])
+app.include_router(events.light_logger_router, tags=['events'])
 
 app = VersionedFastAPI(app, prefix_format='/api/v{major}_{minor}')
 
