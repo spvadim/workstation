@@ -102,7 +102,7 @@ async def new_pack_before_ejector(pack: PackCameraInput,
     error_msg = None
     # TODO: return back "and" check
     if not pack.qr:
-        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с которой не смогли считать ни одного кода!'
+        error_msg = f'{current_datetime} на камере перед сбрасывателем прошла пачка с которой не смогли считать ни одного кода!'
     # TODO: return back when fix nn
     # elif not pack.qr:
     #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с ШК={pack.barcode}, но QR не считался'
@@ -111,10 +111,10 @@ async def new_pack_before_ejector(pack: PackCameraInput,
     #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
 
     elif not await check_qr_unique(Pack, pack.qr):
-        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
+        error_msg = f'{current_datetime} на камере перед сбрасывателем прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        background_tasks.add_task(drop_pack)
+        background_tasks.add_task(drop_pack, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     return pack
