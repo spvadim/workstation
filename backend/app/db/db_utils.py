@@ -140,8 +140,6 @@ async def set_column_red(error_msg: str) -> SystemState:
 async def flush_state() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.state = State.NORMAL
-    message = current_status.system_state.error_msg
-    await add_events('error', message, processed=True)
     current_status.system_state.error_msg = None
     await engine.save(current_status)
     return current_status.system_state

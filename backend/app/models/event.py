@@ -38,8 +38,12 @@ class EventOutput(BaseModel):
 
 
 class EventFilters(BaseModel):
+    skip: Optional[int] = 0
+    limit: Optional[int] = 10
     event_type: Optional[EventType] = None
     processed: Optional[bool] = None
+    events_begin: Optional[datetime]
+    events_end: Optional[datetime]
 
     Config = ReportModelConfig
 
