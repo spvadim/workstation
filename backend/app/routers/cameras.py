@@ -206,9 +206,24 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         to_process = True
         email_body = ''
         wdiot_logger.error('Расхождение, нужно проверить пачки')
-        packs_under_pintset, packs_to_delete = (packs_under_pintset[:-delta],
-                                                packs_under_pintset[-delta:])
-        for pack in packs_to_delete:
+
+        packs_to_delete = []
+
+        for pack in packs_under_pintset:
+            if 'empty' in pack.qr and delta > 0:
+                packs_to_delete.append(pack)
+                delta -= 1
+
+        packs_under_pintset = [
+            pack for pack in packs_under_pintset if pack not in packs_to_delete
+        ]
+
+        if delta > 0:
+            packs_under_pintset, packs_to_delete2 = (
+                packs_under_pintset[:-delta], packs_under_pintset[-delta:])
+
+        for pack in packs_to_delete + packs_to_delete2:
+
             await engine.delete(pack)
 
             msg = (f'Удалил пачку с QR={pack.qr}, '
