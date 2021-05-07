@@ -81,6 +81,13 @@ class CameraList(EmbeddedModel):
     value_type: str = 'list'
 
 
+class CheckCubeQr(EmbeddedModel):
+    title: str = 'Проверка QR куба'
+    desc: str = 'Выберите, проверять ли QR куба'
+    value: bool = False
+    value_type: str = 'bool'
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = 'Общие настройки'
     advanced: bool = False
@@ -96,3 +103,4 @@ class GeneralSettings(EmbeddedModel):
     ftp_url: FtpUrl = FtpUrl()
     video_time_delta: VideoTimeDelta = VideoTimeDelta()
     camera_list: CameraList = CameraList()
+    check_cube_qr: CheckCubeQr = CheckCubeQr()

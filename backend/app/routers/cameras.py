@@ -1,7 +1,7 @@
 from typing import List
 
 from app.db.db_utils import (
-    check_qr_unique, count_exited_pintset_multipacks,
+    check_cube_qr, check_qr_unique, count_exited_pintset_multipacks,
     count_multipacks_entered_pitchfork, count_multipacks_on_packing_table,
     count_multipacks_queue, count_packs_on_assembly, count_packs_queue,
     count_wrapping_multipacks, form_cube_from_n_multipacks, form_url,
@@ -578,8 +578,8 @@ async def cube_identification_auto(identification: CubeIdentificationAuto,
     elif not barcode:
         error_msg = f'{current_datetime} при присвоении внешнего кода кубу с QR={qr} ШК не считался'
 
-    elif not await check_qr_unique(Cube, qr):
-        error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и он не уникален в системе'
+    elif not await check_cube_qr(qr):
+        error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и его нет в системе'
 
     if error_msg:
         background_tasks.add_task(turn_default_error, error_msg)
