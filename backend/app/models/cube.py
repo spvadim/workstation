@@ -79,5 +79,5 @@ class CubeEditSchema(Model):
 
 
 class CubeQr(Model):
-    qr: ObjectId
+    qr: str
     used: bool = False
