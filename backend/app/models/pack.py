@@ -27,6 +27,15 @@ class Pack(Model):
     Config = ModelConfig
 
 
+class PackInReport(Model):
+    qr: str
+    barcode: str
+    created_at: datetime
+    ftp_url: Optional[str]
+
+    Config = ModelConfig
+
+
 class PackOutput(BaseModel):
     id: ObjectId
     qr: str
@@ -40,7 +49,6 @@ class PackOutput(BaseModel):
 class PackPatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
-    comments: Optional[List[str]]
     to_process: Optional[bool]
 
     Config = ModelConfig

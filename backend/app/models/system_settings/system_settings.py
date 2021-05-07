@@ -4,6 +4,7 @@ from odmantic import Model
 from pydantic import BaseModel
 
 from ..model_config import ModelConfig
+from .email_settings import MailSettings
 from .erd_settings import ERDSettings, SecondERDSettings
 from .general_settings import GeneralSettings
 from .location_settings import LocationSettings
@@ -18,6 +19,7 @@ class SystemSettings(Model):
     second_erd_settings: SecondERDSettings
     pintset_settings: PintsetSettings
     telegram_settings: TGSettings
+    mail_settings: MailSettings
 
     Config = ModelConfig
 
@@ -29,5 +31,6 @@ class SystemSettingsPatchScheme(BaseModel):
     second_erd_settings: Optional[SecondERDSettings]
     pintset_settings: Optional[PintsetSettings]
     telegram_settings: Optional[TGSettings]
+    mail_settings: Optional[MailSettings]
 
     Config = ModelConfig

@@ -4,11 +4,12 @@ from app.db.db_utils import (check_qr_unique, delete_cube,
                              get_batch_by_number_or_return_last,
                              get_by_id_or_404, get_by_qr_or_404,
                              get_cubes_queue, get_first_cube_without_qr,
-                             get_last_batch, get_multipacks_queue,
-                             get_packs_queue)
+                             get_last_batch, get_last_cube_in_queue,
+                             get_last_cube_without_qr, get_multipacks_queue,
+                             get_packs_queue, check_cube_qr)
 from app.db.engine import engine
 from app.models.cube import (Cube, CubeEditSchema, CubeInput, CubeOutput,
-                             CubePatchSchema, CubeWithNewContent)
+                             CubePatchSchema, CubeQr, CubeWithNewContent)
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack
 from app.models.production_batch import ProductionBatch, ProductionBatchParams
@@ -49,10 +50,9 @@ async def create_cube(cube_input: CubeInput):
                 created_at=created_at)
 
     if cube_input.qr:
-        if not await check_qr_unique(Cube, cube_input.qr):
+        if not await check_cube_qr(cube_input.qr):
             raise HTTPException(
-                400,
-                detail=f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
+                400, detail=f'QR кода {cube_input.qr} нет в таблице QR-ов')
         cube.qr = cube_input.qr
         cube.added_qr_at = await get_naive_datetime()
 
@@ -80,7 +80,7 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     barcode = cube_input.barcode_for_packs
     current_time = await get_naive_datetime()
     # проверка на уникальность qr-ов, переполнение и пустоту
-    if await check_qr_unique(Cube, cube_input.qr):
+    if await check_cube_qr(cube_input.qr):
 
         if not cube_input.content:
             raise HTTPException(400, 'Пустой куб')
@@ -150,9 +150,8 @@ async def finish_cube(qr: str):
     if not (multipacks_queue or packs_queue):
         raise HTTPException(400, detail='Невозможно сформировать неполный куб')
 
-    if not await check_qr_unique(Cube, qr):
-        raise HTTPException(400,
-                            detail='Куб с QR-кодом {qr} уже есть в системе')
+    if not await check_cube_qr(qr):
+        raise HTTPException(400, detail=f'{qr} нет в таблице QRов')
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
     needed_packs = batch.params.packs
@@ -230,11 +229,40 @@ async def get_cube_by_qr(qr: str = Query(None)):
                           response_model=Cube)
 @version(1, 0)
 async def add_qr_to_first_unidentified_cube(qr: str):
-    if not await check_qr_unique(Cube, qr):
-        raise HTTPException(400, detail=f'В системе есть куб с QR={qr}')
+    if not await check_cube_qr(qr):
+        raise HTTPException(400, detail=f'QR={qr} нет в таблице QRов')
     cube = await get_first_cube_without_qr()
     if not cube:
         raise HTTPException(400, detail='В очереди нет кубов без QR')
+    cube.qr = qr
+    await engine.save(cube)
+    return cube
+
+
+@deep_logger_router.patch('/add_qr_to_last_unidentified_cube/',
+                          response_model=Cube)
+@version(1, 0)
+async def add_qr_to_last_unidentified_cube(qr: str):
+    if not await check_cube_qr(qr):
+        raise HTTPException(400, detail=f'В таблице нет QR={qr}')
+    cube = await get_last_cube_without_qr()
+    if not cube:
+        raise HTTPException(400, detail='В очереди нет кубов без QR')
+    cube.qr = qr
+    await engine.save(cube)
+    return cube
+
+
+@deep_logger_router.patch('/add_qr_to_last_cube/', response_model=Cube)
+@version(1, 0)
+async def add_qr_to_last_cube(qr: str):
+    if not await check_cube_qr(qr):
+        raise HTTPException(400, detail=f'В таблице нет QR={qr}')
+    cube = await get_last_cube_in_queue()
+    if not cube:
+        raise HTTPException(400, detail='В очереди нет кубов')
+    if cube.qr:
+        raise HTTPException(400, detail='У последнего куба в очереди есть QR')
     cube.qr = qr
     await engine.save(cube)
     return cube
@@ -276,10 +304,9 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
     cube = await get_by_id_or_404(Cube, id)
 
     if patch.qr:
-        if not await check_qr_unique(Cube, patch.qr):
+        if not await check_cube_qr(patch.qr):
             raise HTTPException(
-                400,
-                detail=f'Куб с QR-кодом {patch.qr} уже существует в системе')
+                400, detail=f'QR-код {patch.qr} не существует в системе')
         cube.added_qr_at = await get_naive_datetime()
 
     patch_dict = patch.dict(exclude_unset=True)
@@ -358,3 +385,24 @@ async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
     await engine.save(cube)
 
     return cube
+
+
+@light_logger_router.get('/cube_qrs', response_model=List[CubeQr])
+@version(1, 0)
+async def get_cube_qrs():
+    return await engine.find(CubeQr)
+
+
+@deep_logger_router.put('/cube_qrs', response_model=List[CubeQr])
+@version(1, 0)
+async def add_cube_qrs(qrs: List[str]):
+    cube_qrs = [CubeQr(qr=qr) for qr in qrs]
+    return await engine.save_all(cube_qrs)
+
+
+@deep_logger_router.delete('/cube_qrs', response_model=CubeQr)
+@version(1, 0)
+async def delete_cube_qr_by_id(id: ObjectId):
+    cube_qr = await engine.find_one(CubeQr, CubeQr.id == id)
+    await engine.delete(cube_qr)
+    return cube_qr

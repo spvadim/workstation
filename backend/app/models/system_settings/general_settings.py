@@ -1,5 +1,13 @@
+from typing import List, Optional
+
 from odmantic import EmbeddedModel
-from typing import Optional
+
+
+class FtpUrl(EmbeddedModel):
+    title: str = 'Ссылка на FTP сервер'
+    desc: str = 'Введите ссылку на FTP сервер'
+    value: str = 'ftp://10.14.2.21/empty'
+    value_type: str = 'string'
 
 
 class DaysToDelete(EmbeddedModel):
@@ -13,6 +21,20 @@ class PintsetStop(EmbeddedModel):
     title: str = 'Остановка пинцета'
     desc: str = 'Выберите, останавливать ли пинцет в случае ошибок'
     value: bool
+    value_type: str = 'bool'
+
+
+class SyncRequest(EmbeddedModel):
+    title: str = 'Запрос синхронизации'
+    desc: str = 'Выберите, запрашивать ли синхронизацию в случае ошибок'
+    value: bool = True
+    value_type: str = 'bool'
+
+
+class SyncRaiseDamper(EmbeddedModel):
+    title: str = 'Поднимать ли шторку во время синхронизации'
+    desc: str = 'Выберите, поднимать ли шторку во время синхронизации'
+    value: bool = False
     value_type: str = 'bool'
 
 
@@ -45,13 +67,40 @@ class ReportMaxCubes(EmbeddedModel):
     value_type: str = 'integer'
 
 
+class VideoTimeDelta(EmbeddedModel):
+    title: str = 'Дельта для поиска времени на видео'
+    desc: str = 'Введите дельту в секундах'
+    value: int = 60
+    value_type: str = 'integer'
+
+
+class CameraList(EmbeddedModel):
+    title: str = 'Список номеров камер'
+    desc: str = 'Введите список камер'
+    value: List[int] = [1, 2, 4, 6, 7]
+    value_type: str = 'list'
+
+
+class CheckCubeQr(EmbeddedModel):
+    title: str = 'Проверка QR куба'
+    desc: str = 'Выберите, проверять ли QR куба'
+    value: bool = False
+    value_type: str = 'bool'
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = 'Общие настройки'
     advanced: bool = False
     pintset_stop: PintsetStop
+    sync_request: SyncRequest = SyncRequest()
+    sync_raise_damper: SyncRaiseDamper = SyncRaiseDamper()
     send_applikator_tg_message: SendApplikatorTgMessage
     report_max_days: ReportMaxDays
     report_max_cubes: ReportMaxCubes
     applikator_curtain_opening_delay: CurtainOpeningDelay
     camera_counter_curtain_opening_delay: CurtainOpeningDelay
     dropping_mechanism_opening_delay: CurtainOpeningDelay
+    ftp_url: FtpUrl = FtpUrl()
+    video_time_delta: VideoTimeDelta = VideoTimeDelta()
+    camera_list: CameraList = CameraList()
+    check_cube_qr: CheckCubeQr = CheckCubeQr()

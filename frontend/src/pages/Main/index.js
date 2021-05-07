@@ -169,6 +169,7 @@ function Main() {
     const [modalChangePack, setModalChangePack] = useState(false);
     const [modalChangePackAgree, setModalChangePackAgree] = useState(false);
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
+    const [modalDesync, setModalDesync] = useState(false);
 
     const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
     const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
@@ -182,6 +183,7 @@ function Main() {
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
     const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
+    const [notificationDesyncErrorText, setNotificationDesyncErrorText] = useState("");
     const classes = useStyles({ mode, redBackground });
     const tableProps = useMemo(() => getTableProps(extended), [extended]);
 
@@ -244,22 +246,23 @@ function Main() {
             axios.get(address + "/api/v1_0/packing_table_records")
                 .then(res => {
                     setPackingTableRecords(res.data);
-                    if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
-                        setNotificationText("Надо отсканировать QR Куба")
-                    } 
+                    // if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
+                    //     setNotificationText("Надо отсканировать QR куба")
+                    // } 
             });
         }
         
         request2();
         const interval1 = setInterval(() => request2(), 1000);
         return () => clearInterval(interval1);
-    }, [batchSettings]);
+    }, [batchSettings, mode]);
 
     useEffect(() => {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => {
                 let temp = res.data;
+                console.log(temp)
                 if (temp.state === "normal") setNotificationColumnErrorText("") 
                     else {setNotificationColumnErrorText(temp.error_msg); setRedBackground(true)}
                 if (temp.pintset_state === "normal") setNotificationPintsetErrorText("") 
@@ -268,8 +271,11 @@ function Main() {
                     else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg); setRedBackground(true)}
                 if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("") 
                     else {setModalWithdrawal(temp.pintset_withdrawal_error_msg); setRedBackground(true)}
+                if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg); setRedBackground(true)} 
+                    else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}    
+                else {setModalDesync("")}
 
-                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal") setRedBackground(false);    
+                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);    
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
@@ -281,8 +287,6 @@ function Main() {
     useEffect (() => {
         let interval;
         let isExist = Object.keys(dictRefs).indexOf(forceFocus) !== -1;
-
-        console.log(forceFocus)
 
         if (forceFocus && isExist) {
             interval = setInterval(() => {
@@ -370,18 +374,33 @@ function Main() {
 
     return (
         <div className={classes.Main}>
+            {modalDesync &&
+                <ModalWindow
+                    title="Оповещение о рассинхронизации"
+                    description={modalDesync}
+                >
+                    <Button onClick={() => {
+                        axios.patch(address + "/api/v1_0/set_sync_fixing")
+                            .then(() => {
+                                setNotificationDesyncErrorText("Рассинхрон");
+                                setModalDesync(false);
+                                setRedBackground(false);
+                            })
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Понял
+                    </Button>
+                </ModalWindow>
+            }
+
             {modalWithdrawal && 
                 <ModalWindow
                     title="Подтверждение выемки из-под пинцета"
                     description={modalWithdrawal}
                 >
                     <Button onClick={() => {
-                        axios.patch(address + "/api/v1_0/flush_pintset_withdrawal")
+                        axios.patch(address + "/api/v1_0/flush_pintset_withdrawal_with_remove")
                             .then(() => setModalWithdrawal(false))
-                        axios.delete(address + "/api/v1_0/remove_packs_from_pintset")
-                            .catch(e => {
-                                setNotificationErrorText(e.response.data.detail);
-                            })
                     }}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Вынимаю все
@@ -415,7 +434,7 @@ function Main() {
             {modalChangePack && 
                 <ModalWindow
                     title="Замена пачки"
-                    description="Введите QR заменяемой и новой пачек"
+                    description="На постах упаковки одну пачку можно заменить на другую. Для этого введите сначала QR старой пачки, потом QR новой пачки. Далее подтвердите свое действие"
                 >
                     <Button onClick={() => {setModalChangePack(false); setForceFocus("inputQr")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
@@ -527,9 +546,9 @@ function Main() {
             {modalDisassemble && 
                 <ModalWindow
                     title="Разобрать куб?"
-                    description="Введите QR куба для разбора"
+                    description="Информация про куб и пачки в нем будет удалена из системы. Куб нужно будет распаковать, необходимые пачки нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
                 >
-                    <Button onClick={() => {setModalDisassemble(false)}}>
+                    <Button onClick={() => {setModalDisassemble(false); setForceFocus("inputQr")}}>
                         <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
                         Отмена
                     </Button>
@@ -683,7 +702,7 @@ function Main() {
             {modalDeletion && (
                 <ModalWindow
                     title="Удаление объекта"
-                    description="Вы действительно хотите удалить данный объект?"
+                    description="Информация про данную упаковку и составляющие будет удалена из системы. Пачку(и) нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
                 >
                     <Button onClick={() => {
                         setModalDeletion(false);
@@ -709,7 +728,7 @@ function Main() {
             {modalCube && (
                 <ModalWindow
                     title="Формирование неполного куба"
-                    description="Вы действительно хотите создать неполный куб?"
+                    description="Из всех паллет и пачек в очереди будет сформирован куб. Подтверждаете?"
                 >
                     <div style={{ display: "grid", gap: "2rem" }}>
                         <div>
@@ -799,6 +818,8 @@ function Main() {
                     <Text className={classes.tableTitle} type="title2">Очередь кубов</Text>
                     <TableAddress
                         columns={tableProps.cube.columns}
+                        setNotification={n => setNotificationText(n)}
+                        notification={notificationText}
                         setError={() => setModalError(true)}
                         setModal={setModalDeletion}
                         type="cubes"
@@ -895,6 +916,19 @@ function Main() {
                                             description={notificationColumnErrorText}
                                             error
                                         > <Button onClick={() => flushStateColumn()}>Сбросить ошибку</Button>  </Notification>
+                                    ),
+
+                                    notificationDesyncErrorText && (
+                                        <Notification
+                                            title="Десинхронизация"
+                                            description={notificationDesyncErrorText}
+                                            error
+                                        > <Button onClick={() => {
+                                            axios.patch(address + "/api/v1_0/flush_sync")
+                                                .then(() => {
+                                                    setNotificationDesyncErrorText("");
+                                                })
+                                        }}>Сбросить ошибку</Button>  </Notification>
                                     )
                                 ]
                             }

@@ -1,3 +1,4 @@
+import datetime
 import logging
 import sys
 from pprint import pformat
@@ -25,6 +26,30 @@ class InterceptHandler(logging.Handler):
 
         logger.opt(depth=depth,
                    exception=record.exc_info).log(level, record.getMessage())
+
+
+class Rotator:
+    def __init__(self, *, size, at):
+        now = datetime.datetime.now()
+
+        self._size_limit = size
+        self._time_limit = now.replace(hour=at.hour,
+                                       minute=at.minute,
+                                       second=at.second)
+
+        if now >= self._time_limit:
+            # The current time is already past the target time so it would rotate already.
+            # Add one day to prevent an immediate rotation.
+            self._time_limit += datetime.timedelta(days=1)
+
+    def should_rotate(self, message, file):
+        file.seek(0, 2)
+        if file.tell() + len(message) > self._size_limit:
+            return True
+        if message.record["time"].timestamp() > self._time_limit.timestamp():
+            self._time_limit += datetime.timedelta(days=1)
+            return True
+        return False
 
 
 def format_record(record: dict) -> str:
@@ -73,25 +98,47 @@ def init_logging():
     # change handler for default uvicorn logger
     logging.getLogger("uvicorn").handlers = [intercept_handler]
 
+    # rotator = Rotator(size=5e+8, at=datetime.time(0, 0, 0))
+
     # set logs output, level and format
-    logger.configure(handlers=[
-        {
-            "sink": sys.stdout,
-            "level": logging.DEBUG,
-            "format": format_record
-        },
-        {
-            "sink": "logs/deep_logs.log",
-            "level": logging.DEBUG,
-            "format": format_record,
-            "filter": make_filter('deep'),
-            "rotation": '1 day'
-        },
-        {
-            "sink": "logs/light_logs.log",
-            "level": logging.DEBUG,
-            "format": format_record,
-            "filter": make_filter('light'),
-            "rotation": '1 day'
-        }
-    ])
+    logger.configure(handlers=[{
+        "sink": sys.stdout,
+        "level": logging.DEBUG,
+        "format": format_record,
+        "enqueue": True
+    }, {
+        "sink": "logs/deep_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('deep'),
+        # "rotation": rotator.should_rotate,
+        "enqueue": True
+    }, {
+        "sink": "logs/wdiot_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('wdiot'),
+        # "rotation": rotator.should_rotate,
+        "enqueue": True
+    }, {
+        "sink": "logs/erd_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('erd'),
+        # "rotation": rotator.should_rotate,
+        "enqueue": True
+    }, {
+        "sink": "logs/tg_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('tg'),
+        # "rotation": rotator.should_rotate,
+        "enqueue": True
+    }, {
+        "sink": "logs/email_logs.log",
+        "level": logging.DEBUG,
+        "format": format_record,
+        "filter": make_filter('email'),
+        # "rotation": rotator.should_rotate,
+        "enqueue": True
+    }])

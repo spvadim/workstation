@@ -1,21 +1,29 @@
 from datetime import datetime
+from typing import List
 
 from app.db.db_utils import (
-    change_coded_setting, check_qr_unique, delete_cube, delete_multipack,
-    flush_packing_table, flush_pintset, flush_state, flush_withdrawal_pintset,
-    get_by_id_or_404, get_current_state, get_current_status,
-    get_current_workmode, get_last_batch, get_last_cube_in_queue,
-    get_multipacks_queue, get_report, packing_table_error, pintset_error,
-    pintset_withdrawal_error, set_column_red, set_column_yellow)
+    change_coded_setting, check_cube_qr, check_qr_unique, delete_cube,
+    delete_packs_queue, flush_packing_table, flush_pintset, flush_sync,
+    flush_withdrawal_pintset, get_by_id_or_404, get_current_state,
+    get_current_status, get_current_workmode, get_extended_report,
+    get_packs_report, get_report, get_report_without_mpacks,
+    packing_table_error, pintset_error, pintset_withdrawal_error, sync_fixing)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
 from app.models.message import TGMessage
-from app.models.multipack import Status
-from app.models.report import ReportRequest, ReportResponse
+from app.models.pack import PackInReport
+from app.models.report import (ExtendedReportResponse, PackReportItem,
+                               ReportRequest, ReportResponse,
+                               ReportWithoutMPacksResponse)
 from app.models.system_status import Mode, SystemState, SystemStatus
-from app.utils.background_tasks import (flush_to_normal, send_error,
-                                        send_error_with_buzzer, send_warning)
+from app.utils.background_tasks import (flush_default_state,
+                                        flush_sync_to_normal, flush_to_normal,
+                                        send_error, send_error_with_buzzer,
+                                        turn_default_error,
+                                        turn_default_warning, turn_sync_error,
+                                        turn_sync_fixing)
+from app.utils.email import send_email
 from app.utils.io import send_telegram_message
 from app.utils.naive_current_datetime import get_naive_datetime
 from app.utils.pintset import off_pintset, on_pintset
@@ -51,8 +59,8 @@ async def get_state():
 
 
 @light_logger_router.get("/get_multipack_coded_setting",
-                        response_model=SystemStatus,
-                        response_model_exclude={"id", "mode", "system_state"})
+                         response_model=SystemStatus,
+                         response_model_exclude={"id", "mode", "system_state"})
 @version(1, 0)
 async def get_multipack_coded_by_qr_setting():
     return await get_current_status()
@@ -69,23 +77,40 @@ async def set_multipack_coded_by_qr_setting(coded: bool):
 
 @deep_logger_router.patch("/set_column_yellow", response_model=SystemState)
 @version(1, 0)
-async def set_warning_state(error_msg: str, background_tasks: BackgroundTasks):
-    background_tasks.add_task(send_warning)
-    return await set_column_yellow(error_msg)
+async def set_warning_state(error_msg: str):
+    return await turn_default_warning(error_msg)
 
 
 @deep_logger_router.patch("/set_column_red", response_model=SystemState)
 @version(1, 0)
-async def set_error_state(error_msg: str, background_tasks: BackgroundTasks):
-    background_tasks.add_task(send_error)
-    return await set_column_red(error_msg)
+async def set_error_state(error_msg: str):
+    return await turn_default_error(error_msg)
 
 
 @deep_logger_router.patch("/flush_state", response_model=SystemState)
 @version(1, 0)
-async def set_normal_state(background_tasks: BackgroundTasks):
-    background_tasks.add_task(flush_to_normal)
-    return await flush_state()
+async def set_normal_state():
+    return await flush_default_state()
+
+
+@deep_logger_router.patch("/set_sync_error", response_model=SystemState)
+@version(1, 0)
+async def set_sync_error(error_msg: str):
+    return await turn_sync_error(error_msg)
+
+
+@deep_logger_router.patch("/set_sync_fixing", response_model=SystemState)
+@version(1, 0)
+async def set_sync_fixing(background_tasks: BackgroundTasks):
+    background_tasks.add_task(turn_sync_fixing)
+    return await sync_fixing()
+
+
+@deep_logger_router.patch("/flush_sync", response_model=SystemState)
+@version(1, 0)
+async def flush_sync_state(background_tasks: BackgroundTasks):
+    background_tasks.add_task(flush_sync_to_normal)
+    return await flush_sync()
 
 
 @deep_logger_router.patch("/set_pintset_error", response_model=SystemState)
@@ -128,6 +153,17 @@ async def set_pintset_withdrawal_normal(background_tasks: BackgroundTasks):
     return await flush_withdrawal_pintset()
 
 
+@deep_logger_router.patch("/flush_pintset_withdrawal_with_remove",
+                          response_model=SystemState)
+@version(1, 0)
+async def set_pintset_withdrawal_normal_with_remove(
+        background_tasks: BackgroundTasks):
+
+    await delete_packs_queue()
+    background_tasks.add_task(flush_to_normal)
+    return await flush_withdrawal_pintset()
+
+
 @deep_logger_router.patch("/set_packing_table_error",
                           response_model=SystemState)
 @version(1, 0)
@@ -163,8 +199,8 @@ async def set_packing_table_normal_with_remove(
 @version(1, 0)
 async def set_packing_table_normal_with_identify(
         qr: str, background_tasks: BackgroundTasks):
-    if not await check_qr_unique(Cube, qr):
-        raise HTTPException(400, detail=f'Куб с QR {qr} уже существует')
+    if not await check_cube_qr(qr):
+        raise HTTPException(400, detail=f'QR {qr} не существует в системе')
 
     state = await get_current_state()
     wrong_cube_id = state.wrong_cube_id
@@ -178,13 +214,21 @@ async def set_packing_table_normal_with_identify(
     return await flush_packing_table()
 
 
-@deep_logger_router.post("/get_report", response_model=ReportResponse)
-@version(1, 0)
-async def get_system_report(report_query: ReportRequest) -> ReportResponse:
-    return await get_report(report_query)
+@light_logger_router.get("/get_packs_report/",
+                         response_model=List[PackInReport])
+async def get_plain_packs_report_with_query(
+        report_begin: str = "01.01.1970 00:00",
+        report_end: str = "01.01.2050 00:00") -> ReportResponse:
+    report_begin = datetime.strptime(report_begin, "%d.%m.%Y %H:%M")
+    report_end = datetime.strptime(report_end, "%d.%m.%Y %H:%M")
+    report_query = parse_obj_as(ReportRequest, {
+        "report_begin": report_begin,
+        "report_end": report_end
+    })
+    return await get_packs_report(report_query)
 
 
-@deep_logger_router.get("/get_report/", response_model=ReportResponse)
+@light_logger_router.get("/get_report/", response_model=ReportResponse)
 async def get_system_report_with_query(
         report_begin: str = "01.01.1970 00:00",
         report_end: str = "01.01.2050 00:00") -> ReportResponse:
@@ -197,9 +241,42 @@ async def get_system_report_with_query(
     return await get_report(report_query)
 
 
-@deep_logger_router.post("/send_message", response_model=bool)
+@light_logger_router.get("/get_extended_report/",
+                         response_model=ExtendedReportResponse)
+async def get_extended_system_report_with_query(
+        report_begin: str = "01.01.1970 00:00",
+        report_end: str = "01.01.2050 00:00") -> ExtendedReportResponse:
+    report_begin = datetime.strptime(report_begin, "%d.%m.%Y %H:%M")
+    report_end = datetime.strptime(report_end, "%d.%m.%Y %H:%M")
+    report_query = parse_obj_as(ReportRequest, {
+        "report_begin": report_begin,
+        "report_end": report_end
+    })
+    return await get_extended_report(report_query)
+
+
+@light_logger_router.get("/report/",
+                         response_model=ReportWithoutMPacksResponse)
+async def get_report_with_query(
+        report_begin: str = "01.01.1970 00:00",
+        report_end: str = "01.01.2050 00:00") -> ReportWithoutMPacksResponse:
+    report_begin = datetime.strptime(report_begin, "%d.%m.%Y %H:%M")
+    report_end = datetime.strptime(report_end, "%d.%m.%Y %H:%M")
+    report_query = parse_obj_as(ReportRequest, {
+        "report_begin": report_begin,
+        "report_end": report_end
+    })
+    return await get_report_without_mpacks(report_query)
+
+
+@light_logger_router.post("/send_message", response_model=bool)
 async def send_tg_message(text: str,
                           timestamp: bool = False,
                           img: UploadFile = File(None)) -> bool:
     return await send_telegram_message(
         TGMessage(text=text, timestamp=timestamp), img)
+
+
+@light_logger_router.post("/send_email", response_model=bool)
+async def send_email_message(subject: str, body: str) -> bool:
+    return await send_email(subject, body)

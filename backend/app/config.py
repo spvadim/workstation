@@ -1,5 +1,6 @@
 import os
 
+from app.models.system_settings.email_settings import MailSettings
 from app.models.system_settings.erd_settings import (
     ERDBuzzerOID, ERDCommunityString, ERDFifthOID, ERDFirstOID, ERDFourthOID,
     ERDGreenOID, ERDIp, ERDRedOID, ERDSecondOID, ERDSettings, ERDSNMPPort,
@@ -112,6 +113,8 @@ default_tg_token = TGToken(value=os.getenv('TG_TOKEN'))
 default_tg_chat = TGChat(value=os.getenv('TG_CHAT'))
 default_tg_settings = TGSettings(tg_token=default_tg_token,
                                  tg_chat=default_tg_chat)
+# set default email settings
+default_mail_settings = MailSettings()
 
 # set default settings
 default_settings = SystemSettings(
@@ -120,4 +123,5 @@ default_settings = SystemSettings(
     pintset_settings=default_pintset_settings,
     erd_settings=default_erd_settings,
     second_erd_settings=default_second_erd_settings,
-    telegram_settings=default_tg_settings)
+    telegram_settings=default_tg_settings,
+    mail_settings=default_mail_settings)

@@ -398,7 +398,7 @@ function Edit({ description, type, extended }) {
                 <div>
                     <div style={{display: "flex", gap: 20, alignItems: "center"}}>
                         <Text className={classes.tableTitle} type="title2">{type}</Text>
-                        <span>Новый QR: <TextField style={{padding: "5px 5px", width: 100}}
+                        <span>Новый QR: <TextField style={{padding: "5px 5px", width: 200}}
                                                                             outlined
                                                                             placeholder="Новый Qr..."
                                                                             onChange={async e => {

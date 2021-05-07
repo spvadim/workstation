@@ -50,7 +50,7 @@ const InputTextQr = React.forwardRef(({ setNotification, setNotificationError, m
 
                     ref.current.value = "";
                 } else if (e.charCode === 13) {
-                    axios.patch(address + "/api/v1_0/add_qr_to_first_unidentified_cube/?qr=" + ref.current.value)
+                    axios.patch(address + "/api/v1_0/add_qr_to_last_cube/?qr=" + ref.current.value)
                         .then(() => {
                             ref.current.value = "";
                         })
