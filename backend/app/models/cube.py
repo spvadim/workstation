@@ -76,3 +76,8 @@ class CubeEditSchema(Model):
     to_process: Optional[bool]
 
     Config = ModelConfig
+
+
+class CubeQr(Model):
+    qr: ObjectId
+    used: bool = False
