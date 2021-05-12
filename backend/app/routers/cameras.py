@@ -460,24 +460,33 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
 
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
+    sync_error_msg = None
 
-    on_packing_table_multipacks = await get_multipacks_entered_pitchfork()
-    for multipack in on_packing_table_multipacks:
+    multipacks_on_packing_table_system = await count_multipacks_on_packing_table()
+    multipacks_on_packing_table_nn = await get_last_packing_table_amount()
+    if multipacks_on_packing_table_system != multipacks_on_packing_table_nn:
+        sync_error_msg = (f'Рассинхрон логической '
+                          f'{multipacks_on_packing_table_system} '
+                          f'и физической {multipacks_on_packing_table_nn} '
+                          f'очереди на упаковочном столе')
+
+    entered_pitchfork_multipacks = await get_multipacks_entered_pitchfork()
+    for multipack in entered_pitchfork_multipacks:
         multipack.status = Status.ON_PACKING_TABLE
 
-    await engine.save_all(on_packing_table_multipacks)
+    await engine.save_all(entered_pitchfork_multipacks)
 
     max_multipacks_on_packing_table = multipacks_after_pintset * 4
     multipacks_on_packing_table = await count_multipacks_on_packing_table()
 
     if multipacks_on_packing_table > max_multipacks_on_packing_table:
-        background_tasks.add_task(
-            turn_sync_error,
-            (f'На упаковочном столе '
-             f'паллет более {max_multipacks_on_packing_table}:'
-             f' их {multipacks_on_packing_table}'))
+        sync_error_msg = (f'На упаковочном столе '
+                          f'паллет более {max_multipacks_on_packing_table}:'
+                          f' их {multipacks_on_packing_table}')
 
-    return on_packing_table_multipacks
+    if sync_error_msg:
+        background_tasks.add_task(turn_sync_error, sync_error_msg)
+    return entered_pitchfork_multipacks
 
 
 @deep_logger_router.delete('/remove_multipack_from_wrapping',
