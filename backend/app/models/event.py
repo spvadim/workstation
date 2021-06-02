@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from odmantic import Model, ObjectId
 from pydantic import BaseModel
@@ -33,6 +33,13 @@ class EventOutput(BaseModel):
     message: str
     event_type: EventType
     processed: Optional[bool] = False
+
+    Config = ReportModelConfig
+
+
+class EventsOutput(BaseModel):
+    amount: int
+    events: List[EventOutput]
 
     Config = ReportModelConfig
 
