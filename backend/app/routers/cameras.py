@@ -1,7 +1,7 @@
 from typing import List
 
 from app.db.db_utils import (
-    check_qr_unique, count_exited_pintset_multipacks,
+    check_cube_qr, check_qr_unique, count_exited_pintset_multipacks,
     count_multipacks_entered_pitchfork, count_multipacks_on_packing_table,
     count_multipacks_queue, count_packs_on_assembly, count_packs_queue,
     count_wrapping_multipacks, form_cube_from_n_multipacks, form_url,
@@ -102,7 +102,7 @@ async def new_pack_before_ejector(pack: PackCameraInput,
     error_msg = None
     # TODO: return back "and" check
     if not pack.qr:
-        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с которой не смогли считать ни одного кода!'
+        error_msg = f'{current_datetime} на камере перед сбрасывателем прошла пачка с которой не смогли считать ни одного кода!'
     # TODO: return back when fix nn
     # elif not pack.qr:
     #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с ШК={pack.barcode}, но QR не считался'
@@ -111,10 +111,10 @@ async def new_pack_before_ejector(pack: PackCameraInput,
     #     error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr}, но ШК не считался'
 
     elif not await check_qr_unique(Pack, pack.qr):
-        error_msg = f'{current_datetime} на камере за аппликатором прошла пачка с QR={pack.qr} и он не уникален в системе'
+        error_msg = f'{current_datetime} на камере перед сбрасывателем прошла пачка с QR={pack.qr} и он не уникален в системе'
 
     if error_msg:
-        background_tasks.add_task(drop_pack)
+        background_tasks.add_task(drop_pack, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     return pack
@@ -206,9 +206,24 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         to_process = True
         email_body = ''
         wdiot_logger.error('Расхождение, нужно проверить пачки')
-        packs_under_pintset, packs_to_delete = (packs_under_pintset[:-delta],
-                                                packs_under_pintset[-delta:])
-        for pack in packs_to_delete:
+
+        packs_to_delete = []
+
+        for pack in packs_under_pintset:
+            if 'empty' in pack.qr and delta > 0:
+                packs_to_delete.append(pack)
+                delta -= 1
+
+        packs_under_pintset = [
+            pack for pack in packs_under_pintset if pack not in packs_to_delete
+        ]
+
+        if delta > 0:
+            packs_under_pintset, packs_to_delete2 = (
+                packs_under_pintset[:-delta], packs_under_pintset[-delta:])
+
+        for pack in packs_to_delete + packs_to_delete2:
+
             await engine.delete(pack)
 
             msg = (f'Удалил пачку с QR={pack.qr}, '
@@ -445,24 +460,33 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
 
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
+    sync_error_msg = None
 
-    on_packing_table_multipacks = await get_multipacks_entered_pitchfork()
-    for multipack in on_packing_table_multipacks:
+    multipacks_on_packing_table_system = await count_multipacks_on_packing_table()
+    multipacks_on_packing_table_nn = await get_last_packing_table_amount()
+    if multipacks_on_packing_table_system != multipacks_on_packing_table_nn:
+        sync_error_msg = (f'Рассинхрон логической '
+                          f'{multipacks_on_packing_table_system} '
+                          f'и физической {multipacks_on_packing_table_nn} '
+                          f'очереди на упаковочном столе')
+
+    entered_pitchfork_multipacks = await get_multipacks_entered_pitchfork()
+    for multipack in entered_pitchfork_multipacks:
         multipack.status = Status.ON_PACKING_TABLE
 
-    await engine.save_all(on_packing_table_multipacks)
+    await engine.save_all(entered_pitchfork_multipacks)
 
     max_multipacks_on_packing_table = multipacks_after_pintset * 4
     multipacks_on_packing_table = await count_multipacks_on_packing_table()
 
     if multipacks_on_packing_table > max_multipacks_on_packing_table:
-        background_tasks.add_task(
-            turn_sync_error,
-            (f'На упаковочном столе '
-             f'паллет более {max_multipacks_on_packing_table}:'
-             f' их {multipacks_on_packing_table}'))
+        sync_error_msg = (f'На упаковочном столе '
+                          f'паллет более {max_multipacks_on_packing_table}:'
+                          f' их {multipacks_on_packing_table}')
 
-    return on_packing_table_multipacks
+    if sync_error_msg:
+        background_tasks.add_task(turn_sync_error, sync_error_msg)
+    return entered_pitchfork_multipacks
 
 
 @deep_logger_router.delete('/remove_multipack_from_wrapping',
@@ -563,8 +587,8 @@ async def cube_identification_auto(identification: CubeIdentificationAuto,
     elif not barcode:
         error_msg = f'{current_datetime} при присвоении внешнего кода кубу с QR={qr} ШК не считался'
 
-    elif not await check_qr_unique(Cube, qr):
-        error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и он не уникален в системе'
+    elif not await check_cube_qr(qr):
+        error_msg = f'{current_datetime} при попытке присвоения внешнего кода кубу использован QR={qr} и его нет в системе'
 
     if error_msg:
         background_tasks.add_task(turn_default_error, error_msg)

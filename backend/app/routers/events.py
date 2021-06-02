@@ -1,7 +1,7 @@
 from typing import List
 
 from app.db.events import add_events, get_events, mark_event_processed
-from app.models.event import (Event, EventFilters, EventOutput,
+from app.models.event import (Event, EventFilters, EventOutput, EventsOutput,
                               InterventionEventInput)
 from fastapi import APIRouter, Depends
 from fastapi_versioning import version
@@ -13,9 +13,9 @@ deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
 light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
-@light_logger_router.get('/events', response_model=List[EventOutput])
+@light_logger_router.get('/events', response_model=EventsOutput)
 @version(1, 0)
-async def list_events(filters: EventFilters = Depends()) -> List[Event]:
+async def list_events(filters: EventFilters = Depends()) -> EventsOutput:
     return await get_events(filters=filters)
 
 

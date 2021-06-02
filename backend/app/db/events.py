@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from app.models.event import Event, EventFilters, EventType
+from app.models.event import Event, EventFilters, EventType, EventsOutput
 from app.utils.naive_current_datetime import get_naive_datetime
-from odmantic import ObjectId
+from odmantic import ObjectId, query
 
 from .engine import engine
 from .system_settings import get_system_settings
@@ -61,17 +61,28 @@ async def mark_event_processed(id: ObjectId) -> Event:
     return await engine.save(event)
 
 
-async def get_events(filters: EventFilters) -> List[Event]:
+async def get_events(filters: EventFilters) -> EventsOutput:
 
-    if filters.event_type and filters.processed is not None:
-        return await engine.find(Event, Event.event_type == filters.event_type,
-                                 Event.processed == filters.processed)
+    queries = []
 
-    elif filters.event_type:
-        return await engine.find(Event, Event.event_type == filters.event_type)
+    if filters.event_type:
+        queries.append(Event.event_type.eq(filters.event_type))
 
-    elif filters.processed is not None:
-        return await engine.find(Event, Event.processed == filters.processed)
+    if filters.processed is not None:
+        queries.append(Event.processed.eq(filters.processed))
 
-    else:
-        return await engine.find(Event)
+    if filters.events_begin:
+        queries.append(Event.time.gte(filters.events_begin))
+
+    if filters.events_end:
+        queries.append(Event.time.lte(filters.events_end))
+
+    amount = await engine.count(Event, *queries)
+
+    events = await engine.find(Event,
+                               *queries,
+                               sort=query.desc(Event.id),
+                               skip=filters.skip,
+                               limit=filters.limit)
+
+    return EventsOutput(amount=amount, events=events)

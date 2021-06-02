@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 
 from odmantic import Model, ObjectId
 from pydantic import BaseModel
@@ -37,9 +37,20 @@ class EventOutput(BaseModel):
     Config = ReportModelConfig
 
 
+class EventsOutput(BaseModel):
+    amount: int
+    events: List[EventOutput]
+
+    Config = ReportModelConfig
+
+
 class EventFilters(BaseModel):
+    skip: Optional[int] = 0
+    limit: Optional[int] = 10
     event_type: Optional[EventType] = None
     processed: Optional[bool] = None
+    events_begin: Optional[datetime]
+    events_end: Optional[datetime]
 
     Config = ReportModelConfig
 

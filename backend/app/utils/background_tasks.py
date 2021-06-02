@@ -59,6 +59,7 @@ async def send_warning_and_back_to_normal(message: str):
     tasks_before_sleep = []
     tasks_before_sleep.append(send_warning())
     tasks_before_sleep.append(set_column_yellow(message))
+    tasks_before_sleep.append(add_events('error', message))
 
     current_settings = await get_system_settings()
     delay = current_settings.general_settings.applikator_curtain_opening_delay.value
@@ -74,7 +75,7 @@ async def send_warning_and_back_to_normal(message: str):
         await asyncio.gather(*tasks_after_sleep)
 
 
-async def drop_pack():
+async def drop_pack(message: str):
     current_settings = await get_system_settings()
     delay_before_damper = current_settings.second_erd_settings.delay_before_damper.value
     delay_before_ejector = current_settings.second_erd_settings.delay_before_ejector.value
@@ -87,7 +88,11 @@ async def drop_pack():
     await snmp_raise_ejector()
 
     await asyncio.sleep(delay_after_ejector)
-    tasks_after_ejector = [snmp_finish_ejector(), snmp_finish_damper()]
+    tasks_after_ejector = [
+        snmp_finish_ejector(),
+        snmp_finish_damper(),
+        add_events('error', message)
+    ]
     await asyncio.gather(*tasks_after_ejector)
 
 
@@ -95,6 +100,7 @@ async def turn_default_error(message: str):
     tasks = []
     tasks.append(set_column_red(message))
     tasks.append(send_error())
+    tasks.append(add_events('error', message))
     results = await asyncio.gather(*tasks)
     return results[0]
 
@@ -103,6 +109,7 @@ async def turn_default_warning(message: str):
     tasks = []
     tasks.append(set_column_yellow(message))
     tasks.append(send_warning())
+    tasks.append(add_events('error', message))
     results = await asyncio.gather(*tasks)
     return results[0]
 

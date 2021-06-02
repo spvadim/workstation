@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import List, Optional, Union
 
 from app.db.events import add_events
-from app.models.cube import Cube
+from app.models.cube import Cube, CubeQr
 from app.models.multipack import Multipack, Status
 from app.models.pack import Pack, PackInReport
 from app.models.pack import Status as PackStatus
@@ -140,8 +140,6 @@ async def set_column_red(error_msg: str) -> SystemState:
 async def flush_state() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.state = State.NORMAL
-    message = current_status.system_state.error_msg
-    await add_events('error', message, processed=True)
     current_status.system_state.error_msg = None
     await engine.save(current_status)
     return current_status.system_state
@@ -229,6 +227,21 @@ async def flush_packing_table() -> SystemState:
 
 async def check_qr_unique(model, qr: str) -> bool:
     return await engine.find_one(model, model.qr == qr) is None
+
+
+async def check_cube_qr(qr: str) -> bool:
+    settings = await get_system_settings()
+
+    if settings.general_settings.check_cube_qr.value:
+        cube_qr = await engine.find_one(CubeQr, CubeQr.qr == qr)
+        if cube_qr:
+            cube_qr.used = True
+            await engine.save(cube_qr)
+            return True
+        else:
+            return False
+
+    return True
 
 
 async def get_last_batch() -> ProductionBatch:

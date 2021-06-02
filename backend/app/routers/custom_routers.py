@@ -36,6 +36,8 @@ async def log_queues():
     if cubes_queue:
         deep_logger.info(f'\t \t Last cube: {cubes_queue[-1].json()}')
 
+    await deep_logger.complete()
+
 
 class DeepLoggerRoute(APIRoute):
     def get_route_handler(self) -> Callable:

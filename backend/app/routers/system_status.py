@@ -2,17 +2,17 @@ from datetime import datetime
 from typing import List
 
 from app.db.db_utils import (
-    change_coded_setting, check_qr_unique, delete_cube, flush_packing_table,
-    flush_pintset, flush_sync, flush_withdrawal_pintset, get_by_id_or_404,
-    get_current_state, get_current_status, get_current_workmode,
-    get_extended_report, get_packs_report, get_report,
-    get_report_without_mpacks, packing_table_error, pintset_error,
-    pintset_withdrawal_error, sync_fixing, delete_packs_queue)
+    change_coded_setting, check_cube_qr, check_qr_unique, delete_cube,
+    delete_packs_queue, flush_packing_table, flush_pintset, flush_sync,
+    flush_withdrawal_pintset, get_by_id_or_404, get_current_state,
+    get_current_status, get_current_workmode, get_extended_report,
+    get_packs_report, get_report, get_report_without_mpacks,
+    packing_table_error, pintset_error, pintset_withdrawal_error, sync_fixing)
 from app.db.engine import engine
 from app.db.system_settings import get_system_settings
 from app.models.cube import Cube
-from app.models.pack import PackInReport
 from app.models.message import TGMessage
+from app.models.pack import PackInReport
 from app.models.report import (ExtendedReportResponse, PackReportItem,
                                ReportRequest, ReportResponse,
                                ReportWithoutMPacksResponse)
@@ -199,8 +199,8 @@ async def set_packing_table_normal_with_remove(
 @version(1, 0)
 async def set_packing_table_normal_with_identify(
         qr: str, background_tasks: BackgroundTasks):
-    if not await check_qr_unique(Cube, qr):
-        raise HTTPException(400, detail=f'Куб с QR {qr} уже существует')
+    if not await check_cube_qr(qr):
+        raise HTTPException(400, detail=f'QR {qr} не существует в системе')
 
     state = await get_current_state()
     wrong_cube_id = state.wrong_cube_id
