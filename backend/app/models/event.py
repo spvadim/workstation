@@ -43,6 +43,7 @@ class EventsOutput(BaseModel):
 
     Config = ReportModelConfig
 
+
 class EventFilters(BaseModel):
     skip: Optional[int] = 0
     limit: Optional[int] = 10
