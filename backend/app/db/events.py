@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from app.models.event import Event, EventFilters, EventType
+from app.models.event import Event, EventFilters, EventType, EventsOutput
 from app.utils.naive_current_datetime import get_naive_datetime
 from odmantic import ObjectId, query
 
@@ -61,7 +61,7 @@ async def mark_event_processed(id: ObjectId) -> Event:
     return await engine.save(event)
 
 
-async def get_events(filters: EventFilters) -> List[Event]:
+async def get_events(filters: EventFilters) -> EventsOutput:
 
     queries = []
 
@@ -77,8 +77,12 @@ async def get_events(filters: EventFilters) -> List[Event]:
     if filters.events_end:
         queries.append(Event.time.lte(filters.events_end))
 
-    return await engine.find(Event,
-                             *queries,
-                             sort=query.desc(Event.id),
-                             skip=filters.skip,
-                             limit=filters.limit)
+    amount = await engine.count(Event, *queries)
+
+    events = await engine.find(Event,
+                               *queries,
+                               sort=query.desc(Event.id),
+                               skip=filters.skip,
+                               limit=filters.limit)
+
+    return EventsOutput(amount=amount, events=events)
