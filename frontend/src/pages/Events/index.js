@@ -6,6 +6,8 @@ import Table from '../../components/Table/index.js';
 import TableAddress from "../../components/Table/TableAddress.js";
 import Select from "../../components/Select/index.js";
 import { resetWarningCache } from "prop-types";
+import { Redirect } from "react-router-dom";
+import { Button } from "src/components";
 
 const useStyles = createUseStyles({
     tableContainer: {
@@ -27,6 +29,7 @@ const useStyles = createUseStyles({
         marginBottom: "1em",
         margin: "0 auto",
         display: 'flex',
+        alignItems: "center",
         gap: "2em",
     },
 
@@ -80,6 +83,8 @@ const tableProps = () => ({
 function Events() {
     const classes = useStyles();
     const date_ = new Date();
+
+    const [redirectPage, setRedirectPage] = useState();
 
     const [page, setPage] = useState(1);
     const [typeError, setTypeError] = useState("none");
@@ -142,11 +147,16 @@ function Events() {
         setPage(1)
     }, [typeError, processed, date])
 
-
+    if (redirectPage) {
+        return (
+            <Redirect to="/" />
+        );
+    }
 
     return (
         <div className={classes.container}>
             <div className={classes.filterContainer}>
+                <Button style={{height: 32}} onClick={() => setRedirectPage("main")} >На главную</Button>
                 <Select rows={["none", "desync", "error", "manual_intervention"]}
                         label={"Тип ошибки"}
                         callback={mode => setTypeError(mode)} />
