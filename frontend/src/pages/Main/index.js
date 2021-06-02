@@ -252,7 +252,7 @@ function Main() {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/events?processed=false")
             request.then(res => {
-                setEvents(res.data);
+                setEvents(res.data.events);
             })
         }
         
