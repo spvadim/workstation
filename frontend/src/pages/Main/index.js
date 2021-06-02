@@ -298,7 +298,6 @@ function Main() {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => {
                 let temp = res.data;
-                console.log(temp)
                 if (temp.state === "normal") setNotificationColumnErrorText("") 
                     else {setNotificationColumnErrorText(temp.error_msg)}  // setRedBackground(true)}
                 if (temp.pintset_state === "normal") setNotificationPintsetErrorText("") 
@@ -348,6 +347,10 @@ function Main() {
     } else if (page === "create") {
         return (
             <Redirect to="/create" />
+        );
+    } else if (page === "events") {
+        return (
+            <Redirect to="/events" />
         );
     }
 
@@ -820,7 +823,8 @@ function Main() {
                                                   />
                             })
                     }
-                    <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button>
+                    {events.length > 1 ? <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button> : null}
+                    <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
                 </div>
 
                 <div className={classes.headerInfo}>

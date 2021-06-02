@@ -79,11 +79,13 @@ const tableProps = () => ({
 
 function Events() {
     const classes = useStyles();
+    const date_ = new Date();
 
     const [page, setPage] = useState(1);
     const [typeError, setTypeError] = useState("none");
     const [processed, setProcessed] = useState("none");
-    const [date, setDate] = useState("none");
+    const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : 
+                                        (date_.getMonth() + 1)) + "-" + (date_.getDate().toString().length === 1 ? "0" + date_.getDate() : date_.getDate()));
     const [tableData, setTableData] = useState([]);
     const [eventsCount, setEventsCount] = useState(null);
 
@@ -97,6 +99,7 @@ function Events() {
     if (date !== "none") reqAddress += `events_begin=${date + "T00:00:00"}&` +
                                        `events_end=${date + "T23:59:59"}&`
 
+    const tableRef = useRef(null);
 
     const generatePages = () => {
         let pages = Math.ceil(eventsCount / perPage);
@@ -131,6 +134,16 @@ function Events() {
         return () => clearInterval(timer)
     }, [typeError, processed, date, page])
     
+    useEffect(() => {
+        tableRef.current.scrollTop = 0;
+    }, [typeError, processed, date, page])
+
+    useEffect(() => {
+        setPage(1)
+    }, [typeError, processed, date])
+
+
+
     return (
         <div className={classes.container}>
             <div className={classes.filterContainer}>
@@ -147,6 +160,7 @@ function Events() {
             </div>
             <div className={classes.tableContainer}>
                 <Table
+                    bodyRef={tableRef}
                     columns={tableProps().columns}
                     rows={tableData}
                 />
