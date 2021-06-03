@@ -150,7 +150,8 @@ function Table({
                                     {
                                         columns.map(({ name, Component }) => (
                                             <div key={name} style={{backgroundColor: row.to_process ? "#CC3333" : null}}>
-                                                {Component ? <Component index={index}>{row[name]}</Component> : row[name]+""}
+                                                {Component ? <Component index={index}>{row[name]}</Component> : 
+                                                        row[name] === null ? row[name] : row[name]+""}
                                             </div>
                                         ))
                                     }

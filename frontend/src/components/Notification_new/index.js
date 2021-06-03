@@ -27,7 +27,7 @@ const useStyles = createUseStyles({
     },
 });
 
-export const Notification = React.memo(({ text, error, onClose }) => {
+export const Notification_new = React.memo(({ text, error, onClose }) => {
     const classes = useStyles({ error });
 
     return (

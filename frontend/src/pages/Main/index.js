@@ -8,7 +8,8 @@ import ModalWindow from "../../components/ModalWindow/index.js";
 
 // import ColumnError from "../../components/ColumnError/index.js";
 // import { Notification, NotificationImage } from "../../components/Notification/index.js";
-import { Notification } from "../../components/Notification_new/index.js";
+import { Notification_new } from "../../components/Notification_new/index.js";
+import { Notification } from "../../components/Notification/index.js";
 
 import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
@@ -165,6 +166,8 @@ const useStyles = createUseStyles({
         bottom: 90,
         left: 27,
         maxWidth: 260,
+        backgroundColor: "#d4d4d4",
+        borderRadius: 7,
     },
 
 
@@ -199,6 +202,7 @@ function Main() {
 
     const [packingTableRecords, setPackingTableRecords] = useState("");
     const [notificationText, setNotificationText] = useState("");
+    const [notificationText2, setNotificationText2] = useState("");
     const [returnNotificationText, setReturnNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
@@ -268,10 +272,10 @@ function Main() {
         axios.get(address + "/api/v1_0/get_mode")
             .then(res => {
                 setMode(res.data.work_mode);
-                if (res.data.work_mode === "auto") setReturnNotificationText("")
+                if (res.data.work_mode === "auto") setNotificationText2("")
                 else {
-                    setReturnNotificationText("Сосканируйте QR куба для редактирования");
-                    setNotificationText("Сосканируйте QR куба для редактирования");
+                    // setReturnNotificationText2("Сосканируйте QR куба для редактирования");
+                    setNotificationText2("Сосканируйте QR куба для редактирования");
                 }
             })
             .catch(e => setNotificationErrorText(e.response.data.detail))
@@ -364,11 +368,11 @@ function Main() {
             .then(res => {
                 setMode(res.data.work_mode);
                 if (res.data.work_mode === "auto") {
-                    setReturnNotificationText("");
-                    setNotificationText("");
+                    // setReturnNotificationText("");
+                    setNotificationText2("");
                 } else {
-                    setReturnNotificationText("Сосканируйте QR куба для редактирования");
-                    setNotificationText("Сосканируйте QR куба для редактирования");
+                    // setReturnNotificationText("Сосканируйте QR куба для редактирования");
+                    setNotificationText2("Сосканируйте QR куба для редактирования");
                 }
             })
             .catch(e => {
@@ -414,6 +418,8 @@ function Main() {
     const closeProcessEvent = id => {
         axios.patch(address + "/api/v1_0/events/" + id)
     }
+
+    console.log(notificationText2)
 
     return (
         <div className={classes.Main}>
@@ -818,7 +824,7 @@ function Main() {
             <div className={classes.header}>
                 <div className={classes.notificationPanel}>
                     { events.map(event => {
-                            return <Notification text={event.message}
+                            return <Notification_new text={event.message}
                                                  onClose={() => closeProcessEvent(event.id)}
                                                   />
                             })
@@ -910,15 +916,29 @@ function Main() {
                 </div>
             </div>
 
-            {/* <NotificationPanel
+            <NotificationPanel
+                style={{marginLeft: 276}}
                 notifications={
-                    notificationText && (
+                    [notificationText && (
                         <Notification
                             description={notificationText}
                         />
+                    ),
+                    notificationText2 && (
+                        <Notification
+                            description={notificationText2}
+                        />
+                    )]
+                }
+                errors={
+                    notificationErrorText && (
+                        <Notification
+                            error
+                            description={notificationErrorText}
+                        />
                     )
                 }
-            /> */}
+            />
 
             {/* 
             <ColumnError /> */}

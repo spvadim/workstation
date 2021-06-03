@@ -75,7 +75,7 @@ const tableProps = () => ({
             { name: "time_on_video", title: "Время на видео", width: "10%" },
             { name: "message", title: "Сообщение" },
             { name: "event_type", title: "Тип ошибки", width: "15%" },
-            { name: "processed", title: "Видимость", width: "10%" },
+            { name: "processed", title: "Обработано", width: "10%" },
             { name: "camera_number", title: "Номер камеры", width: '5%' },
         ]
 })
@@ -161,7 +161,7 @@ function Events() {
                         label={"Тип ошибки"}
                         callback={mode => setTypeError(mode)} />
                 <Select rows={["none", "true", "false"]}
-                        label={"Видимость"}
+                        label={"Обработано"}
                         callback={mode => setProcessed(mode)} />
                 <div className={classes.dateContainer}>
                     <label className={classes.label}>Дата:</label>

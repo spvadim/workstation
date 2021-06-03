@@ -34,10 +34,10 @@ const useStyles = createUseStyles({
     }
 });
 
-const NotificationPanel = React.memo(({ notifications, errors }) =>  {
+const NotificationPanel = React.memo(({ notifications, errors, ...restprops }) =>  {
     const classes = useStyles();
     return (
-        <div className={['notification-panel', classes.root].join(' ')} style={{}}>
+        <div className={['notification-panel', classes.root].join(' ')} {...restprops}>
             <div className={classes.container}>
                 <div className={classes.column}>
                     {/* <Paper className={classes.icon} style={{ backgroundImage: `url(${imgNotification})` }} /> */}
