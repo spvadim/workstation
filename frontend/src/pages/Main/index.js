@@ -250,7 +250,7 @@ function Main() {
 
     useEffect(() => {
         const request = () => {
-            let request = axios.get(address + "/api/v1_0/events?processed=false")
+            let request = axios.get(address + "/api/v1_0/events?processed=false&event_type=error")
             request.then(res => {
                 setEvents(res.data.events);
             })
