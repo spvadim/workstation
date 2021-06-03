@@ -29,6 +29,12 @@ async def add_events(event_type: EventType,
         lower_bound = time - timedelta(seconds=delta)
         upper_bound = time + timedelta(seconds=delta)
 
+        error_event = Event(time=time,
+                            event_type=EventType.ERROR,
+                            processed=processed,
+                            message=message)
+        event_list.append(error_event)
+
         for camera in camera_numbers:
             lower_event = Event(time=time,
                                 message=message,
