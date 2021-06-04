@@ -1,7 +1,6 @@
 import os
 
 from app.models.cube import Cube
-from app.models.event import Event
 from app.models.multipack import Multipack
 from app.models.pack import Pack
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -27,7 +26,3 @@ async def models_startup():
     await engine.get_collection(Cube).create_index('batch_number')
     await engine.get_collection(Cube).create_index('qr')
     await engine.get_collection(Cube).create_index('created_at')
-    await engine.get_collection(Event).create_index('time')
-    await engine.get_collection(Event).create_index('event_type')
-    await engine.get_collection(Event).create_index(
-        'processed', partialFilterExpression={'processed': False})
