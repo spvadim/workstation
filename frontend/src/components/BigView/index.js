@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from 'axios';
 import { createUseStyles } from 'react-jss';
 import Block from "../../components/Block/index.js";
+import Pallet from "../../components/Pallet/index.js";
 import address from "../../address.js";
 
 const useStyles = createUseStyles({
@@ -48,10 +49,18 @@ const useStyles = createUseStyles({
     columnsContainer: {
         display: 'flex',
         position: 'relative',
-        gap: "10%",
-        justifyContent: 'space-around',
+        // gap: "10%",
+        // paddingRight: "4em", 
+    },
+
+    columnsContainer2: {
+        display: 'flex',
+        position: 'relative',
+        gap: "5%",
         paddingLeft: "2em",
+        paddingBottom: "1em",
         paddingRight: "4em", 
+        flexWrap: "wrap-reverse",
     },
     
 })
@@ -68,7 +77,9 @@ const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
             let columnItemsTemp = [];
             for (let i = 1; i <= data[column].length; i++) {
                 columnItemsTemp.push((
-                    <Block key={data[column][i-1].id} id={data[column][i-1].id} style={{marginBottom: "-9%", zIndex: data[column].length - i}} />
+                    <Block key={data[column][i-1].id} 
+                           id={data[column][i-1].id} 
+                           style={{marginBottom: "-9%", zIndex: data[column].length - i}} />
                 ))
 
                 if (i % perColumn === 0) {
@@ -101,10 +112,17 @@ const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
         let secondColumn = [];
 
         for (let i = 1; i <= pallet.pack_ids.length; i++) {
+            let block = <Block key={pallet.pack_ids[i-1] + "_"} 
+                               id={pallet.pack_ids[i-1]} 
+                               onClick={() => console.log(123)}
+                               style={{marginBottom: "-9%", zIndex: pallet.pack_ids.length - i}} 
+                               onlyGray={onlyGray} 
+                               size={size} />;
+
             if (i % 2 !== 0) {
-                firstColumn.push(<Block key={pallet.pack_ids[i-1]} id={pallet.pack_ids[i-1]} style={{marginBottom: "-9%", zIndex: pallet.pack_ids.length - i}} onlyGray={onlyGray} size={size} />)
+                firstColumn.push(block)
             } else {
-                secondColumn.push(<Block key={pallet.pack_ids[i-1]} id={pallet.pack_ids[i-1]} style={{marginBottom: "-9%", zIndex: pallet.pack_ids.length - i}} onlyGray={onlyGray} size={size} />)
+                secondColumn.push(block)
             }
         }
 
@@ -119,13 +137,13 @@ const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
     }
 
     function buildPallets(pallets, onlyGray, size) {
-        return pallets.map(pallet => buildPallet(pallet, onlyGray, size))
+        return pallets.map((pallet, i) => <Pallet zIndex={i} pallet={pallet} onlyGray={onlyGray} size={size}/>)
     }
 
     return (
         <div className={classes.content}>
-            <div className={classes.columnsContainer}>
-                {dataType === "packs" ? buildPacks() : buildPallets(data, false, [301, 113])}
+            <div className={dataType === "palletsPackingTable" ? classes.columnsContainer2 : classes.columnsContainer}>
+                {dataType === "packs" ? buildPacks() : buildPallets(data, false, [301, 113])} 
             </div>
                 
             

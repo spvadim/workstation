@@ -101,10 +101,12 @@ const blueBox = (classes, onClick, onAdd, size) => {
         <div className={classes.blue}>
             <div className={classes.buildBox__buttons}>
                 <div className={classes.buildBox__buttonsBox}>
-                    <div className={[classes.buildBox__button, classes.add].join(" ")}
-                         onClick={onAdd}>
-                        <img src="add.svg" alt="btn" />
-                    </div>
+                    {onAdd && 
+                        <div className={[classes.buildBox__button, classes.add].join(" ")}
+                             onClick={onAdd}>
+                            <img src="add.svg" alt="btn" />
+                        </div>
+                    }
                     {/* <div className={[classes.buildBox__button, classes.remove].join(" ")}>
                         <img src="remove.svg" alt="btn" />
                     </div> */}
@@ -180,21 +182,25 @@ const grayBox = (classes, onClick, size, id) => {
     )
 };
 
-const yellowBox = (classes, onClick, onDelete, size, id) => {
+const yellowBox = (classes, onClick, onEdit, onDelete, size, id) => {
     return (
         <div className={classes.yellow}>
             <div className={classes.buildBox__buttons}>
                 <div className={classes.buildBox__buttonsBox}>
-                    <div className={[classes.buildBox__button, classes.edit].join(" ")}>
-                        <img src="edit.svg" alt="btn" />
-                    </div>
-                    <div className={[classes.buildBox__button, classes.del].join(" ")}
-                         onClick={onDelete} >
-                        <img src="del.svg" alt="btn" />
-                    </div>
-                    <div className={[classes.buildBox__button, classes.remove].join(" ")}>
+                    {onEdit &&
+                        <div className={[classes.buildBox__button, classes.edit].join(" ")}>
+                            <img src="edit.svg" alt="btn" />
+                        </div>
+                    }
+                    {onDelete &&
+                        <div className={[classes.buildBox__button, classes.del].join(" ")}
+                             onClick={onDelete} >
+                            <img src="del.svg" alt="btn" />
+                        </div>
+                    }
+                    {/* <div className={[classes.buildBox__button, classes.remove].join(" ")}>
                         <img src="remove.svg" alt="btn" />
-                    </div>
+                    </div> */}
                 </div>
             </div>
             <div className={classes.buildBox__box}>
@@ -233,7 +239,7 @@ const yellowBox = (classes, onClick, onDelete, size, id) => {
     )
 };
 
-const Block = React.memo(({ id, onlyGray, onAdd, onDelete, onEdit, size, controlledMode, ...restProps }) => {
+const Block = React.memo(({ id, onlyGray, onAdd, onDelete, onEdit, onClick, size, controlledMode, ...restProps }) => {
     const classes = useStyles();
 
     const [mode, setMode] = useState(0); // 0 : edge, 1 : blue, 2 : gray, 3 : yellow 
@@ -246,30 +252,34 @@ const Block = React.memo(({ id, onlyGray, onAdd, onDelete, onEdit, size, control
         else if (mode === 3) setMode(2)
     };
 
-    const drawBlock = () => {
+    const drawBlock = (mode) => {
         switch(mode) {
-            case 0: return edgeBox(classes, () => changeModeLogic(mode), size)
+            case 0: return edgeBox(classes, onClick ? () => onClick() : 
+                                                      () => changeModeLogic(mode), size)
 
-            case 1: return blueBox(classes, () => changeModeLogic(mode), () => setMode(2), size)
+            case 1: return blueBox(classes, onClick ? () => onClick() : 
+                                                      () => changeModeLogic(mode), onAdd, size)
 
-            case 2: return grayBox(classes, () => changeModeLogic(mode), size, id)
+            case 2: return grayBox(classes, onClick ? () => onClick() : 
+                                                      () => changeModeLogic(mode), size, id)
 
-            case 3: return yellowBox(classes, () => changeModeLogic(mode), () => setMode(0), size, id)
+            case 3: return yellowBox(classes, onClick ? () => onClick() : 
+                                                        () => changeModeLogic(mode), onEdit, onDelete, size, id)
 
             default: return
         }
     };
 
-    useEffect(() => {
-        if (controlledMode) {
-            setMode(controlledMode);
-        }
-    }, [controlledMode])
+    // useEffect(() => {
+    //     if (controlledMode) {
+    //         setMode(controlledMode);
+    //     }
+    // }, [controlledMode])
     
     return (
         <div id={id} className={classes.buildBox} style={size ? {width: size[0], height: size[1]} : null} {...restProps}>
             {onlyGray ? grayBox(classes, () => {return}, size) :
-                        drawBlock()}
+                        drawBlock(controlledMode ? controlledMode : mode)}
         </div>
     )
 })
