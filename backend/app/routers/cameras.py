@@ -441,10 +441,10 @@ async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
     await engine.save(entered_pitchfork_multipack)
 
     multipacks_entered_pitchfork = await count_multipacks_entered_pitchfork()
-    if multipacks_entered_pitchfork > multipacks_after_pintset:
+    if multipacks_entered_pitchfork > multipacks_after_pintset * 2:
         background_tasks.add_task(turn_sync_error,
                                   (f'На вилах более '
-                                   f'{multipacks_after_pintset} паллет:'
+                                   f'{multipacks_after_pintset * 2} паллет:'
                                    f'их {multipacks_entered_pitchfork}'))
 
     return entered_pitchfork_multipack
