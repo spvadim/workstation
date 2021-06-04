@@ -398,19 +398,19 @@ function Edit({ description, type, extended }) {
                 <div>
                     <div style={{display: "flex", gap: 20, alignItems: "center"}}>
                         <Text className={classes.tableTitle} type="title2">{type}</Text>
-                        <span>Новый QR: <TextField style={{padding: "5px 5px", width: 200}}
+                        <span>Новый QR: <TextField style={{padding: "5px 5px", width: 300}}
                                                                             outlined
                                                                             placeholder="Новый Qr..."
                                                                             onChange={async e => {
                                                                                 setNewQrCube(e.target.value);
                                                                                 setErrorText2("");
                                                                             }} /></span>
-                        {toProcess &&
+                        {/* {toProcess &&
                             <Button onClick={() => setToProcessDump(!toProcessDump)} theme="secondary">
                                 <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
                                 Сбросить статус: ({toProcessDump ? "true" : "false"})
                             </Button>
-                        }
+                        } */}
                     </div>
                     <TableData
                         className={classes.tableDescription}

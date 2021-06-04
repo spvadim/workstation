@@ -41,8 +41,9 @@ function InputRadio({ name, htmlFor, children, checked, onChange, className, ...
             name={name}
             htmlFor={htmlFor}
             {...restProps}>
-
+            
             {children}
+            
             <input
                 className={classes.input}
                 name={name}
