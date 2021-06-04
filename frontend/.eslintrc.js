@@ -99,6 +99,7 @@ module.exports = {
         "indent": "off",
         "indent-legacy": "off",
         "init-declarations": "off",
+        "jsx-a11y/anchor-is-valid": 0,
         "jsx-quotes": [
             "error",
             "prefer-double"
@@ -167,7 +168,7 @@ module.exports = {
         "no-native-reassign": "error",
         "no-negated-condition": "off",
         "no-negated-in-lhs": "error",
-        "no-nested-ternary": "error",
+        "no-nested-ternary": "off",
         "no-new": "error",
         "no-new-func": "error",
         "no-new-object": "error",
@@ -175,7 +176,7 @@ module.exports = {
         "no-new-wrappers": "error",
         "no-octal-escape": "error",
         "no-param-reassign": "error",
-        "no-path-concat": "error",
+        "no-path-concat": "off",
         "no-unreachable": "warn",
         "no-plusplus": [
             "error",
@@ -194,7 +195,7 @@ module.exports = {
         "no-restricted-properties": "error",
         "no-restricted-syntax": "error",
         "no-return-assign": "error",
-        "no-return-await": "error",
+        "no-return-await": "off",
         "no-script-url": "error",
         "no-self-compare": "error",
         "no-sequences": "error",
@@ -223,7 +224,7 @@ module.exports = {
         "no-useless-backreference": "error",
         "no-useless-call": "error",
         "no-useless-computed-key": "error",
-        "no-useless-concat": "error",
+        "no-useless-concat": "off",
         "no-useless-constructor": "error",
         "no-useless-rename": "error",
         "no-useless-return": "warn",

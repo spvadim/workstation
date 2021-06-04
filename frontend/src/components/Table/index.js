@@ -52,6 +52,8 @@ const useStyles = createUseStyles({
         paddingLeft: 12,
     },
     body: {
+        overflowY: "scroll",
+        maxHeight: "100%",
         '& > div': {
             display: 'grid',
         },
@@ -120,10 +122,10 @@ function resizeHeader(head, body) {
 }
 
 function Table({
-    rows, columns, className, buttonEdit, buttonDelete, buttonVisible, onVisible, onEdit, onDelete, hideTracksWhenNotNeeded
+    rows, columns, bodyRef, className, buttonEdit, buttonDelete, buttonVisible, onVisible, onEdit, onDelete, hideTracksWhenNotNeeded
 }) {
     const headRef = React.useRef(null);
-    const bodyRef = React.useRef(null);
+    // const bodyRef = React.useRef(null);
     const classes = useStyles({ columns, buttonEdit, buttonDelete, buttonVisible });
 
     const gridTemplateColumns = React.useMemo(() => {
@@ -140,7 +142,7 @@ function Table({
                 }
             </div>
             <div className={classes.table}>
-                <Scrollbars hideTracksWhenNotNeeded={hideTracksWhenNotNeeded}>
+                {/* <Scrollbars hideTracksWhenNotNeeded={hideTracksWhenNotNeeded}> */}
                     <div className={classes.body} ref={bodyRef}>
                         {
                             rows.map((row, index) => (
@@ -148,7 +150,8 @@ function Table({
                                     {
                                         columns.map(({ name, Component }) => (
                                             <div key={name} style={{backgroundColor: row.to_process ? "#CC3333" : null}}>
-                                                {Component ? <Component index={index}>{row[name]}</Component> : row[name]}
+                                                {Component ? <Component index={index}>{row[name]}</Component> : 
+                                                        row[name] === null ? row[name] : row[name]+""}
                                             </div>
                                         ))
                                     }
@@ -165,7 +168,7 @@ function Table({
                             ))
                         }
                     </div>
-                </Scrollbars>
+                {/* </Scrollbars> */}
             </div>
         </div>
     )

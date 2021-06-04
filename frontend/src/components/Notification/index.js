@@ -7,9 +7,9 @@ import imgCross from 'src/assets/images/cross.svg';
 
 const useStyles = createUseStyles({
     rootNotification: {
-        width: 351,
-        paddingLeft: 21,
-        paddingRight: 21,
+        width: 325,
+        paddingLeft: 16,
+        paddingRight: 16,
     },
     rootNotificationImage: {
         width: 377,
@@ -30,7 +30,7 @@ const useStyles = createUseStyles({
     },
     description: {
         marginTop: 11,
-        fontSize: 22,
+        fontSize: 19,
     },
     actions: {
         '& > .button': {
