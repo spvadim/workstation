@@ -473,8 +473,8 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
                           f'очереди на упаковочном столе')
 
     entered_pitchfork_multipacks = await get_multipacks_entered_pitchfork()
-    for multipack in entered_pitchfork_multipacks:
-        multipack.status = Status.ON_PACKING_TABLE
+    for i in range(multipacks_after_pintset):
+        entered_pitchfork_multipacks[i].status = Status.ON_PACKING_TABLE
 
     await engine.save_all(entered_pitchfork_multipacks)
 
