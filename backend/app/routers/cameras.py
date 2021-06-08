@@ -199,7 +199,7 @@ async def pintset_receive(background_tasks: BackgroundTasks):
             await get_naive_datetime(),
             wdiot_logger,
             result=packs_under_pintset)
-        background_tasks.add_task(send_email, 'Сгениророваны пачки',
+        background_tasks.add_task(send_email, 'Сгенерированы пачки',
                                   email_body)
 
     if delta > 0:
