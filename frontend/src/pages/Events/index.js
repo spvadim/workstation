@@ -87,7 +87,7 @@ function Events() {
     const [redirectPage, setRedirectPage] = useState();
 
     const [page, setPage] = useState(1);
-    const [typeError, setTypeError] = useState("none");
+    const [typeError, setTypeError] = useState("error");
     const [processed, setProcessed] = useState("none");
     const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : 
                                         (date_.getMonth() + 1)) + "-" + (date_.getDate().toString().length === 1 ? "0" + date_.getDate() : date_.getDate()));
@@ -157,9 +157,9 @@ function Events() {
         <div className={classes.container}>
             <div className={classes.filterContainer}>
                 <Button style={{height: 32}} onClick={() => setRedirectPage("main")} >На главную</Button>
-                <Select rows={["none", "desync", "error", "manual_intervention"]}
+                {/* <Select rows={["none", "desync", "error", "manual_intervention"]}
                         label={"Тип ошибки"}
-                        callback={mode => setTypeError(mode)} />
+                        callback={mode => setTypeError(mode)} /> */}
                 <Select rows={["none", "true", "false"]}
                         label={"Обработано"}
                         callback={mode => setProcessed(mode)} />
