@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from app.models.event import Event, EventFilters, EventType, EventsOutput
+from app.models.event import Event, EventFilters, EventsOutput, EventType
 from app.utils.naive_current_datetime import get_naive_datetime
 from odmantic import ObjectId, query
 
@@ -29,11 +29,13 @@ async def add_events(event_type: EventType,
         lower_bound = time - timedelta(seconds=delta)
         upper_bound = time + timedelta(seconds=delta)
 
-        error_event = Event(time=time,
-                            event_type=EventType.ERROR,
-                            processed=processed,
-                            message=message)
-        event_list.append(error_event)
+        if event_type == EventType.MANUAL_INTERVENTION:
+
+            error_event = Event(time=time,
+                                event_type=EventType.ERROR,
+                                processed=processed,
+                                message=message)
+            event_list.append(error_event)
 
         for camera in camera_numbers:
             lower_event = Event(time=time,
