@@ -317,6 +317,7 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     delta = len(packs_on_assembly) - needed_packs
     current_time = await get_naive_datetime()
     to_process = False
+    email_body = ''
 
     if delta < 0:
         packs_under_pintset = await get_packs_under_pintset()
@@ -325,7 +326,9 @@ async def pintset_finish(background_tasks: BackgroundTasks):
                 packs_under_pintset) >= multipacks_after_pintset and delta < 0:
 
             for pack in packs_under_pintset[:multipacks_after_pintset]:
-                wdiot_logger.info(f'Перевел пачку {pack.json()} в сборку')
+                log_message = f'Перевел пачку {pack.json()} в сборку'
+                email_body += f'<br> {log_message}'
+                wdiot_logger.info(log_message)
                 pack.status = PackStatus.ON_ASSEMBLY
                 packs_on_assembly.append(pack)
 
@@ -356,6 +359,9 @@ async def pintset_finish(background_tasks: BackgroundTasks):
             packs_on_assembly[i].id)
 
     await engine.save_all(packs_on_assembly)
+
+    if email_body:
+        background_tasks.add_task(send_email, 'Перевел пачки в сборку', email_body)
 
     new_multipacks = []
     for pack_ids in all_pack_ids:
