@@ -317,6 +317,7 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     delta = len(packs_on_assembly) - needed_packs
     current_time = await get_naive_datetime()
     to_process = False
+    email_body = ''
 
     if delta < 0:
         packs_under_pintset = await get_packs_under_pintset()
@@ -325,7 +326,9 @@ async def pintset_finish(background_tasks: BackgroundTasks):
                 packs_under_pintset) >= multipacks_after_pintset and delta < 0:
 
             for pack in packs_under_pintset[:multipacks_after_pintset]:
-                wdiot_logger.info(f'Перевел пачку {pack.json()} в сборку')
+                log_message = f'Перевел пачку {pack.json()} в сборку'
+                email_body += f'<br> {log_message}'
+                wdiot_logger.info(log_message)
                 pack.status = PackStatus.ON_ASSEMBLY
                 packs_on_assembly.append(pack)
 
@@ -335,16 +338,9 @@ async def pintset_finish(background_tasks: BackgroundTasks):
             delta = len(packs_on_assembly) - needed_packs
 
         if delta < 0:
-            raise HTTPException(400,
-                                detail='Не получилось сформировать паллеты')
-            # TODO: uncomment this in future
-            # to_process = True
-            # packs_on_assembly, email_body = await generate_packs(
-            #     abs(delta), number, current_time, wdiot_logger,
-            #     PackStatus.ON_ASSEMBLY, to_process, packs_on_assembly)
-
-            # background_tasks.add_task(send_email, 'Сгениророваны пачки',
-            #                           email_body)
+            error_msg = 'Недостаточно пачек для формирования паллет'
+            background_tasks.add_task(turn_sync_error, error_msg)
+            return JSONResponse(status_code=400, content={'detail': error_msg})
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
@@ -356,6 +352,10 @@ async def pintset_finish(background_tasks: BackgroundTasks):
             packs_on_assembly[i].id)
 
     await engine.save_all(packs_on_assembly)
+
+    if email_body:
+        background_tasks.add_task(send_email, 'Перевел пачки в сборку',
+                                  email_body)
 
     new_multipacks = []
     for pack_ids in all_pack_ids:
@@ -464,7 +464,8 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
     multipacks_after_pintset = batch.params.multipacks_after_pintset
     sync_error_msg = None
 
-    multipacks_on_packing_table_system = await count_multipacks_on_packing_table()
+    multipacks_on_packing_table_system = await count_multipacks_on_packing_table(
+    )
     multipacks_on_packing_table_nn = await get_last_packing_table_amount()
     if multipacks_on_packing_table_system != multipacks_on_packing_table_nn:
         sync_error_msg = (f'Рассинхрон логической '
