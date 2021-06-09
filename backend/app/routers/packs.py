@@ -78,7 +78,10 @@ async def update_pack_by_id(id: ObjectId, patch: PackPatchSchema):
         if not await check_qr_unique(Pack, patch.qr):
             raise HTTPException(
                 400, detail=f'Пачка с QR-кодом {patch.qr} уже есть в системе')
-        patch.to_process = True
+
+        if patch.to_process is not False:
+            patch.to_process = True
+
         pack.comments.append(f'QR был изменен с {pack.qr}')
     patch_dict = patch.dict(exclude_unset=True)
     for name, value in patch_dict.items():
