@@ -388,35 +388,10 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
 
     wrapping_multipack = await get_first_exited_pintset_multipack()
     if not wrapping_multipack:
+        error_msg = 'В очереди нет паллеты, вышедшей из-под пинцета!'
+        background_tasks.add_task(turn_sync_error, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
 
-        batch = await get_last_batch()
-        multipacks_after_pintset = batch.params.multipacks_after_pintset
-        needed_packs = batch.params.packs * multipacks_after_pintset
-
-        packs_on_assembly = await get_packs_on_assembly()
-        delta = len(packs_on_assembly) - needed_packs
-
-        #TODO: turn_sync_error here
-
-        if delta >= 0:
-            await pintset_finish(background_tasks=background_tasks)
-            return await multipack_wrapping_auto(
-                background_tasks=background_tasks)
-
-        else:
-            raise HTTPException(
-                400,
-                detail=
-                'В очереди нет паллеты, вышедшей из пинцета и при этом недостаточно пачек'
-            )
-            # TODO: turn_sync_error here
-            # current_time = await get_naive_datetime()
-            # wrapping_multipack, email_body = await generate_multipack(
-            #     batch.number, batch.params.packs, current_time, wdiot_logger,
-            #     True)
-
-            # background_tasks.add_task(send_email, 'Сгенирорована паллета',
-            #                           email_body)
     wrapping_multipack.status = Status.WRAPPING
 
     await engine.save(wrapping_multipack)
