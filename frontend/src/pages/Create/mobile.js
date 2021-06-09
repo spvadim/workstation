@@ -15,7 +15,7 @@ import imgOk from 'src/assets/images/ok.svg';
 
 const useStyles = createUseStyles({
     header: {
-        display: "flex",
+        // display: "flex",
         marginBottom: 10,
     },
 
@@ -28,6 +28,7 @@ const useStyles = createUseStyles({
     title2: {
         fontSize: "1.5rem",
         fontWeight: 700,
+        float: "left",
     },
 
     body: {
@@ -382,7 +383,7 @@ function Create_mobile() {
                 <div>
                     <div className={classes.header} style={{justifyContent: "space-between", alignItems: "center"}}>
                         <span className={classes.title2}>Паллеты</span>
-                        <Button className={classes.button} onClick={() => addEmptyMultipack()}>Добавить</Button>
+                        <Button style={{margin: "0 auto"}} className={classes.button} onClick={() => addEmptyMultipack()}>Добавить</Button>
                     </div>
 
                     <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>

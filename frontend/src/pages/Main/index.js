@@ -135,6 +135,7 @@ const useStyles = createUseStyles({
         paddingBottom: 22,
         paddingLeft: 27,
         paddingRight: 27,
+        marginTop: 50,
     },
     switchContainer: {
         userSelect: 'none',

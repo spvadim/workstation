@@ -25,8 +25,8 @@ const useStyles = createUseStyles({
 		position: "relative",
 	},
 	App_inner: {
-		position: "absolute",
-		overflowY: "scroll",
+		// position: "absolute",
+		// overflowY: "scroll",
 		height: "100%",
 		width: "100%",
 		zIndex: 1,

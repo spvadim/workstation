@@ -5,7 +5,7 @@ import { color } from 'src/theme';
 
 const useStyles = createUseStyles({
     Footer: {
-        position: 'fixed',
+        position: 'absolute',
         width: '100%',
         bottom: "5%",
         zIndex: 0,
