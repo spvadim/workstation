@@ -438,6 +438,12 @@ async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
     entered_pitchfork_multipack = await get_first_wrapping_multipack()
+
+    if not entered_pitchfork_multipack:
+        error_msg = 'В очереди нет паллет в обмотке!'
+        background_tasks.add_task(turn_sync_error, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
+
     entered_pitchfork_multipack.status = Status.ENTER_PITCHFORK
 
     await engine.save(entered_pitchfork_multipack)
