@@ -456,7 +456,7 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
 
     entered_pitchfork_multipacks = await get_multipacks_entered_pitchfork()
 
-    if not entered_pitchfork_multipacks:
+    if len(entered_pitchfork_multipacks) < multipacks_after_pintset:
         error_msg = 'В очереди нет паллет на виллах!'
         background_tasks.add_task(turn_sync_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
