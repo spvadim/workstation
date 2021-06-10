@@ -278,9 +278,17 @@ const useStyles = createUseStyles({
         display: 'flex',
         position: 'relative',
         gap: "10%",
-        justifyContent: 'space-around',
         paddingLeft: "2em",
         paddingRight: "4em", 
+    },
+
+    columnsContainer2: {
+        display: 'flex',
+        position: 'relative',
+        gap: "5%",
+        paddingLeft: "2em",
+        paddingRight: "4em", 
+        flexWrap: "wrap-reverse",
     },
 });
 
@@ -444,6 +452,12 @@ function Main() {
             };
             
             temp = pallets.onFork;
+        } else if (mode === "onPackingTable") {
+            temp = {
+                onPackingTable: [],
+            };
+
+            temp = pallets.onPackingTable;
         }
 
         setDataBigView(temp);
@@ -487,7 +501,9 @@ function Main() {
         return allColumns
     }
 
-    
+    function buildPallets(pallets, onlyGray, size) {
+        return pallets.map((pallet, i) => <Pallet zIndex={i} pallet={pallet} onlyGray={onlyGray} size={size}/>)
+    }
 
     return (
 		<div className={classes.box}>
@@ -592,17 +608,18 @@ function Main() {
                                 <h3 className={classes.variants__itemTitle}>Вилы</h3>
                                 <div className={classes.columnsContainer}>
                                     {/* {buildPallets(["onFork"], 2, true, [70, 25], pallets)} */}
-                                    {/* {buildPallets(pallets.onFork, true, [70, 25])} */}
-                                    <Pallet pallets={pallets.onFork} onlyGray size={[70, 25]} />
+                                    {buildPallets(pallets.onFork, true, [70, 25])}
+                                    {/* <Pallet pallets={pallets.onFork} onlyGray size={[70, 25]} /> */}
                                 </div>
                             </label>
                         </li>
-                        <li className={classes.variants__item}>
+                        <li className={classes.variants__item}
+                            onClick={() => {changeBigViewMode("onPackingTable"); setDataTypeBigView("palletsPackingTable")}}>
                             <input type="radio" name="variants" id="variants-5" />
                             <label htmlFor="variants-5" className={classes.variants__itemLabel}>
                                 <h3 className={classes.variants__itemTitle}>Упаковочный стол</h3>
-                                <div className={classes.variants__itemContainer}>
-
+                                <div className={classes.columnsContainer2}>
+                                    {buildPallets(pallets.onPackingTable, true, [70, 25])}
                                 </div>
                             </label>
                         </li>

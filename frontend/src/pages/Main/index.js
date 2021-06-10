@@ -62,11 +62,13 @@ const getTableProps = (extended) => ({
                 { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
+                { name: "status", title: "Статус", width: 100 },
                 { name: "id", title: "id", width: 200 },
             ] : [
                 { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
+                { name: "status", title: "Статус", width: 100 },
             ],
     },
 
@@ -133,6 +135,7 @@ const useStyles = createUseStyles({
         paddingBottom: 22,
         paddingLeft: 27,
         paddingRight: 27,
+        marginTop: 50,
     },
     switchContainer: {
         userSelect: 'none',
@@ -418,8 +421,6 @@ function Main() {
     const closeProcessEvent = id => {
         axios.patch(address + "/api/v1_0/events/" + id)
     }
-
-    console.log(notificationText2)
 
     return (
         <div className={classes.Main}>
