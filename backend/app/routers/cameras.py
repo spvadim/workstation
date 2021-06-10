@@ -455,6 +455,12 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
                           f'очереди на упаковочном столе')
 
     entered_pitchfork_multipacks = await get_multipacks_entered_pitchfork()
+
+    if not entered_pitchfork_multipacks:
+        error_msg = 'В очереди нет паллет на виллах!'
+        background_tasks.add_task(turn_sync_error, error_msg)
+        return JSONResponse(status_code=400, content={'detail': error_msg})
+
     for i in range(multipacks_after_pintset):
         entered_pitchfork_multipacks[i].status = Status.ON_PACKING_TABLE
 
