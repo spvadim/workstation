@@ -620,7 +620,7 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     current_time = await get_naive_datetime()
     if len(multipacks_on_packing_table) < needed_multipacks:
         error_msg = f'{current_time} попытка формирования куба, когда на упаковочном столе меньше {needed_multipacks} мультипаков'
-        background_tasks.add_task(turn_default_error, error_msg)
+        background_tasks.add_task(turn_sync_error, error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     multipack_ids_with_pack_ids = {}
