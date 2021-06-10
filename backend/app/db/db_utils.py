@@ -59,7 +59,7 @@ async def delete_cube(id: ObjectId) -> Cube:
 async def get_by_qr_or_404(model, qr: str) -> Model:
     instance = await engine.find_one(model, model.qr == qr)
     if instance is None:
-        raise HTTPException(404)
+        raise HTTPException(404, detail=f'Не найден элемент с QR={qr}')
     return instance
 
 
