@@ -9,7 +9,9 @@ const verticalPadding = 18;
 
 const useStyles = createUseStyles({
     root: {
-        position: 'relative',
+        position: 'absolute',
+        bottom: "5em",
+        zIndex: 2,
         height: (2 * verticalPadding) + iconHeight,
     },
     container: {
