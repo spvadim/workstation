@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from 'axios';
 import { createUseStyles } from 'react-jss';
 import Block from "../../components/Block/index.js";
@@ -6,6 +6,15 @@ import address from "../../address.js";
 import TableAddress from "../../components/Table/TableAddress.js";
 import BigView from "../../components/BigView/index.js";
 import Pallet from "../../components/Pallet/index.js";
+import {PalletOnPackingTable, PalletOnFork} from "../../components/Pallet/packing_table.js";
+import {useHistory} from 'react-router-dom';
+import ModalWindow from '../../components/ModalWindow';
+import imgOk from 'src/assets/images/ok.svg';
+import imgCross from 'src/assets/images/cross.svg';
+import Input from '../../components/InputText/Input';
+import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
+import {Notification} from '../../components/Notification';
+import InputTextQr from '../../components/InputText/InputTextQr';
 
 const useStyles = createUseStyles({
 	container: {
@@ -76,7 +85,7 @@ const useStyles = createUseStyles({
             transition: "all 0.3s ease",
         },
     },
-    
+
     header: {
         position: 'relative',
     },
@@ -91,6 +100,7 @@ const useStyles = createUseStyles({
         display: 'flex',
         alignItems: "start",
         flexWrap: 'wrap',
+        flex: 3,
     },
 
     header__infoItem: {
@@ -112,10 +122,11 @@ const useStyles = createUseStyles({
             fontSize: 24,
         },
     },
-    
+
     header__buttonList: {
         display: 'flex',
         alignItems: "center",
+        flex: 5,
         marginTop: -12,
         marginLeft: 12,
     },
@@ -123,10 +134,12 @@ const useStyles = createUseStyles({
     header__button: {
         marginRight: 12,
         marginTop: 12,
+        minHeight: 115,
         flex: 1,
         "&:last-child": {
             marginRight: 0,
         },
+        boxSizing: 'border-box',
     },
 
     header__qr: {
@@ -190,6 +203,7 @@ const useStyles = createUseStyles({
         // gap: "30px 30px",
         // listStyle: "none",
         display: 'flex',
+        flex: 2,
         position: 'relative',
         listStyle: "none",
         justifyContent: 'space-around',
@@ -227,6 +241,9 @@ const useStyles = createUseStyles({
         "&:hover": {
             background: "#f7ce55",
         },
+        '&.active': {
+            background: "#f7ce55",
+        }
     },
 
     variants__itemTitle: {
@@ -280,9 +297,47 @@ const useStyles = createUseStyles({
         gap: "10%",
         justifyContent: 'space-around',
         paddingLeft: "2em",
-        paddingRight: "4em", 
+        paddingRight: "4em",
+    },
+
+    content: {
+        display: 'flex',
+        flex: 5,
+        justifyContent: 'space-around',
+        // maxWidth: "90%",
+        alignItems: 'center',
+    },
+
+    footer: {
+        position: 'absolute',
+        width: '100%',
+        boxSizing: 'border-box',
+        bottom: 0,
+        display: 'flex',
+        justifyContent: 'space-between',
+        paddingBottom: 22,
+        paddingLeft: 27,
+        paddingRight: 27,
+    },
+    switchContainer: {
+        userSelect: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        fontSize: 18,
+    },
+    switchTitle: {
+        fontSize: 24,
+        fontWeight: 700,
     },
 });
+
+const bigViewModes = {
+    pintset: 'pintset',
+    pallet: 'pallet',
+    onWinder: 'onWinder',
+    onFork: 'onFork',
+    onPackingTable: 'onPackingTable',
+};
 
 const tableProps = (extended) => ({
     columns: extended ?
@@ -301,8 +356,27 @@ const tableProps = (extended) => ({
 function Main() {
 	const classes = useStyles();
 
-    const [extented, setExtended] = useState(false);
+    const history = useHistory();
+
+    const [mode, setMode] = useState('auto');
+    const [extended, setExtended] = useState(false);
     const [settings, setSettings] = useState(false);
+    const [page, setPage] = useState('');
+
+    const [modalAgree, setModalAgree] = useState(false);
+    const [modalDisassemble, setModalDisassemble] = useState(false);
+    const [modalCube, setModalCube] = useState(false);
+    const [modalPackingTableError, setModalPackingTableError] = useState(false);
+    const [modalDelete2Pallet, setModalDelete2Pallet]  = useState(false);
+    const [modalChangePack, setModalChangePack] = useState(false);
+    const [modalChangePackAgree, setModalChangePackAgree] = useState(false);
+    const [modalDelPalletAgree, setModalDelPalletAgree] = useState(false);
+
+    const [forceFocus, setForceFocus] = useState("inputQr");
+    const [notificationText, setNotificationText] = useState("");
+    const [notificationText2, setNotificationText2] = useState("");
+    const [notificationErrorText, setNotificationErrorText] = useState("");
+    const [returnNotificationText, setReturnNotificationText] = useState("");
 
     const [packs, setPacks] = useState({
         underPintset: [],
@@ -322,6 +396,20 @@ function Main() {
 
     const [bigViewMode, setBigViewMode] = useState("");
 
+    const inputQrRef = useRef();
+    const inputQrCubeRef = useRef();
+    const inputDisassembleRef = useRef();
+    const inputChangePackOldRef = useRef();
+    const inputChangePackNewRef = useRef();
+
+    const dictRefs = {
+        inputQr: inputQrRef,
+        inputQrCube: inputQrCubeRef,
+        inputDisassemble: inputDisassembleRef,
+        inputChangePackOld: inputChangePackOldRef,
+        inputChangePackNew: inputChangePackNewRef,
+    }
+
     const sortPacks = array => {
         let packs = {
             underPintset: [],
@@ -340,7 +428,7 @@ function Main() {
                     countOnAssemble += 1;
                     if (countOnAssemble > maxCountOnAssemble) packs.onAssemble_after.push(item)
                     else packs.onAssemble_before.push(item);
-                    
+
                     break;
 
                 default:
@@ -351,7 +439,7 @@ function Main() {
         return packs
     };
 
-    const sortPallets = array => {
+    const sortPallets = async array => {
         let pallets = {
             onFork: [],
             onWinder: [],
@@ -359,15 +447,16 @@ function Main() {
             others: [],
         };
 
-        array.forEach(async (it) => {
-            async function getPallet() {
-                let response = axios.get(address + "/api/v1_0/multipacks/" + it.id);
-                return response;
-            }
+        async function getPallet(id) {
+            let response = await axios.get(address + "/api/v1_0/multipacks/" + id);
+            return response.data;
+        }
 
-            let item = await getPallet();
-            item = item.data
+        const res = await Promise.all(array.map(async ({id}) => {
+            return await getPallet(id)
+        }));
 
+        res.forEach((item) => {
             switch (item.status) {
                 case "зашел на вилы":
                     pallets.onFork.push(item);
@@ -378,7 +467,7 @@ function Main() {
                 case "на упаковочном столе":
                     pallets.onPackingTable.push(item);
                     break;
-                
+
                 default:
                     pallets.others.push(item);
                     break;
@@ -395,16 +484,22 @@ function Main() {
         }
 
         getPacks();
-    }, []);
+
+        const interval = setInterval(getPacks, 1000);
+        return () => clearInterval(interval);
+    }, [setPacks]);
 
     useEffect(() => {
         async function getPallets() {
             let response = await axios.get(address + "/api/v1_0/multipacks_queue")
-            setPallets(sortPallets(response.data));
+            setPallets(await sortPallets(response.data));
         }
 
         getPallets();
-    }, []);
+
+        const interval = setInterval(getPallets, 1000);
+        return () => clearInterval(interval);
+    }, [setPallets]);
 
     useEffect(() => {
         async function getSettings() {
@@ -413,7 +508,6 @@ function Main() {
         }
 
         getSettings();
-
     }, []);
 
     function changeBigViewMode(mode) {
@@ -442,7 +536,7 @@ function Main() {
             temp = {
                 onFork: [],
             };
-            
+
             temp = pallets.onFork;
         }
 
@@ -455,20 +549,20 @@ function Main() {
         let separatedColumns = [];
         let swap = false;
         let columnItems = [];
-        
+
         columns.map(column => {
             for (let i = 1; i <= packs[column].length; i++) {
                 columnItems.push((
                     <Block key={packs[column][i-1].id + "123"} id={packs[column][i-1].id} style={{marginBottom: "-9%", zIndex: packs[column].length - i}} onlyGray={onlyGray} size={size} />
                 ))
-    
+
                 if (i % perColumn === 0) {
                     separatedColumns.push((<div style={swap ? {} : null} className={classes.buildCol}>{columnItems}</div>));
                     if (separatedColumns.length === 2) {
                         allColumns.push((<div style={swap ? {zIndex: i} : null} className={classes.buildRow}>{separatedColumns}</div>));
                         separatedColumns = [];
                     }
-    
+
                     columnItems = [];
                     swap = !swap;
                 }
@@ -487,10 +581,367 @@ function Main() {
         return allColumns
     }
 
-    
+    const createIncompleteCube = () => {
+        axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + inputQrCubeRef.current.value.replace("/", "%2F"))
+            .then(() => {
+                setReturnNotificationText(notificationText);
+                setNotificationText("Неполный куб успешно сформирован");
+                setTimeout(() => {
+                    returnNotification();
+                }, 2000);
+            })
+            .catch(e => {
+                setNotificationErrorText(e.response.data.detail)
+            })
+    }
+
+    const updateMode = () => {
+        let newMode = mode === "auto" ? "manual" : "auto"
+        axios.patch(address + "/api/v1_0/set_mode", { work_mode: newMode })
+            .then(res => {
+                setMode(res.data.work_mode);
+                if (res.data.work_mode === "auto") {
+                    // setReturnNotificationText("");
+                    setNotificationText2("");
+                } else {
+                    // setReturnNotificationText("Сосканируйте QR куба для редактирования");
+                    setNotificationText2("Сосканируйте QR куба для редактирования");
+                }
+            })
+            .catch(e => {
+                // TOD0: handle error
+                console.log(e);
+            })
+    }
+
+    useEffect (() => {
+        let interval;
+        let isExist = Object.keys(dictRefs).indexOf(forceFocus) !== -1;
+
+        if (forceFocus && isExist) {
+            interval = setInterval(() => {
+                if (document.activeElement.id !== forceFocus && dictRefs[forceFocus].current) {
+                    dictRefs[forceFocus].current.focus();
+                }
+            }, 300)
+        } else if (!isExist) {
+            interval = setInterval(() => {
+                if (document.activeElement.id !== forceFocus) {
+                    dictRefs["inputQr"].current.focus();
+                }
+            }, 300);
+        }
+
+        return () => {clearInterval(interval)};
+    }, [forceFocus])
+
+    if (page === "batch_params") {
+        history.push('/batch_params')
+    } else if (page === "create") {
+        history.push('/create')
+    } else if (page === "events") {
+        history.push('/events')
+    }
+
+    const returnNotification = () => {
+        setNotificationText(returnNotificationText);
+    }
+
+    const delPallet = useCallback((id) => {
+        setModalDelPalletAgree(id)
+    }, [setModalDelPalletAgree])
+
+    const editPallet = useCallback((row) => {
+        history.push('/edit', { description: row, type: 'multipacks', extended})
+    }, [extended, history])
 
     return (
 		<div className={classes.box}>
+            {modalAgree &&
+            <ModalWindow
+                title="Подтвердите действие"
+                description="Вы действительно хотите удалить объект?"
+            >
+                <Button onClick={() => {axios.delete((address + "/api/v1_0/cubes/" + modalAgree)).then(() => setModalAgree(false))}}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Удалить
+                </Button>
+
+                <Button onClick={() => {setModalAgree(false)}}>
+                    Отмена
+                </Button>
+            </ModalWindow>
+            }
+
+            {modalDisassemble &&
+            <ModalWindow
+                title="Разобрать куб?"
+                description="Информация про куб и пачки в нем будет удалена из системы. Куб нужно будет распаковать, необходимые пачки нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
+            >
+                <Button onClick={() => {setModalDisassemble(false); setForceFocus("inputQr")}}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Отмена
+                </Button>
+
+                <Input
+                    id="inputDisassemble"
+                    ref={inputDisassembleRef}
+                    onKeyPress={async e => {
+                        if (e.charCode === 13) {
+                            let req = axios.get(address + "/api/v1_0/cubes/?qr=" + inputDisassembleRef.current.value);
+                            req.catch(e => {
+                                setNotificationErrorText(e.response.data.detail);
+                                inputDisassembleRef.current.value = "";
+                                setTimeout(() => {
+                                    setNotificationErrorText("");
+                                }, 2000);
+                            })
+                            let awaited = await req;
+
+                            if (awaited.data.id) {
+                                setModalDisassemble(false);
+                                setModalAgree(awaited.data.id);
+                            }
+                        }
+                    }}
+                />
+
+                {/* <TextField
+                        placeholder="QR..."
+                        onChange={async e => {
+                            setValueQrToDisassemble(e.target.value);
+                        }}
+                        onKeyPress={async e => {
+                                if (e.charCode === 13) {
+                                    let req = axios.get(address + "/api/v1_0/cubes/?qr=" + valueQrToDisassemble);
+                                    let awaited = await req;
+
+                                    console.log(awaited);
+
+                                    if (awaited.data.id) {
+                                        setModalDisassemble(false);
+                                        setModalAgree(awaited.data.id);
+                                    }
+                                }
+                            }
+                        }
+                        value={valueQrToDisassemble}
+                        outlined
+                        forceFocus
+                        autoFocus
+
+
+                    /> */}
+            </ModalWindow>
+            }
+
+            {modalCube && (
+                <ModalWindow
+                    title="Формирование неполного куба"
+                    description="Из всех паллет и пачек в очереди будет сформирован куб. Подтверждаете?"
+                >
+                    <div style={{ display: "grid", gap: "2rem" }}>
+                        <div>
+                            <Input
+                                id={"inputQrCube"}
+                                ref={inputQrCubeRef}
+                            />
+                            {/* <TextField
+                                placeholder="QR..."
+                                onChange={async e => {
+                                    setinputQrCubeRef.current.value(e.target.value);
+                                }}
+                                value={inputQrCubeRef.current.value}
+                                outlined
+                                forceFocus
+                                autoFocus
+                            /> */}
+                        </div>
+                        <div style={{ display: "flex", gap: "2rem" }}>
+                            <Button onClick={() => {
+                                if (inputQrCubeRef.current.value) {
+                                    setForceFocus("inputQr");
+                                    setModalCube(false);
+                                    createIncompleteCube();
+                                    inputQrCubeRef.current.value = "";
+                                }
+                            }}>
+                                <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                                Создать
+                            </Button>
+                            <Button onClick={() => {
+                                setForceFocus("inputQr");
+                                setModalCube(false);
+                                inputQrCubeRef.current.value = "";
+                            }} theme="secondary">
+                                <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                                Отмена
+                            </Button>
+                        </div>
+                    </div>
+                </ModalWindow>
+            )}
+
+            {modalDelete2Pallet &&
+            <ModalWindow
+                title="Удаление паллет"
+                description="Вы действительно хотите удалить паллет(ы)?"
+            >
+                <Button onClick={() => {
+                    axios.delete(address + "/api/v1_0/remove_multipacks_to_refresh_wrapper")
+                        .then(() => {
+                            setReturnNotificationText(notificationText)
+                            setNotificationText("Паллеты успешно удалены")
+                            setTimeout(returnNotification, 2000)
+                            setModalDelete2Pallet(false)
+                        })
+                        .catch(e => console.log(e.responce))
+                }}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Удалить
+                </Button>
+                <Button onClick={() => setModalDelete2Pallet(false)} theme="secondary">
+                    <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                    Отмена
+                </Button>
+            </ModalWindow>
+            }
+
+            {modalChangePackAgree &&
+            <ModalWindow
+                title="Подтвердите действие"
+                description="Вы действительно хотите заменить пачку?"
+            >
+                <Button onClick={modalChangePackAgree[0]}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Заменить
+                </Button>
+
+                <Button onClick={() => {setModalChangePackAgree(false); setForceFocus("inputQr")}}>
+                    Отмена
+                </Button>
+            </ModalWindow>
+            }
+
+            {modalChangePack &&
+            <ModalWindow
+                title="Замена пачки"
+                description="На постах упаковки одну пачку можно заменить на другую. Для этого введите сначала QR старой пачки, потом QR новой пачки. Далее подтвердите свое действие"
+            >
+                <Button onClick={() => {setModalChangePack(false); setForceFocus("inputQr")}}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Отмена
+                </Button>
+
+                <Input
+                    id="inputChangePackOld"
+                    ref={inputChangePackOldRef}
+                    onKeyPress={async e => {
+                        if (e.charCode === 13) {
+                            let req = axios.get(address + "/api/v1_0/not_shipped_pack/?qr=" + inputChangePackOldRef.current.value);
+                            req.catch(e => {
+                                setNotificationErrorText(e.response.data.detail);
+                                inputChangePackOldRef.current.value = "";
+                                setTimeout(() => {
+                                    setNotificationErrorText("");
+                                }, 2000);
+                            })
+                            let awaited = await req;
+
+                            if (awaited.data.id) {
+                                setForceFocus("inputChangePackNew");
+                            }
+                        }
+                    }
+                    }
+                />
+
+                <Input
+                    id="inputChangePackNew"
+                    ref={inputChangePackNewRef}
+                    onKeyPress={async e => {
+                        if (e.charCode === 13) {
+                            setModalChangePack(false);
+                            let old = inputChangePackOldRef.current.value;
+                            let new_ = inputChangePackNewRef.current.value;
+                            let req = await axios.get(address + "/api/v1_0/packs/?qr=" + old);
+
+                            setModalChangePackAgree([() => {
+                                setForceFocus("inputQr");
+                                axios.patch(address + "/api/v1_0/packs/" + req.data.id, {"qr": new_})
+                                    .then(() => setModalChangePackAgree(false))
+                                    .catch(e => setNotificationErrorText(e.response.data.detail))
+                            }])
+
+                        }
+                    }}
+                />
+
+                {/* <TextField
+                        placeholder="QR для замены"
+                        onChange={async e => {
+                            setValueQrToChangePack(e.target.value);
+                        }}
+                        onKeyPress={async e => {
+                                if (e.charCode === 13) {
+                                    let req = axios.get(address + "/api/v1_0/not_shipped_pack/?qr=" + valueQrToChangePack);
+                                    let awaited = await req;
+
+                                    if (awaited.data.id) {
+                                        console.log("123")
+                                    }
+                                }
+                            }
+                        }
+                        value={valueQrToChangePack}
+                        outlined
+                        forceFocus
+                        autoFocus
+                    />
+
+                    <TextField
+                        placeholder="QR новой"
+                        onChange={async e => {
+                            setValueQrToChangeNewPack(e.target.value);
+                        }}
+                        onKeyPress={async e => {
+                                if (e.charCode === 13) {
+                                    axios.patch(address + "/api/v1_0/packs/" +  valueQrToChangePack, {"qr": valueQrToChangeNewPack})
+
+                                    }
+                            }
+                        }
+                        value={valueQrToChangePack}
+                        outlined
+                        forceFocus
+                        autoFocus
+                    /> */}
+            </ModalWindow>
+            }
+
+            {modalDelPalletAgree &&
+            <ModalWindow
+                title="Подтвердите действие"
+                description="Вы действительно хотите удалить палету?"
+            >
+                <Button onClick={() => {
+                    axios.delete(address + "/api/v1_0/multipacks/" + modalDelPalletAgree)
+                        .then(res => console.log(res))
+                        .catch(e => {console.log(e)});
+                    setModalDelPalletAgree(false);
+                }}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Удалить
+                </Button>
+
+                <Button onClick={() => {setModalDelPalletAgree(false)}}>
+                    Отмена
+                </Button>
+            </ModalWindow>
+            }
+
+
+
 			<header className={classes.header}>
                 <div className={[classes.container, classes.header__container].join(' ')}>
                     <ul className={classes.header__info}>
@@ -516,10 +967,53 @@ function Main() {
                         </li>
                     </ul>
                     <div className={classes.header__buttonList}>
-                        <button className={[classes.btn, classes.header__button].join(' ')}>Новая партия</button>
-                        <button className={[classes.btn, classes.header__button].join(' ')}>Сформировать неполный куб</button>
+                        <button
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => { setPage("batch_params") }}
+                        >Новая партия</button>
+
+                        <button
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => {
+                                setModalDisassemble(true);
+                                setForceFocus("inputDisassemble");
+                            }}
+                        >Разобрать куб по его QR</button>
+
+                        <button
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => { setModalCube([createIncompleteCube]); setForceFocus("inputQrCube") }}
+                        >Сформировать неполный куб</button>
+
+                        <button
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => {
+                                setModalDelete2Pallet(true);
+                            }}
+                        >Удалить паллет(ы) для перезагрузки обмотчика</button>
+
+                        <button
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }}
+                        >Заменить пачку на упаковке</button>
+
+                        <button
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => setPage("create")}
+                        >Новый куб</button>
                     </div>
-                    <input className={[classes.btn, classes.btn_border, classes.header__qr].join(' ')} placeholder="QR..." />
+
+                    <InputTextQr
+                        id="inputQr"
+                        placeholder="QR..."
+                        className={[classes.btn, classes.btn_border, classes.header__qr].join(' ')}
+                        setNotification={setNotificationText}
+                        setNotificationError={setNotificationErrorText}
+                        mode={mode}
+                        forceFocus={!modalCube && !modalPackingTableError}
+                        hidden={!extended}
+                        ref={inputQrRef}
+                    />
                 </div>
             </header>
 
@@ -528,19 +1022,36 @@ function Main() {
                     <div>
                         <span className={classes.tableTitle}>Очередь кубов</span>
                         <TableAddress
-                            columns={tableProps(extented).columns}
+                            columns={tableProps(extended).columns}
                             setModal={() => {return}}
                             type="cubes"
-                            extended={extented}
+                            extended={extended}
                             address="/api/v1_0/cubes_queue"
                             buttonEdit="/edit"
                             buttonDelete="/trash"
                         />
                     </div>
                 </div>
-                    
+
                 <div className={classes.variantsBox}>
-                    <BigView data={dataBigView} dataType={dataTypeBigView} perColumn={bigViewMode === "pintset" ? Infinity : 3}/>
+
+                    <div className={classes.content}>
+                        {bigViewMode === bigViewModes.onPackingTable && <PalletOnPackingTable
+                            pallets={pallets.onPackingTable}
+                            onDel={delPallet}
+                            onEdit={editPallet}
+                            bigView
+                        />}
+                        {bigViewMode === bigViewModes.onFork && <PalletOnFork
+                            pallets={pallets.onFork}
+                            onDel={delPallet}
+                            onEdit={editPallet}
+                            bigView
+                        />}
+                    </div>
+
+                    {/* <BigView data={dataBigView} dataType={dataTypeBigView} perColumn={bigViewMode === "pintset" ? Infinity : 3}/> */}
+
                     <ul className={classes.variants__list}>
                         <li className={classes.variants__item}
                             onClick={() => {changeBigViewMode("pintset"); setDataTypeBigView("packs")}}>
@@ -556,12 +1067,12 @@ function Main() {
                                     </div>
                                     <div className={classes.buildRow}>
                                         <div className={classes.variants__itemContainer}>
-                                            <span className={classes.more} style={packs.underPintset.length > 2 ? {display: "block"} : {display: "none"}}>{packs.underPintset.length - 2}</span> 
+                                            <span className={classes.more} style={packs.underPintset.length > 2 ? {display: "block"} : {display: "none"}}>{packs.underPintset.length - 2}</span>
                                             {packs.underPintset.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)}
                                         </div>
                                     </div>
                                 </div>
-                                
+
                             </label>
                         </li>
                         <li className={classes.variants__item}
@@ -588,27 +1099,82 @@ function Main() {
                         <li className={classes.variants__item}
                             onClick={() => {changeBigViewMode("onFork"); setDataTypeBigView("pallets")}}>
                             <input type="radio" name="variants" id="variants-4" />
-                            <label htmlFor="variants-4" className={classes.variants__itemLabel}>
+                            <label htmlFor="variants-4" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onFork && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Вилы</h3>
                                 <div className={classes.columnsContainer}>
-                                    {/* {buildPallets(["onFork"], 2, true, [70, 25], pallets)} */}
-                                    {/* {buildPallets(pallets.onFork, true, [70, 25])} */}
-                                    <Pallet pallets={pallets.onFork} onlyGray size={[70, 25]} />
+                                    <PalletOnFork pallets={pallets.onFork} />
                                 </div>
                             </label>
                         </li>
-                        <li className={classes.variants__item}>
+                        <li className={classes.variants__item} onClick={() => {changeBigViewMode(bigViewModes.onPackingTable)}}>
                             <input type="radio" name="variants" id="variants-5" />
-                            <label htmlFor="variants-5" className={classes.variants__itemLabel}>
+                            <label htmlFor="variants-5" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onPackingTable && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Упаковочный стол</h3>
                                 <div className={classes.variants__itemContainer}>
-
+                                    <PalletOnPackingTable pallets={pallets.onPackingTable} />
                                 </div>
                             </label>
                         </li>
                     </ul>
                 </div>
             </main>
+
+            <NotificationPanel
+                style={{marginLeft: 276}}
+                notifications={
+                    [notificationText && (
+                        <Notification
+                            description={notificationText}
+                        />
+                    ),
+                        notificationText2 && (
+                            <Notification
+                                description={notificationText2}
+                            />
+                        )]
+                }
+                errors={
+                    notificationErrorText && (
+                        <Notification
+                            error
+                            description={notificationErrorText}
+                        />
+                    )
+                }
+            />
+
+            <div className={classes.footer}>
+                <div style={{ display: "flex" }}>
+                    <div>
+                        <div className={classes.switchTitle}>
+                            Режим управления:
+                        </div>
+                        <div className={classes.switchContainer}>
+                            Автоматический
+                            <Switch mode={mode} onClick={updateMode} />
+                            Ручной
+                        </div>
+                    </div>
+
+                    <div style={{display: "flex", gap: "321px"}}>
+                    </div>
+
+                </div>
+
+
+
+                <div>
+                    <div className={classes.switchTitle} style={{ textAlign: 'right' }}>
+                        Вид интерфейса:
+                    </div>
+                    <div className={classes.switchContainer}>
+                        Сжатый
+                        <Switch onClick={() => setExtended(!extended)} />
+                        Расширенный
+                    </div>
+                </div>
+
+            </div>
 
 		</div>
 	);

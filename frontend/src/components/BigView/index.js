@@ -7,6 +7,7 @@ import address from "../../address.js";
 const useStyles = createUseStyles({
     content: {
         display: 'flex',
+        flex: 5,
         justifyContent: 'space-around',
         maxWidth: "90%",
         alignItems: 'center',
@@ -51,9 +52,9 @@ const useStyles = createUseStyles({
         gap: "10%",
         justifyContent: 'space-around',
         paddingLeft: "2em",
-        paddingRight: "4em", 
+        paddingRight: "4em",
     },
-    
+
 })
 
 const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
@@ -94,7 +95,7 @@ const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
 
     function buildPallet(pallet, onlyGray, size) {
         if (!pallet) return
-        
+
         let allColumns = [];
         let swap = false;
         let firstColumn = [];
@@ -127,8 +128,8 @@ const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
             <div className={classes.columnsContainer}>
                 {dataType === "packs" ? buildPacks() : buildPallets(data, false, [301, 113])}
             </div>
-                
-            
+
+
         </div>
     )
 })
