@@ -1,6 +1,5 @@
 import React, {useState, useCallback} from 'react';
 import {createUseStyles} from 'react-jss';
-import {Redirect} from 'react-router-dom';
 
 const useStyles = createUseStyles({
     palletContainer: {
@@ -26,19 +25,127 @@ const useStyles = createUseStyles({
     },
 });
 
-const Control = React.memo(({pallet, x = 0, y = 0, onRemove, onAdd, onDel, onEdit}) => {
-    return <svg fill={'none'} {...{x, y}}>
-        {!pallet && <g>
+function chunk(items, size) {
+    const result = []
+    let group = []
+
+    items.forEach((item, i) => {
+        group.push(item)
+        if ((i + 1) % 4 === 0) {
+            result.push(group)
+            group = []
+        }
+    })
+
+    return result
+}
+
+function addEmptyItems(items, n, addItem) {
+    while (items.length < n) {
+        items.push(addItem)
+    }
+
+    return items
+}
+
+const Control = React.memo(({item, x = 0, y = 0, viewBox, onRemove, onAdd, onDel, onEdit}) => {
+    return <svg fill={'none'} {...{x, y, viewBox}}>
+        {!item && <g>
             <g onClick={onAdd}><image transform={'scale(0.14) translate(30)'} href={'add.svg'} /></g>
             <g onClick={onRemove}><image transform={'scale(0.14) translate(100)'} href={'remove.svg'} /></g>
         </g>}
 
-        {pallet && <g>
+        {item && <g>
             <g onClick={onEdit}><image transform={'scale(0.14)'} href={'edit.svg'} /></g>
             <g onClick={onDel}><image transform={'scale(0.14) translate(65)'} href={'del.svg'} /></g>
             <g onClick={onRemove}><image transform={'scale(0.14) translate(130)'} href={'remove.svg'} /></g>
         </g>}
     </svg>
+});
+
+const PackBlock = React.memo(({pack, bigView, onDel, onEdit, x = 0, y = 0}) => {
+    const [selected, setSelected] = useState(false);
+
+    const strokeWidth = bigView ? 0.6: 1;
+    let strokeOpacity = 1;
+    let fillFront = '#AFAFAF';
+    let fillBack = '#E2E2E2';
+    let stroke = '#A6A5A5';
+
+    if (!pack && !bigView) {
+        return null
+    }
+
+    if (!pack && bigView) {
+        fillFront = 'none'
+        fillBack = 'none'
+        stroke = '#0057FF'
+        strokeOpacity = selected ? 1 : 0.3
+    }
+
+    if (pack && selected) {
+        fillFront = '#F7CE55';
+        fillBack = '#F7EE55';
+    }
+
+    return <svg {...{x, y}} fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g onClick={() => bigView && setSelected(true)}>
+            <path {...{strokeWidth, strokeOpacity}} d="M44 1H300V86.3L256.5 112.3H0.5V27L44 1Z" fill={fillFront} />
+            <path {...{strokeWidth, strokeOpacity}} d="M256.5 27H0.5V112.3H256.5V27Z" fill={fillBack} />
+            <path {...{strokeWidth, strokeOpacity}} d="M256.5 27H0.5V112.3H256.5V27Z" stroke={stroke} strokeMiterlimit="10" />
+            <path {...{strokeWidth, strokeOpacity}} d="M0.5 27L44 1H300V86.3L256.5 112.3" stroke={stroke} strokeMiterlimit="10" />
+            <path {...{strokeWidth, strokeOpacity}} d="M300 1L256.5 27" stroke={stroke} strokeMiterlimit="10" />
+        </g>
+        {selected && <svg transform={'scale(5)'}><Control
+            item={pack}
+            x={-70}
+            y={40}
+            viewBox="0 0 100 30"
+            onRemove={() => { setSelected(false) }}
+            onDel={() => onDel(pack.id)}
+            onEdit={() => onEdit(pack.id)}
+        /></svg>}
+    </svg>
+});
+
+const PacksOnPintset = React.memo(({packs, bigView = false, onDel, onEdit}) => {
+    const classes = useStyles();
+
+    const scale = bigView ? 5.5 : 1;
+
+    return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
+        <svg width={153*scale} height={79*scale} viewBox={'0 0 993 240'} fill={'none'}  >
+            {chunk(packs, 4).map((group, i) => {
+                return <g key={group.map(item => item.id).join(' ')}>
+                    <PackBlock x={680} y={214 - (i * 85)} pack={group[0]} {...{bigView, onDel, onEdit}} />
+                    <PackBlock x={308} y={214 - (i * 85)} pack={group[1]} {...{bigView, onDel, onEdit}} />
+                    <PackBlock x={520} y={240 - (i * 85)} pack={group[2]} {...{bigView, onDel, onEdit}} />
+                    <PackBlock x={108} y={240 - (i * 85)} pack={group[3]} {...{bigView, onDel, onEdit}} />
+                </g>
+            })}
+        </svg>
+    </div>
+});
+
+const PacksOnAssemble = React.memo(({packs, bigView = false, onDel, onEdit}) => {
+    const classes = useStyles();
+
+    const scale = bigView ? 5.5 : 1;
+
+    const packs2 = addEmptyItems(packs, 12)
+
+    return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
+        <svg width={153*scale} height={79*scale} viewBox={'0 0 993 240'} fill={'none'}  >
+            {chunk(packs2, 4).map((group, i) => {
+                return <g key={group.map(item => item && item.id).join(' ')}>
+                    <PackBlock x={680} y={214 - (i * 85)} pack={group[0]} {...{bigView, onDel, onEdit}} />
+                    <PackBlock x={308} y={214 - (i * 85)} pack={group[1]} {...{bigView, onDel, onEdit}} />
+                    <PackBlock x={520} y={240 - (i * 85)} pack={group[2]} {...{bigView, onDel, onEdit}} />
+                    <PackBlock x={108} y={240 - (i * 85)} pack={group[3]} {...{bigView, onDel, onEdit}} />
+                </g>
+            })}
+        </svg>
+    </div>
 });
 
 const PalletBlock = React.memo(({pallet, bigView, onDel, onEdit, x = 0, y = 0}) => {
@@ -100,7 +207,7 @@ const PalletBlock = React.memo(({pallet, bigView, onDel, onEdit, x = 0, y = 0}) 
             <path {...{strokeWidth, strokeOpacity}} d="M146.454 35.9216L140.987 39.1888" stroke={stroke} strokeMiterlimit="10" />
         </g>
         {selected && <Control
-            pallet={pallet}
+            item={pallet}
             x={112}
             y={41}
             onRemove={() => { setSelected(false) }}
@@ -109,6 +216,36 @@ const PalletBlock = React.memo(({pallet, bigView, onDel, onEdit, x = 0, y = 0}) 
         />}
     </svg>
 })
+
+const PalletOnWinder = React.memo(({pallets, bigView = false, onDel, onEdit}) => {
+    const classes = useStyles();
+    const width = bigView ? 1300 : 153
+    const height = bigView ? 435 : 79
+    let scale = 2.4 / pallets.length
+    if (scale > 0.8) {
+        scale = 0.8
+    }
+
+    return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
+        <svg width={width} height={height} viewBox={'0 0 993 240' } fill={'none'}  >
+            {pallets.reverse().map((pallet, n) => {
+                return chunk(pallet.pack_ids, 6).map((group) => {
+                    const group2 = addEmptyItems(group, 6)
+                    return <g key={group.join(' ')} transform={`scale(${scale})`}>
+                        <PackBlock x={160 + (372 * n)} y={214} pack={group[0] && {id: group[0]}} {...{bigView, onDel, onEdit}} />
+                        <PackBlock x={(372 * n)} y={240} pack={group[1] && {id: group[1]}} {...{bigView, onDel, onEdit}} />
+
+                        <PackBlock x={160 + (372 * n)} y={129} pack={group[2] && {id: group[2]}} {...{bigView, onDel, onEdit}} />
+                        <PackBlock x={(372 * n)} y={155} pack={group[3] && {id: group[3]}} {...{bigView, onDel, onEdit}} />
+
+                        <PackBlock x={160 + (372 * n)} y={44} pack={group[4] && {id: group[4]}} {...{bigView, onDel, onEdit}} />
+                        <PackBlock x={(372 * n)} y={70} pack={group[5] && {id: group[5]}} {...{bigView, onDel, onEdit}} />
+                    </g>
+                })
+            })}
+        </svg>
+    </div>
+});
 
 const PalletOnFork = React.memo(({pallets, onDel, onEdit, bigView = false}) => {
     const classes = useStyles();
@@ -146,6 +283,9 @@ const PalletOnPackingTable = React.memo(({pallets, onDel, onEdit, bigView = fals
 })
 
 export {
+    PacksOnPintset,
+    PacksOnAssemble,
+    PalletOnWinder,
     PalletOnFork,
     PalletOnPackingTable,
 }

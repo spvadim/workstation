@@ -6,7 +6,7 @@ import address from "../../address.js";
 import TableAddress from "../../components/Table/TableAddress.js";
 import BigView from "../../components/BigView/index.js";
 import Pallet from "../../components/Pallet/index.js";
-import {PalletOnPackingTable, PalletOnFork} from "../../components/Pallet/packing_table.js";
+import {PalletOnPackingTable, PalletOnFork, PalletOnWinder, PacksOnAssemble, PacksOnPintset} from "../../components/Pallet/packing_table.js";
 import {useHistory} from 'react-router-dom';
 import ModalWindow from '../../components/ModalWindow';
 import imgOk from 'src/assets/images/ok.svg';
@@ -371,6 +371,8 @@ function Main() {
     const [modalChangePack, setModalChangePack] = useState(false);
     const [modalChangePackAgree, setModalChangePackAgree] = useState(false);
     const [modalDelPalletAgree, setModalDelPalletAgree] = useState(false);
+    const [modalDelPackAgree, setModalDelPackAgree] = useState(false);
+    const [modalEditPack, setModalEditPack] = useState(false);
 
     const [forceFocus, setForceFocus] = useState("inputQr");
     const [notificationText, setNotificationText] = useState("");
@@ -401,6 +403,7 @@ function Main() {
     const inputDisassembleRef = useRef();
     const inputChangePackOldRef = useRef();
     const inputChangePackNewRef = useRef();
+    const inputEditPackNewRef = useRef();
 
     const dictRefs = {
         inputQr: inputQrRef,
@@ -408,6 +411,7 @@ function Main() {
         inputDisassemble: inputDisassembleRef,
         inputChangePackOld: inputChangePackOldRef,
         inputChangePackNew: inputChangePackNewRef,
+        inputEditPackNewRef: inputEditPackNewRef,
     }
 
     const sortPacks = array => {
@@ -651,6 +655,15 @@ function Main() {
         setModalDelPalletAgree(id)
     }, [setModalDelPalletAgree])
 
+    const delPack = useCallback((id) => {
+        setModalDelPackAgree(id)
+    }, [setModalDelPackAgree])
+
+    const editPack = useCallback((id) => {
+        setModalEditPack(id)
+        setForceFocus("inputEditPackNewRef")
+    }, [setModalEditPack])
+
     const editPallet = useCallback((row) => {
         history.push('/edit', { description: row, type: 'multipacks', extended})
     }, [extended, history])
@@ -876,46 +889,6 @@ function Main() {
                         }
                     }}
                 />
-
-                {/* <TextField
-                        placeholder="QR для замены"
-                        onChange={async e => {
-                            setValueQrToChangePack(e.target.value);
-                        }}
-                        onKeyPress={async e => {
-                                if (e.charCode === 13) {
-                                    let req = axios.get(address + "/api/v1_0/not_shipped_pack/?qr=" + valueQrToChangePack);
-                                    let awaited = await req;
-
-                                    if (awaited.data.id) {
-                                        console.log("123")
-                                    }
-                                }
-                            }
-                        }
-                        value={valueQrToChangePack}
-                        outlined
-                        forceFocus
-                        autoFocus
-                    />
-
-                    <TextField
-                        placeholder="QR новой"
-                        onChange={async e => {
-                            setValueQrToChangeNewPack(e.target.value);
-                        }}
-                        onKeyPress={async e => {
-                                if (e.charCode === 13) {
-                                    axios.patch(address + "/api/v1_0/packs/" +  valueQrToChangePack, {"qr": valueQrToChangeNewPack})
-
-                                    }
-                            }
-                        }
-                        value={valueQrToChangePack}
-                        outlined
-                        forceFocus
-                        autoFocus
-                    /> */}
             </ModalWindow>
             }
 
@@ -937,6 +910,57 @@ function Main() {
                 <Button onClick={() => {setModalDelPalletAgree(false)}}>
                     Отмена
                 </Button>
+            </ModalWindow>
+            }
+
+            {modalDelPackAgree &&
+            <ModalWindow
+                title="Удаление объекта"
+                description="Информация про данную упаковку и составляющие будет удалена из системы. Пачку(и) нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
+            >
+                <Button onClick={() => {
+                    axios.delete(address + "/api/v1_0/packs/" + modalDelPackAgree)
+                        .then(res => console.log(res))
+                        .catch(e => {console.log(e)});
+                    setModalDelPackAgree(false);
+                }}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Удалить
+                </Button>
+
+                <Button onClick={() => {setModalDelPackAgree(false)}}>
+                    Отмена
+                </Button>
+            </ModalWindow>
+            }
+
+            {modalEditPack &&
+            <ModalWindow
+                title="Замена пачки"
+                description="На постах упаковки одну пачку можно заменить на другую. Для этого введите QR новой пачки. Далее подтвердите свое действие"
+            >
+                <Button onClick={() => {setModalEditPack(false); setForceFocus("inputQr")}}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Отмена
+                </Button>
+
+                <Input
+                    id="inputEditPackNew"
+                    ref={inputEditPackNewRef}
+                    onKeyPress={async e => {
+                        if (e.charCode === 13) {
+                            setModalEditPack(false);
+                            let new_ = inputEditPackNewRef.current.value;
+
+                            setModalChangePackAgree([() => {
+                                setForceFocus("inputQr");
+                                axios.patch(address + "/api/v1_0/packs/" + modalEditPack, {"qr": new_})
+                                    .then(() => setModalChangePackAgree(false))
+                                    .catch(e => setNotificationErrorText(e.response.data.detail))
+                            }])
+                        }
+                    }}
+                />
             </ModalWindow>
             }
 
@@ -1048,15 +1072,27 @@ function Main() {
                             onEdit={editPallet}
                             bigView
                         />}
+                        {bigViewMode === bigViewModes.onWinder && <PalletOnWinder
+                            pallets={pallets.others}
+                            onDel={delPack}
+                            onEdit={editPack}
+                            bigView
+                        />}
+                        {bigViewMode === bigViewModes.pallet && <PacksOnAssemble
+                            packs={packs.onAssemble_before}
+                            onDel={delPack}
+                            onEdit={editPack}
+                            bigView
+                        />}
                     </div>
 
                     {/* <BigView data={dataBigView} dataType={dataTypeBigView} perColumn={bigViewMode === "pintset" ? Infinity : 3}/> */}
 
                     <ul className={classes.variants__list}>
                         <li className={classes.variants__item}
-                            onClick={() => {changeBigViewMode("pintset"); setDataTypeBigView("packs")}}>
+                            onClick={() => {changeBigViewMode(bigViewModes.pintset)}}>
                             <input type="radio" name="variants" id="variants-1" />
-                            <label htmlFor="variants-1" className={classes.variants__itemLabel}>
+                            <label htmlFor="variants-1" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.pintset && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Пинцет</h3>
                                 <div className={classes.buildCol}>
                                     <div className={classes.buildRow}>
@@ -1076,28 +1112,30 @@ function Main() {
                             </label>
                         </li>
                         <li className={classes.variants__item}
-                            onClick={() => {changeBigViewMode("pallet"); setDataTypeBigView("packs")}}>
+                            onClick={() => {changeBigViewMode(bigViewModes.pallet)}}>
                             <input type="radio" name="variants" id="variants-2" />
-                            <label htmlFor="variants-2" className={classes.variants__itemLabel}>
+                            <label htmlFor="variants-2" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.pallet && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Паллеты</h3>
                                 <div className={classes.columnsContainer}>
-                                    {buildPacks(["onAssemble_before"], 3, true, [70, 25], packs)}
+                                    {/* {buildPacks(["onAssemble_before"], 3, true, [70, 25], packs)} */}
+                                    <PacksOnAssemble packs={packs.onAssemble_before} />
                                 </div>
 
                             </label>
                         </li>
                         <li className={classes.variants__item}
-                            onClick={() => {changeBigViewMode("onWinder"); setDataTypeBigView("packs")}}>
+                            onClick={() => {changeBigViewMode(bigViewModes.onWinder)}}>
                             <input type="radio" name="variants" id="variants-3" />
-                            <label htmlFor="variants-3" className={classes.variants__itemLabel}>
+                            <label htmlFor="variants-3" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onWinder && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Обмотчик</h3>
                                 <div className={classes.columnsContainer}>
-                                    {buildPacks(["others"], 3, true, [70, 25], pallets)}
+                                    <PalletOnWinder pallets={pallets.others} />
+                                    {/* {buildPacks(["others"], 3, true, [70, 25], pallets)} */}
                                 </div>
                             </label>
                         </li>
                         <li className={classes.variants__item}
-                            onClick={() => {changeBigViewMode("onFork"); setDataTypeBigView("pallets")}}>
+                            onClick={() => {changeBigViewMode(bigViewModes.onFork)}}>
                             <input type="radio" name="variants" id="variants-4" />
                             <label htmlFor="variants-4" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onFork && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Вилы</h3>
