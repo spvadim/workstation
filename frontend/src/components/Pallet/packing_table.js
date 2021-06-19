@@ -66,7 +66,7 @@ const Control = React.memo(({item, x = 0, y = 0, viewBox, onRemove, onAdd, onDel
 const PackBlock = React.memo(({pack, bigView, onDel, onEdit, x = 0, y = 0}) => {
     const [selected, setSelected] = useState(false);
 
-    const strokeWidth = bigView ? 0.6: 1;
+    const strokeWidth = bigView ? 1: 1;
     let strokeOpacity = 1;
     let fillFront = '#AFAFAF';
     let fillBack = '#E2E2E2';
@@ -102,8 +102,8 @@ const PackBlock = React.memo(({pack, bigView, onDel, onEdit, x = 0, y = 0}) => {
             y={40}
             viewBox="0 0 100 30"
             onRemove={() => { setSelected(false) }}
-            onDel={() => onDel(pack.id)}
-            onEdit={() => onEdit(pack.id)}
+            onDel={() => {onDel(pack.id); setSelected(false)}}
+            onEdit={() => {onEdit(pack.id); setSelected(false)}}
         /></svg>}
     </svg>
 });
@@ -111,18 +111,12 @@ const PackBlock = React.memo(({pack, bigView, onDel, onEdit, x = 0, y = 0}) => {
 const PacksOnPintset = React.memo(({packs, bigView = false, onDel, onEdit}) => {
     const classes = useStyles();
 
-    const scale = bigView ? 5.5 : 1;
+    const scale = bigView ? 5.5 : 1.2;
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={153*scale} height={79*scale} viewBox={'0 0 993 240'} fill={'none'}  >
-            {chunk(packs, 4).map((group, i) => {
-                return <g key={group.map(item => item.id).join(' ')}>
-                    <PackBlock x={680} y={214 - (i * 85)} pack={group[0]} {...{bigView, onDel, onEdit}} />
-                    <PackBlock x={308} y={214 - (i * 85)} pack={group[1]} {...{bigView, onDel, onEdit}} />
-                    <PackBlock x={520} y={240 - (i * 85)} pack={group[2]} {...{bigView, onDel, onEdit}} />
-                    <PackBlock x={108} y={240 - (i * 85)} pack={group[3]} {...{bigView, onDel, onEdit}} />
-                </g>
-            })}
+        <svg width={120*scale} height={15*scale} viewBox={'0 0 993 240'} fill={'none'} transform={'scale(2)'} >
+            <PackBlock x={200} y={20} pack={packs[1]} {...{bigView, onDel, onEdit}} />
+            <PackBlock x={455} y={20} pack={packs[0]} {...{bigView, onDel, onEdit}} />
         </svg>
     </div>
 });
@@ -132,10 +126,10 @@ const PacksOnAssemble = React.memo(({packs, bigView = false, onDel, onEdit}) => 
 
     const scale = bigView ? 5.5 : 1;
 
-    const packs2 = addEmptyItems(packs, 12)
+    const packs2 = addEmptyItems(packs.slice(), 12)
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={153*scale} height={79*scale} viewBox={'0 0 993 240'} fill={'none'}  >
+        <svg width={140*scale} height={79*scale} viewBox={'0 0 993 240'} fill={'none'}  >
             {chunk(packs2, 4).map((group, i) => {
                 return <g key={group.map(item => item && item.id).join(' ')}>
                     <PackBlock x={680} y={214 - (i * 85)} pack={group[0]} {...{bigView, onDel, onEdit}} />
@@ -211,8 +205,8 @@ const PalletBlock = React.memo(({pallet, bigView, onDel, onEdit, x = 0, y = 0}) 
             x={112}
             y={41}
             onRemove={() => { setSelected(false) }}
-            onDel={() => onDel(pallet.id)}
-            onEdit={() => onEdit(pallet)}
+            onDel={() => {onDel(pallet.id); setSelected(false)}}
+            onEdit={() => {onEdit(pallet); setSelected(false)}}
         />}
     </svg>
 })
@@ -250,10 +244,13 @@ const PalletOnWinder = React.memo(({pallets, bigView = false, onDel, onEdit}) =>
 const PalletOnFork = React.memo(({pallets, onDel, onEdit, bigView = false}) => {
     const classes = useStyles();
 
+    const width = bigView ? 1300 : 120
+    const height = bigView ? 435 : 79
+
     const scale = bigView ? 5.5 : 1;
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={153*scale} height={79*scale} viewBox={'30 10 153 79'} fill={'none'} transform={'scale(1.6)'}  >
+        <svg width={width} height={height} viewBox={'30 10 153 79'} fill={'none'} transform={'scale(1)'} >
             <PalletBlock x={-32} pallet={pallets[1]} {...{bigView, onDel, onEdit}} />
             <PalletBlock pallet={pallets[0]} {...{bigView, onDel, onEdit}} />
         </svg>

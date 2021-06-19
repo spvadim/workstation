@@ -15,6 +15,7 @@ import Input from '../../components/InputText/Input';
 import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
 import {Notification} from '../../components/Notification';
 import InputTextQr from '../../components/InputText/InputTextQr';
+import {Notification_new} from '../../components/Notification_new';
 
 const useStyles = createUseStyles({
 	container: {
@@ -84,6 +85,22 @@ const useStyles = createUseStyles({
             transform: "translateY(-50%)",
             transition: "all 0.3s ease",
         },
+    },
+
+    notificationPanel: {
+        position: 'fixed',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 10,
+        maxHeight: "40%",
+        overflowY: 'scroll',
+        padding: 5,
+        zIndex: 99,
+        bottom: 90,
+        left: 27,
+        maxWidth: 260,
+        backgroundColor: "#d4d4d4",
+        borderRadius: 7,
     },
 
     header: {
@@ -229,6 +246,7 @@ const useStyles = createUseStyles({
         height: "100%",
         position: 'relative',
         width: "100%",
+        minHeight: 151,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -379,6 +397,7 @@ function Main() {
     const [notificationText2, setNotificationText2] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [returnNotificationText, setReturnNotificationText] = useState("");
+    const [events, setEvents] = useState([]);
 
     const [packs, setPacks] = useState({
         underPintset: [],
@@ -480,6 +499,22 @@ function Main() {
 
         return pallets;
     }
+
+    useEffect(() => {
+        const request = () => {
+            let request = axios.get(address + "/api/v1_0/events?processed=false&event_type=error")
+            request.then(res => {
+                setEvents(res.data.events);
+            })
+        }
+
+
+        request();
+        let timer = setInterval(() => {
+            request();
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [])
 
     useEffect(() => {
         async function getPacks() {
@@ -649,6 +684,10 @@ function Main() {
 
     const returnNotification = () => {
         setNotificationText(returnNotificationText);
+    }
+
+    const closeProcessEvent = id => {
+        axios.patch(address + "/api/v1_0/events/" + id)
     }
 
     const delPallet = useCallback((id) => {
@@ -967,6 +1006,17 @@ function Main() {
 
 
 			<header className={classes.header}>
+                <div className={classes.notificationPanel}>
+                    { events.map(event => {
+                        return <Notification_new text={event.message}
+                                                 onClose={() => closeProcessEvent(event.id)}
+                        />
+                    })
+                    }
+                    {events.length > 1 ? <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button> : null}
+                    <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
+                </div>
+
                 <div className={[classes.container, classes.header__container].join(' ')}>
                     <ul className={classes.header__info}>
                         <li className={classes.header__infoItem}>
@@ -1084,6 +1134,24 @@ function Main() {
                             onEdit={editPack}
                             bigView
                         />}
+                        {bigViewMode === bigViewModes.pintset && <div className={classes.buildCol}>
+                            <div className={classes.buildRow}>
+                                <PacksOnPintset
+                                    packs={packs.onAssemble_after.slice(0, 2)}
+                                    onDel={delPack}
+                                    onEdit={editPack}
+                                    bigView
+                                />
+                            </div>
+                            <div className={classes.buildRow}>
+                                <PacksOnPintset
+                                    packs={packs.underPintset.slice(0, 2)}
+                                    onDel={delPack}
+                                    onEdit={editPack}
+                                    bigView
+                                />
+                            </div>
+                        </div>}
                     </div>
 
                     {/* <BigView data={dataBigView} dataType={dataTypeBigView} perColumn={bigViewMode === "pintset" ? Infinity : 3}/> */}
@@ -1098,13 +1166,15 @@ function Main() {
                                     <div className={classes.buildRow}>
                                         <div className={classes.variants__itemContainer}>
                                             <span className={classes.more} style={packs.onAssemble_after.length > 2 ? {display: "block"} : {display: "none"}}>{packs.onAssemble_after.length - 2}</span>
-                                            {packs.onAssemble_after.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)}
+                                            <PacksOnPintset packs={packs.onAssemble_after.slice(0, 2)} />
+                                            {/* {packs.onAssemble_after.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)} */}
                                         </div>
                                     </div>
                                     <div className={classes.buildRow}>
                                         <div className={classes.variants__itemContainer}>
                                             <span className={classes.more} style={packs.underPintset.length > 2 ? {display: "block"} : {display: "none"}}>{packs.underPintset.length - 2}</span>
-                                            {packs.underPintset.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)}
+                                            <PacksOnPintset packs={packs.underPintset.slice(0, 2)} />
+                                            {/* {packs.underPintset.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)} */}
                                         </div>
                                     </div>
                                 </div>
@@ -1140,7 +1210,12 @@ function Main() {
                             <label htmlFor="variants-4" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onFork && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Вилы</h3>
                                 <div className={classes.columnsContainer}>
-                                    <PalletOnFork pallets={pallets.onFork} />
+                                    <div className={classes.buildCol}>
+                                        <div className={classes.buildRow}>
+                                            <span className={classes.more} style={pallets.onFork.length > 2 ? {display: "block"} : {display: "none"}}>{pallets.onFork.length - 2}</span>
+                                            <PalletOnFork pallets={pallets.onFork} />
+                                        </div>
+                                    </div>
                                 </div>
                             </label>
                         </li>
@@ -1149,7 +1224,12 @@ function Main() {
                             <label htmlFor="variants-5" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onPackingTable && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Упаковочный стол</h3>
                                 <div className={classes.variants__itemContainer}>
-                                    <PalletOnPackingTable pallets={pallets.onPackingTable} />
+                                    <div className={classes.buildCol}>
+                                        <div className={classes.buildRow}>
+                                            <span className={classes.more} style={pallets.onPackingTable.length > 8 ? {display: "block"} : {display: "none"}}>{pallets.onPackingTable.length - 8}</span>
+                                            <PalletOnPackingTable pallets={pallets.onPackingTable} />
+                                        </div>
+                                    </div>
                                 </div>
                             </label>
                         </li>
