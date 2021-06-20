@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from 'axios';
 import { createUseStyles } from 'react-jss';
-import Block from "../../components/Block/index.js";
 import address from "../../address.js";
 import TableAddress from "../../components/Table/TableAddress.js";
-import BigView from "../../components/BigView/index.js";
-import Pallet from "../../components/Pallet/index.js";
 import {PalletOnPackingTable, PalletOnFork, PalletOnWinder, PacksOnAssemble, PacksOnPintset} from "../../components/Pallet/packing_table.js";
 import {useHistory} from 'react-router-dom';
 import ModalWindow from '../../components/ModalWindow';
@@ -161,14 +158,17 @@ const useStyles = createUseStyles({
 
     header__qr: {
         width: 177,
+        minHeight: 115,
         textAlign: "left",
         color: "#aaaaaa",
         justifyContent: "flex-start",
         marginLeft: 12,
+        boxSizing: 'border-box',
     },
 
     box: {
         display: "flex",
+        overflow: 'hidden',
         height: "100%",
         flexDirection: "column",
         justifyContent: "space-between",
@@ -412,9 +412,6 @@ function Main() {
         others: [],
     });
 
-    const [dataBigView, setDataBigView] = useState({});
-    const [dataTypeBigView, setDataTypeBigView] = useState("packs");
-
     const [bigViewMode, setBigViewMode] = useState("");
 
     const inputQrRef = useRef();
@@ -432,6 +429,11 @@ function Main() {
         inputChangePackNew: inputChangePackNewRef,
         inputEditPackNewRef: inputEditPackNewRef,
     }
+
+    const isShortPacks = !(settings && settings.params && settings.params.multipacks_after_pintset === 1)
+    const limitPintset = isShortPacks ? 2 : 1
+    const limitOnFork = isShortPacks ? 2 : 1
+    const limitOnPackingTable = isShortPacks ? 2 : 1
 
     const sortPacks = array => {
         let packs = {
@@ -548,77 +550,6 @@ function Main() {
 
         getSettings();
     }, []);
-
-    function changeBigViewMode(mode) {
-        let temp = [];
-        if (mode === "pintset") {
-            temp = {
-                underPintset: [],
-                onAssemble_after: [],
-            };
-
-            temp.underPintset = packs.underPintset.slice(2);
-            temp.onAssemble_after = packs.onAssemble_after;
-        } else if (mode === "pallet") {
-            temp = {
-                onAssemble_before: [],
-            };
-
-            temp.onAssemble_before = packs.onAssemble_before
-        } else if (mode === "onWinder") {
-            temp = {
-                others: [],
-            };
-
-            temp.others = pallets.others;
-        } else if (mode === "onFork") {
-            temp = {
-                onFork: [],
-            };
-
-            temp = pallets.onFork;
-        }
-
-        setDataBigView(temp);
-        setBigViewMode(mode);
-    }
-
-    function buildPacks(columns, perColumn, onlyGray, size, packs) {
-        let allColumns = [];
-        let separatedColumns = [];
-        let swap = false;
-        let columnItems = [];
-
-        columns.map(column => {
-            for (let i = 1; i <= packs[column].length; i++) {
-                columnItems.push((
-                    <Block key={packs[column][i-1].id + "123"} id={packs[column][i-1].id} style={{marginBottom: "-9%", zIndex: packs[column].length - i}} onlyGray={onlyGray} size={size} />
-                ))
-
-                if (i % perColumn === 0) {
-                    separatedColumns.push((<div style={swap ? {} : null} className={classes.buildCol}>{columnItems}</div>));
-                    if (separatedColumns.length === 2) {
-                        allColumns.push((<div style={swap ? {zIndex: i} : null} className={classes.buildRow}>{separatedColumns}</div>));
-                        separatedColumns = [];
-                    }
-
-                    columnItems = [];
-                    swap = !swap;
-                }
-            }
-
-            return null
-        })
-
-        if (columnItems.length !== 0) {
-            separatedColumns.push((<div style={swap ? {} : null} className={classes.buildCol}>{columnItems}</div>));
-            allColumns.push((<div style={swap ? {zIndex: 30} : null} className={classes.buildRow}>{separatedColumns}</div>));
-        }
-
-
-        // console.log(allColumns)
-        return allColumns
-    }
 
     const createIncompleteCube = () => {
         axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + inputQrCubeRef.current.value.replace("/", "%2F"))
@@ -757,33 +688,6 @@ function Main() {
                         }
                     }}
                 />
-
-                {/* <TextField
-                        placeholder="QR..."
-                        onChange={async e => {
-                            setValueQrToDisassemble(e.target.value);
-                        }}
-                        onKeyPress={async e => {
-                                if (e.charCode === 13) {
-                                    let req = axios.get(address + "/api/v1_0/cubes/?qr=" + valueQrToDisassemble);
-                                    let awaited = await req;
-
-                                    console.log(awaited);
-
-                                    if (awaited.data.id) {
-                                        setModalDisassemble(false);
-                                        setModalAgree(awaited.data.id);
-                                    }
-                                }
-                            }
-                        }
-                        value={valueQrToDisassemble}
-                        outlined
-                        forceFocus
-                        autoFocus
-
-
-                    /> */}
             </ModalWindow>
             }
 
@@ -798,16 +702,6 @@ function Main() {
                                 id={"inputQrCube"}
                                 ref={inputQrCubeRef}
                             />
-                            {/* <TextField
-                                placeholder="QR..."
-                                onChange={async e => {
-                                    setinputQrCubeRef.current.value(e.target.value);
-                                }}
-                                value={inputQrCubeRef.current.value}
-                                outlined
-                                forceFocus
-                                autoFocus
-                            /> */}
                         </div>
                         <div style={{ display: "flex", gap: "2rem" }}>
                             <Button onClick={() => {
@@ -1111,24 +1005,28 @@ function Main() {
 
                     <div className={classes.content}>
                         {bigViewMode === bigViewModes.onPackingTable && <PalletOnPackingTable
+                            isShortPacks={isShortPacks}
                             pallets={pallets.onPackingTable}
                             onDel={delPallet}
                             onEdit={editPallet}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.onFork && <PalletOnFork
+                            isShortPacks={isShortPacks}
                             pallets={pallets.onFork}
                             onDel={delPallet}
                             onEdit={editPallet}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.onWinder && <PalletOnWinder
+                            isShortPacks={isShortPacks}
                             pallets={pallets.others}
                             onDel={delPack}
                             onEdit={editPack}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.pallet && <PacksOnAssemble
+                            isShortPacks={isShortPacks}
                             packs={packs.onAssemble_before}
                             onDel={delPack}
                             onEdit={editPack}
@@ -1137,7 +1035,8 @@ function Main() {
                         {bigViewMode === bigViewModes.pintset && <div className={classes.buildCol}>
                             <div className={classes.buildRow}>
                                 <PacksOnPintset
-                                    packs={packs.onAssemble_after.slice(0, 2)}
+                                    isShortPacks={isShortPacks}
+                                    packs={packs.onAssemble_after.slice(0, limitPintset)}
                                     onDel={delPack}
                                     onEdit={editPack}
                                     bigView
@@ -1145,7 +1044,8 @@ function Main() {
                             </div>
                             <div className={classes.buildRow}>
                                 <PacksOnPintset
-                                    packs={packs.underPintset.slice(0, 2)}
+                                    isShortPacks={isShortPacks}
+                                    packs={packs.underPintset.slice(0, limitPintset)}
                                     onDel={delPack}
                                     onEdit={editPack}
                                     bigView
@@ -1154,27 +1054,29 @@ function Main() {
                         </div>}
                     </div>
 
-                    {/* <BigView data={dataBigView} dataType={dataTypeBigView} perColumn={bigViewMode === "pintset" ? Infinity : 3}/> */}
-
                     <ul className={classes.variants__list}>
                         <li className={classes.variants__item}
-                            onClick={() => {changeBigViewMode(bigViewModes.pintset)}}>
+                            onClick={() => {setBigViewMode(bigViewModes.pintset)}}>
                             <input type="radio" name="variants" id="variants-1" />
                             <label htmlFor="variants-1" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.pintset && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Пинцет</h3>
                                 <div className={classes.buildCol}>
                                     <div className={classes.buildRow}>
                                         <div className={classes.variants__itemContainer}>
-                                            <span className={classes.more} style={packs.onAssemble_after.length > 2 ? {display: "block"} : {display: "none"}}>{packs.onAssemble_after.length - 2}</span>
-                                            <PacksOnPintset packs={packs.onAssemble_after.slice(0, 2)} />
-                                            {/* {packs.onAssemble_after.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)} */}
+                                            <span
+                                                className={classes.more}
+                                                style={packs.onAssemble_after.length > limitPintset ? {display: 'block'} : {display: 'block', opacity: 0}}
+                                            >{packs.onAssemble_after.length - limitPintset}</span>
+                                            <PacksOnPintset isShortPacks={isShortPacks} packs={packs.onAssemble_after.slice(0, limitPintset)} />
                                         </div>
                                     </div>
                                     <div className={classes.buildRow}>
                                         <div className={classes.variants__itemContainer}>
-                                            <span className={classes.more} style={packs.underPintset.length > 2 ? {display: "block"} : {display: "none"}}>{packs.underPintset.length - 2}</span>
-                                            <PacksOnPintset packs={packs.underPintset.slice(0, 2)} />
-                                            {/* {packs.underPintset.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)} */}
+                                            <span
+                                                className={classes.more}
+                                                style={packs.underPintset.length > limitPintset ? {display: 'block'} : {display: 'block', opacity: 0}}
+                                            >{packs.underPintset.length - limitPintset}</span>
+                                            <PacksOnPintset isShortPacks={isShortPacks} packs={packs.underPintset.slice(0, limitPintset)} />
                                         </div>
                                     </div>
                                 </div>
@@ -1182,52 +1084,56 @@ function Main() {
                             </label>
                         </li>
                         <li className={classes.variants__item}
-                            onClick={() => {changeBigViewMode(bigViewModes.pallet)}}>
+                            onClick={() => {setBigViewMode(bigViewModes.pallet)}}>
                             <input type="radio" name="variants" id="variants-2" />
                             <label htmlFor="variants-2" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.pallet && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Паллеты</h3>
                                 <div className={classes.columnsContainer}>
-                                    {/* {buildPacks(["onAssemble_before"], 3, true, [70, 25], packs)} */}
-                                    <PacksOnAssemble packs={packs.onAssemble_before} />
+                                    <PacksOnAssemble isShortPacks={isShortPacks} packs={packs.onAssemble_before} />
                                 </div>
 
                             </label>
                         </li>
                         <li className={classes.variants__item}
-                            onClick={() => {changeBigViewMode(bigViewModes.onWinder)}}>
+                            onClick={() => {setBigViewMode(bigViewModes.onWinder)}}>
                             <input type="radio" name="variants" id="variants-3" />
                             <label htmlFor="variants-3" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onWinder && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Обмотчик</h3>
                                 <div className={classes.columnsContainer}>
-                                    <PalletOnWinder pallets={pallets.others} />
-                                    {/* {buildPacks(["others"], 3, true, [70, 25], pallets)} */}
+                                    <PalletOnWinder isShortPacks={isShortPacks} pallets={pallets.others} />
                                 </div>
                             </label>
                         </li>
                         <li className={classes.variants__item}
-                            onClick={() => {changeBigViewMode(bigViewModes.onFork)}}>
+                            onClick={() => {setBigViewMode(bigViewModes.onFork)}}>
                             <input type="radio" name="variants" id="variants-4" />
                             <label htmlFor="variants-4" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onFork && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Вилы</h3>
                                 <div className={classes.columnsContainer}>
                                     <div className={classes.buildCol}>
                                         <div className={classes.buildRow}>
-                                            <span className={classes.more} style={pallets.onFork.length > 2 ? {display: "block"} : {display: "none"}}>{pallets.onFork.length - 2}</span>
-                                            <PalletOnFork pallets={pallets.onFork} />
+                                            <span
+                                                className={classes.more}
+                                                style={pallets.onFork.length > limitOnFork ? {display: 'block'} : {display: 'block', opacity: 0}}
+                                            >{pallets.onFork.length - limitOnFork}</span>
+                                            <PalletOnFork isShortPacks={isShortPacks} pallets={pallets.onFork} />
                                         </div>
                                     </div>
                                 </div>
                             </label>
                         </li>
-                        <li className={classes.variants__item} onClick={() => {changeBigViewMode(bigViewModes.onPackingTable)}}>
+                        <li className={classes.variants__item} onClick={() => {setBigViewMode(bigViewModes.onPackingTable)}}>
                             <input type="radio" name="variants" id="variants-5" />
                             <label htmlFor="variants-5" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onPackingTable && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Упаковочный стол</h3>
                                 <div className={classes.variants__itemContainer}>
                                     <div className={classes.buildCol}>
                                         <div className={classes.buildRow}>
-                                            <span className={classes.more} style={pallets.onPackingTable.length > 8 ? {display: "block"} : {display: "none"}}>{pallets.onPackingTable.length - 8}</span>
-                                            <PalletOnPackingTable pallets={pallets.onPackingTable} />
+                                            <span
+                                                className={classes.more}
+                                                style={pallets.onPackingTable.length > limitOnPackingTable ? {display: 'block'} : {display: 'block', opacity: 0}}
+                                            >{pallets.onPackingTable.length - limitOnPackingTable}</span>
+                                            <PalletOnPackingTable isShortPacks={isShortPacks} pallets={pallets.onPackingTable} />
                                         </div>
                                     </div>
                                 </div>
