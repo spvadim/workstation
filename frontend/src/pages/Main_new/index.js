@@ -434,7 +434,7 @@ function Main() {
     const isShortPacks = !(settings && settings.params && settings.params.multipacks_after_pintset === 1)
     const limitPintset = isShortPacks ? 2 : 1
     const limitOnFork = isShortPacks ? 2 : 1
-    const limitOnPackingTable = isShortPacks ? 2 : 1
+    const limitOnPackingTable = isShortPacks ? 8 : 4
 
     const sortPacks = array => {
         let packs = {
@@ -1037,7 +1037,7 @@ function Main() {
                             <div className={classes.buildRow}>
                                 <PacksOnPintset
                                     {...{extended, isShortPacks}}
-                                    packs={packs.onAssemble_after.slice(0, limitPintset)}
+                                    packs={packs.onAssemble_after.slice()}
                                     onDel={delPack}
                                     onEdit={editPack}
                                     bigView
@@ -1046,7 +1046,7 @@ function Main() {
                             <div className={classes.buildRow}>
                                 <PacksOnPintset
                                     {...{extended, isShortPacks}}
-                                    packs={packs.underPintset.slice(0, limitPintset)}
+                                    packs={packs.underPintset.slice()}
                                     onDel={delPack}
                                     onEdit={editPack}
                                     bigView

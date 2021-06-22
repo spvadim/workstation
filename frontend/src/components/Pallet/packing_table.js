@@ -132,6 +132,10 @@ const PacksOnPintset = React.memo(({extended, isShortPacks, packs, bigView = fal
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
         <svg width={width} height={height} viewBox={'0 0 1000 400'} fill={'none'} transform={bigView ? 'scale(2.9) translate(0, 50)' : 'scale(4.5) translate(0, 5)'} >
+            {bigView && packs.slice(isShortPacks ? 2 : 1).map((pack, i) => {
+                return <PackBlock controlKey={`overlimit_${i}`} x={-110} y={-85 * i} pack={pack} {...{bigView, isShortPacks: true, onDel, onEdit, control: select, extended, selected}} />
+            })}
+
             {isShortPacks && <PackBlock controlKey={'1'} x={200} y={0} pack={packs[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
             <PackBlock controlKey={'2'} x={isShortPacks ? 455 : 200} y={0} pack={packs[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
@@ -258,6 +262,7 @@ const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel,
 
 const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = false, onDel, onEdit}) => {
     const classes = useStyles();
+
     const width = bigView ? 1300 : 120
     const height = bigView ? 435 : 79
 
@@ -268,9 +273,9 @@ const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = f
         scale = 1.5
     }
     let translateY = Math.round(40 / scale)
-    // let translateY = 0
-    // let translateX = (bigView ? 300 : 35) - ((pallets2.length - 1) * (isShortPacks ? 60 : 120))
-    let translateX = 0
+    let translateX = isShortPacks ? 0 : -12
+
+    const startX = isShortPacks ? -60 :  -150
 
     const [selected, setSelected] = useState(false)
     const [control, setControl] = useState(null)
@@ -279,17 +284,15 @@ const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = f
         setSelected((selected === key || !elem) ? false : key)
     }, [setControl, setSelected, selected])
 
-
-
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={width} height={height} viewBox={'0 0 400 80' } fill={'none'} transform={bigView ? `translate(${translateX}, ${translateY})` : `scale(2.5) translate(${translateX}, -8)`}>
+        <svg width={width} height={height} viewBox={'0 0 400 80' } fill={'none'} transform={bigView ? `translate(0}, ${translateY})` : `scale(2.5) translate(${translateX}, -8)`}>
             <g transform={`scale(${scale})`}>
                 {pallets2.reverse().map((pallet, m) => {
                     const n = isShortPacks ? m : m * 2
 
                     return <PalletBlock
                         controlKey={`${m}`}
-                        x={-60 + (40 * n)}
+                        x={startX + (40 * n)}
                         y={-20}
                         pallet={pallet}
                         {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}}
@@ -316,9 +319,15 @@ const PalletOnFork = React.memo(({extended, isShortPacks, pallets, onDel, onEdit
     }, [setControl, setSelected, selected])
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.7) translate(0, -30)' : 'scale(5) translate(5, -5)'} >
-            {isShortPacks && <PalletBlock controlKey={'1'} x={isShortPacks ? 40 : -32} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
-            <PalletBlock controlKey={'2'} x={isShortPacks ? 72 : -64} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+        <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.7) translate(0, -30)' : 'scale(5) translate(0, -5)'} >
+            {bigView && pallets.slice(isShortPacks ? 2 : 1).map((pallet, i) => {
+                return <PalletBlock controlKey={`overlimit_${i}`} x={isShortPacks ? 10 : -130} y={0 - (32 * i)} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            })}
+
+            {bigView && pallets.slice(isShortPacks ? 2 : 1) <= 0 && <PalletBlock controlKey={`overlimit_${0}`} x={isShortPacks ? 10 : -62} y={0} pallet={null} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
+
+            {isShortPacks && <PalletBlock controlKey={'1'} x={isShortPacks ? 60 : -12} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
+            <PalletBlock controlKey={'2'} x={isShortPacks ? 92 : -44} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
             {bigView && control}
         </svg>
@@ -340,18 +349,22 @@ const PalletOnPackingTable = React.memo(({extended, isShortPacks, pallets, onDel
 
     if (isShortPacks) {
         return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-            <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.4) translate(400)' : 'scale(3) translate(37)'}>
-                <PalletBlock controlKey={'1'} x={-107} y={7} pallet={pallets[6]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'2'} x={-107} y={-25} pallet={pallets[8]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.4) translate(-50)' : 'scale(3) translate(-10)'}>
+                {bigView && pallets.slice(8).map((pallet, i) => {
+                    return <PalletBlock controlKey={`overlimit_${i}`} x={0} y={7 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                })}
 
-                <PalletBlock controlKey={'3'} x={-64} pallet={pallets[5]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'4'} x={-64} y={-32} pallet={pallets[7]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'1'} x={50} y={7} pallet={pallets[6]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'2'} x={50} y={-25} pallet={pallets[8]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
-                <PalletBlock controlKey={'5'} x={-43} y={7} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'6'} x={-43} y={-25} pallet={pallets[4]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'3'} x={93} pallet={pallets[5]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'4'} x={93} y={-32} pallet={pallets[7]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
-                <PalletBlock controlKey={'7'} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'8'} y={-32} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'5'} x={114} y={7} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'6'} x={114} y={-25} pallet={pallets[4]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+
+                <PalletBlock controlKey={'7'} x={157} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'8'} x={157} y={-32} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
                 {bigView && control}
             </svg>
@@ -359,12 +372,16 @@ const PalletOnPackingTable = React.memo(({extended, isShortPacks, pallets, onDel
     }
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.4) translate(150)' : 'scale(3) translate(10)'}>
-            <PalletBlock controlKey={'1'} x={-80} y={0} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-            <PalletBlock controlKey={'2'} x={-80} y={-32} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+        <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.4)' : 'scale(3) translate(-10)'}>
+            {bigView && pallets.slice(4).map((pallet, i) => {
+                return <PalletBlock controlKey={`overlimit_${i}`} x={-140} y={7 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            })}
 
-            <PalletBlock controlKey={'3'} x={-123} y={7} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-            <PalletBlock controlKey={'4'} x={-123} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'1'} x={0} y={0} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'2'} x={0} y={-32} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+
+            <PalletBlock controlKey={'3'} x={-43} y={7} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'4'} x={-43} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
             {bigView && control}
         </svg>
