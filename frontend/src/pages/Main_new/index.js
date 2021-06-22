@@ -247,6 +247,7 @@ const useStyles = createUseStyles({
         position: 'relative',
         width: "100%",
         minHeight: 151,
+        overflow: 'hidden',
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -635,7 +636,7 @@ function Main() {
     }, [setModalEditPack])
 
     const editPallet = useCallback((row) => {
-        history.push('/edit', { description: row, type: 'multipacks', extended})
+        history.push('/edit', {description: row, type: 'multipacks', extended})
     }, [extended, history])
 
     return (
@@ -1005,28 +1006,28 @@ function Main() {
 
                     <div className={classes.content}>
                         {bigViewMode === bigViewModes.onPackingTable && <PalletOnPackingTable
-                            isShortPacks={isShortPacks}
+                            {...{extended, isShortPacks}}
                             pallets={pallets.onPackingTable}
                             onDel={delPallet}
                             onEdit={editPallet}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.onFork && <PalletOnFork
-                            isShortPacks={isShortPacks}
+                            {...{extended, isShortPacks}}
                             pallets={pallets.onFork}
                             onDel={delPallet}
                             onEdit={editPallet}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.onWinder && <PalletOnWinder
-                            isShortPacks={isShortPacks}
+                            {...{extended, isShortPacks}}
                             pallets={pallets.others}
-                            onDel={delPack}
-                            onEdit={editPack}
+                            onDel={delPallet}
+                            onEdit={editPallet}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.pallet && <PacksOnAssemble
-                            isShortPacks={isShortPacks}
+                            {...{extended, isShortPacks}}
                             packs={packs.onAssemble_before}
                             onDel={delPack}
                             onEdit={editPack}
@@ -1035,7 +1036,7 @@ function Main() {
                         {bigViewMode === bigViewModes.pintset && <div className={classes.buildCol}>
                             <div className={classes.buildRow}>
                                 <PacksOnPintset
-                                    isShortPacks={isShortPacks}
+                                    {...{extended, isShortPacks}}
                                     packs={packs.onAssemble_after.slice(0, limitPintset)}
                                     onDel={delPack}
                                     onEdit={editPack}
@@ -1044,7 +1045,7 @@ function Main() {
                             </div>
                             <div className={classes.buildRow}>
                                 <PacksOnPintset
-                                    isShortPacks={isShortPacks}
+                                    {...{extended, isShortPacks}}
                                     packs={packs.underPintset.slice(0, limitPintset)}
                                     onDel={delPack}
                                     onEdit={editPack}
@@ -1067,7 +1068,7 @@ function Main() {
                                                 className={classes.more}
                                                 style={packs.onAssemble_after.length > limitPintset ? {display: 'block'} : {display: 'block', opacity: 0}}
                                             >{packs.onAssemble_after.length - limitPintset}</span>
-                                            <PacksOnPintset isShortPacks={isShortPacks} packs={packs.onAssemble_after.slice(0, limitPintset)} />
+                                            <PacksOnPintset {...{extended, isShortPacks}} packs={packs.onAssemble_after.slice(0, limitPintset)} />
                                         </div>
                                     </div>
                                     <div className={classes.buildRow}>
@@ -1076,7 +1077,7 @@ function Main() {
                                                 className={classes.more}
                                                 style={packs.underPintset.length > limitPintset ? {display: 'block'} : {display: 'block', opacity: 0}}
                                             >{packs.underPintset.length - limitPintset}</span>
-                                            <PacksOnPintset isShortPacks={isShortPacks} packs={packs.underPintset.slice(0, limitPintset)} />
+                                            <PacksOnPintset {...{extended, isShortPacks}} packs={packs.underPintset.slice(0, limitPintset)} />
                                         </div>
                                     </div>
                                 </div>
@@ -1089,7 +1090,7 @@ function Main() {
                             <label htmlFor="variants-2" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.pallet && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Паллеты</h3>
                                 <div className={classes.columnsContainer}>
-                                    <PacksOnAssemble isShortPacks={isShortPacks} packs={packs.onAssemble_before} />
+                                    <PacksOnAssemble {...{extended, isShortPacks}} packs={packs.onAssemble_before} />
                                 </div>
 
                             </label>
@@ -1100,7 +1101,7 @@ function Main() {
                             <label htmlFor="variants-3" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onWinder && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Обмотчик</h3>
                                 <div className={classes.columnsContainer}>
-                                    <PalletOnWinder isShortPacks={isShortPacks} pallets={pallets.others} />
+                                    <PalletOnWinder {...{extended, isShortPacks}} pallets={pallets.others} />
                                 </div>
                             </label>
                         </li>
@@ -1116,7 +1117,7 @@ function Main() {
                                                 className={classes.more}
                                                 style={pallets.onFork.length > limitOnFork ? {display: 'block'} : {display: 'block', opacity: 0}}
                                             >{pallets.onFork.length - limitOnFork}</span>
-                                            <PalletOnFork isShortPacks={isShortPacks} pallets={pallets.onFork} />
+                                            <PalletOnFork {...{extended, isShortPacks}} pallets={pallets.onFork} />
                                         </div>
                                     </div>
                                 </div>
@@ -1133,7 +1134,7 @@ function Main() {
                                                 className={classes.more}
                                                 style={pallets.onPackingTable.length > limitOnPackingTable ? {display: 'block'} : {display: 'block', opacity: 0}}
                                             >{pallets.onPackingTable.length - limitOnPackingTable}</span>
-                                            <PalletOnPackingTable isShortPacks={isShortPacks} pallets={pallets.onPackingTable} />
+                                            <PalletOnPackingTable {...{extended, isShortPacks}} pallets={pallets.onPackingTable} />
                                         </div>
                                     </div>
                                 </div>
