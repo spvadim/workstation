@@ -39,8 +39,8 @@ function App() {
 	return (
 		<div className={classes.App}>
 			<div className={classes.App_inner}>
-				<Route exact path="/" component={Main} />
-				<Route exact path="/main_new" component={Main_new} />
+				<Route exact path="/" component={Main_new} />
+				<Route exact path="/main_old" component={Main} />
 				<Route exact path="/batch_params" component={BatchParams} />
 				<Route exact path="/edit" component={(props) => Edit(props.location.state)} />
 				<Route exact path="/create" component={window.screen.width < 600 ? Create_mobile : Create} />

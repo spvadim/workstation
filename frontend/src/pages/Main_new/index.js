@@ -172,6 +172,7 @@ const useStyles = createUseStyles({
         height: "100%",
         flexDirection: "column",
         justifyContent: "space-between",
+        backgroundColor: ({ redBackground }) => redBackground && "#CC3333",
     },
 
     main: {
@@ -373,10 +374,8 @@ const tableProps = (extended) => ({
 })
 
 function Main() {
-	const classes = useStyles();
-
     const history = useHistory();
-
+    const [redBackground, setRedBackground] = useState(false);
     const [mode, setMode] = useState('auto');
     const [extended, setExtended] = useState(false);
     const [settings, setSettings] = useState(false);
@@ -392,13 +391,20 @@ function Main() {
     const [modalDelPalletAgree, setModalDelPalletAgree] = useState(false);
     const [modalDelPackAgree, setModalDelPackAgree] = useState(false);
     const [modalEditPack, setModalEditPack] = useState(false);
+    const [modalWithdrawal, setModalWithdrawal] = useState(false);
+    const [modalDesync, setModalDesync] = useState(false);
 
     const [forceFocus, setForceFocus] = useState("inputQr");
     const [notificationText, setNotificationText] = useState("");
     const [notificationText2, setNotificationText2] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [returnNotificationText, setReturnNotificationText] = useState("");
+    const [notificationPintsetErrorText, setNotificationPintsetErrorText] = useState("");
+    const [notificationColumnErrorText, setNotificationColumnErrorText] = useState("");
+    const [notificationDesyncErrorText, setNotificationDesyncErrorText] = useState("");
     const [events, setEvents] = useState([]);
+
+    const classes = useStyles({mode, redBackground});
 
     const [packs, setPacks] = useState({
         underPintset: [],
@@ -584,6 +590,32 @@ function Main() {
                 console.log(e);
             })
     }
+
+    useEffect(() => {
+        const request = () => {
+            let request = axios.get(address + "/api/v1_0/get_state");
+            request.then(res => {
+                let temp = res.data;
+                if (temp.state === "normal") setNotificationColumnErrorText("")
+                else {setNotificationColumnErrorText(temp.error_msg)}  // setRedBackground(true)}
+                if (temp.pintset_state === "normal") setNotificationPintsetErrorText("")
+                else {setNotificationPintsetErrorText(temp.pintset_error_msg)}  // setRedBackground(true)}
+                if (temp.packing_table_state === "normal") setModalPackingTableError("")
+                else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg)} // setRedBackground(true)}
+                if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("")
+                else {setModalWithdrawal(temp.pintset_withdrawal_error_msg)} // setRedBackground(true)}
+                if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg)} // setRedBackground(true)}
+                else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}
+                else {setModalDesync("")}
+
+                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);
+            })
+            request.catch(e => setNotificationErrorText(e.response.data.detail))
+        };
+        request();
+        const interval = setInterval(request, 1000);
+        return () => {clearInterval(interval)};
+    }, []);
 
     useEffect (() => {
         let interval;
@@ -898,12 +930,53 @@ function Main() {
             </ModalWindow>
             }
 
+            {modalWithdrawal &&
+            <ModalWindow
+                title="Подтверждение выемки из-под пинцета"
+                description={modalWithdrawal}
+            >
+                <Button onClick={() => {
+                    axios.patch(address + "/api/v1_0/flush_pintset_withdrawal_with_remove")
+                        .then(() => setModalWithdrawal(false))
+                }}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Вынимаю все
+                </Button>
+
+                <Button onClick={() => {
+                    axios.patch(address + "/api/v1_0/flush_pintset_withdrawal")
+                        .then(() => setModalWithdrawal(false))
+                }}>
+                    Ничего не вынимаю
+                </Button>
+            </ModalWindow>
+            }
+
+            {modalDesync &&
+            <ModalWindow
+                title="Оповещение о рассинхронизации"
+                description={modalDesync}
+            >
+                <Button onClick={() => {
+                    axios.patch(address + "/api/v1_0/set_sync_fixing")
+                        .then(() => {
+                            setNotificationDesyncErrorText("Рассинхрон");
+                            setModalDesync(false);
+                            // setRedBackground(false);
+                        })
+                }}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Понял
+                </Button>
+            </ModalWindow>
+            }
+
 
 
 			<header className={classes.header}>
                 <div className={classes.notificationPanel}>
                     { events.map(event => {
-                        return <Notification_new text={event.message}
+                        return <Notification_new key={event.id} text={event.message}
                                                  onClose={() => closeProcessEvent(event.id)}
                         />
                     })
