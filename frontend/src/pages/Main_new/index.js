@@ -311,6 +311,13 @@ const useStyles = createUseStyles({
         }
     },
 
+    moreContainer: {
+        clear: 'both',
+        "&:after": {
+            clear: 'both',
+        },
+    },
+
     columnsContainer: {
         display: 'flex',
         position: 'relative',
@@ -1106,26 +1113,14 @@ function Main() {
                             onEdit={editPack}
                             bigView
                         />}
-                        {bigViewMode === bigViewModes.pintset && <div className={classes.buildCol}>
-                            <div className={classes.buildRow}>
-                                <PacksOnPintset
-                                    {...{extended, isShortPacks}}
-                                    packs={packs.onAssemble_after.slice()}
-                                    onDel={delPack}
-                                    onEdit={editPack}
-                                    bigView
-                                />
-                            </div>
-                            <div className={classes.buildRow}>
-                                <PacksOnPintset
-                                    {...{extended, isShortPacks}}
-                                    packs={packs.underPintset.slice()}
-                                    onDel={delPack}
-                                    onEdit={editPack}
-                                    bigView
-                                />
-                            </div>
-                        </div>}
+                        {bigViewMode === bigViewModes.pintset && <PacksOnPintset
+                            {...{extended, isShortPacks}}
+                            packsTop={packs.onAssemble_after.slice()}
+                            packsBottom={packs.underPintset.slice()}
+                            onDel={delPack}
+                            onEdit={editPack}
+                            bigView
+                        />}
                     </div>
 
                     <ul className={classes.variants__list}>
@@ -1134,29 +1129,32 @@ function Main() {
                             <input type="radio" name="variants" id="variants-1" />
                             <label htmlFor="variants-1" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.pintset && 'active'].join(' ')}>
                                 <h3 className={classes.variants__itemTitle}>Пинцет</h3>
+
                                 <div className={classes.buildCol}>
                                     <div className={classes.buildRow}>
                                         <div className={classes.variants__itemContainer}>
-                                            <span
-                                                className={classes.more}
-                                                style={packs.onAssemble_after.length > limitPintset ? {display: 'block'} : {display: 'block', opacity: 0}}
-                                            >{packs.onAssemble_after.length - limitPintset}</span>
-                                            <PacksOnPintset {...{extended, isShortPacks}} packs={packs.onAssemble_after.slice(0, limitPintset)} />
-                                        </div>
-                                    </div>
-                                    <div className={classes.buildRow}>
-                                        <div className={classes.variants__itemContainer}>
-                                            <span
-                                                className={classes.more}
-                                                style={packs.underPintset.length > limitPintset ? {display: 'block'} : {display: 'block', opacity: 0}}
-                                            >{packs.underPintset.length - limitPintset}</span>
-                                            <PacksOnPintset {...{extended, isShortPacks}} packs={packs.underPintset.slice(0, limitPintset)} />
+                                            <div className={classes.moreContainer}>
+                                                <span
+                                                    className={classes.more}
+                                                    style={packs.onAssemble_after.length > limitPintset ? {display: 'block'} : {display: 'block', opacity: 0}}
+                                                >{packs.onAssemble_after.length - limitPintset}</span>
+                                                <span
+                                                    className={classes.more}
+                                                    style={packs.underPintset.length > limitPintset ? {display: 'block'} : {display: 'block', opacity: 0}}
+                                                >{packs.underPintset.length - limitPintset}</span>
+                                            </div>
+
+                                            <PacksOnPintset
+                                                {...{extended, isShortPacks}}
+                                                packsTop={packs.onAssemble_after.slice(0, limitPintset)}
+                                                packsBottom={packs.underPintset.slice(0, limitPintset)}
+                                            />
                                         </div>
                                     </div>
                                 </div>
-
                             </label>
                         </li>
+
                         <li className={classes.variants__item}
                             onClick={() => {setBigViewMode(bigViewModes.pallet)}}>
                             <input type="radio" name="variants" id="variants-2" />
@@ -1168,6 +1166,7 @@ function Main() {
 
                             </label>
                         </li>
+
                         <li className={classes.variants__item}
                             onClick={() => {setBigViewMode(bigViewModes.onWinder)}}>
                             <input type="radio" name="variants" id="variants-3" />
@@ -1178,6 +1177,7 @@ function Main() {
                                 </div>
                             </label>
                         </li>
+
                         <li className={classes.variants__item}
                             onClick={() => {setBigViewMode(bigViewModes.onFork)}}>
                             <input type="radio" name="variants" id="variants-4" />
@@ -1196,6 +1196,7 @@ function Main() {
                                 </div>
                             </label>
                         </li>
+
                         <li className={classes.variants__item} onClick={() => {setBigViewMode(bigViewModes.onPackingTable)}}>
                             <input type="radio" name="variants" id="variants-5" />
                             <label htmlFor="variants-5" className={[classes.variants__itemLabel, bigViewMode === bigViewModes.onPackingTable && 'active'].join(' ')}>

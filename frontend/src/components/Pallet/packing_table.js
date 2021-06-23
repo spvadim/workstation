@@ -82,6 +82,11 @@ const PackBlock = React.memo(({extended, isShortPacks, pack, bigView, onDel, onE
         strokeOpacity = isSelected ? 1 : 0.3
     }
 
+    if (pack && pack.to_process) {
+        fillFront = '#b22f2f';
+        fillBack = '#CC3333';
+    }
+
     if (pack && isSelected) {
         fillFront = '#F7CE55';
         fillBack = '#F7EE55';
@@ -93,7 +98,7 @@ const PackBlock = React.memo(({extended, isShortPacks, pack, bigView, onDel, onE
                 if (!bigView) return;
                 control(controlKey, (<svg {...{x, y}}><Control
                     item={pack}
-                    x={isShortPacks ? 50 : 150}
+                    x={isShortPacks ? 50 : 180}
                     y={-19}
                     viewBox="0 0 165 44"
                     onRemove={() => {control(controlKey)}}
@@ -101,15 +106,23 @@ const PackBlock = React.memo(({extended, isShortPacks, pack, bigView, onDel, onE
                     onEdit={() => {onEdit(pack.id); control(controlKey)}}
                 /></svg>))
             }}
-            transform={isShortPacks ? '' : 'scale(2, 1)'}
         >
-            <path {...{strokeWidth, strokeOpacity}} d="M44 1H300V86.3L256.5 112.3H0.5V27L44 1Z" fill={fillFront} />
-            <path {...{strokeWidth, strokeOpacity}} d="M256.5 27H0.5V112.3H256.5V27Z" fill={fillBack} />
-            <path {...{strokeWidth, strokeOpacity}} d="M256.5 27H0.5V112.3H256.5V27Z" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M0.5 27L44 1H300V86.3L256.5 112.3" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M300 1L256.5 27" stroke={stroke} strokeMiterlimit="10" />
+            {!isShortPacks && <g>
+                <path {...{strokeWidth, strokeOpacity}} d="M44 1H556V86.3L512.5 112.3H0.5V27L44 1Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M256.5 27H0.5V112.3H512.5V27Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M256.5 27H0.5V112.3H512.5V27Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M0.5 27L44 1H556V86.3L512.5 112.3" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M556 1L512.5 27" stroke={stroke} strokeMiterlimit="10" />
+            </g>}
+            {isShortPacks && <g>
+                <path {...{strokeWidth, strokeOpacity}} d="M44 1H300V86.3L256.5 112.3H0.5V27L44 1Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M256.5 27H0.5V112.3H256.5V27Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M256.5 27H0.5V112.3H256.5V27Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M0.5 27L44 1H300V86.3L256.5 112.3" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M300 1L256.5 27" stroke={stroke} strokeMiterlimit="10" />
+            </g>}
 
-            {bigView && pack && <g transform={isShortPacks ? '' : 'scale(0.5, 1)'}>
+            {bigView && pack && <g>
                 <text x={5} y={107} fontFamily="sans-serif" fontSize="18" fill="black">{pack.qr}</text>
                 {extended && <text x={5} y={45} fontFamily="sans-serif" fontSize="18" fill="black">{pack.id}</text>}
             </g>}
@@ -117,11 +130,11 @@ const PackBlock = React.memo(({extended, isShortPacks, pack, bigView, onDel, onE
     </svg>
 });
 
-const PacksOnPintset = React.memo(({extended, isShortPacks, packs, bigView = false, onDel, onEdit}) => {
+const PacksOnPintset = React.memo(({extended, isShortPacks, packsTop, packsBottom, bigView = false, onDel, onEdit}) => {
     const classes = useStyles();
 
-    const width = bigView ? 1300 : 120
-    const height = bigView ? 130 : 19
+    const width = bigView ? 1500 : 120
+    const height = bigView ? 435 : 79
 
     const [selected, setSelected] = useState(false)
     const [control, setControl] = useState(null)
@@ -131,15 +144,22 @@ const PacksOnPintset = React.memo(({extended, isShortPacks, packs, bigView = fal
     }, [setControl, setSelected, selected])
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={width} height={height} viewBox={'0 0 1000 400'} fill={'none'} transform={bigView ? 'scale(2.9) translate(0, 50)' : 'scale(4.5) translate(0, 5)'} >
-            {bigView && packs.slice(isShortPacks ? 2 : 1).map((pack, i) => {
-                return <PackBlock controlKey={`overlimit_${i}`} x={-110} y={-85 * i} pack={pack} {...{bigView, isShortPacks: true, onDel, onEdit, control: select, extended, selected}} />
+        <svg width={width} height={height} viewBox={'0 0 1000 600'} fill={'none'} transform={bigView ? '' : 'scale(1.3) translate(0, -15)'} >
+            {bigView && packsTop.slice(isShortPacks ? 2 : 1).map((pack, i) => {
+                return <PackBlock controlKey={`top_overlimit_${i}`} x={770} y={240 - (85 * i)} pack={pack} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
             })}
 
-            {isShortPacks && <PackBlock controlKey={'1'} x={200} y={0} pack={packs[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
-            <PackBlock controlKey={'2'} x={isShortPacks ? 455 : 200} y={0} pack={packs[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            {isShortPacks && <PackBlock controlKey={'top_1'} x={200} y={240} pack={packsTop[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
+            <PackBlock controlKey={'top_2'} x={isShortPacks ? 455 : 200} y={240} pack={packsTop[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
-            {bigView && control}
+            {bigView && packsBottom.slice(isShortPacks ? 2 : 1).map((pack, i) => {
+                return <PackBlock controlKey={`bottom_overlimit_${i}`} x={isShortPacks ? -110 : -380} y={380 - (85 * i)} pack={pack} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            })}
+
+            {isShortPacks && <PackBlock controlKey={'bottom_1'} x={200} y={380} pack={packsBottom[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
+            <PackBlock controlKey={'bottom_2'} x={isShortPacks ? 455 : 200} y={380} pack={packsBottom[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+
+            {bigView && <g transform={'translate(0, -100)'}>{control}</g>}
         </svg>
     </div>
 });
@@ -182,7 +202,7 @@ const PacksOnAssemble = React.memo(({extended, isShortPacks, packs, bigView = fa
     </div>
 });
 
-const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel, onEdit, x = 0, y = 0, controlKey, control, selected}) => {
+const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel, onEdit, x = 0, y = 0, controlKey, control, selected, showStatus}) => {
     const isSelected = selected === controlKey
     const strokeWidth = bigView ? 0.2: 1;
     let strokeOpacity = 1;
@@ -201,6 +221,11 @@ const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel,
         strokeOpacity = isSelected ? 1 : 0.3
     }
 
+    if (pallet && pallet.to_process) {
+        fillFront = '#b22f2f';
+        fillBack = '#CC3333';
+    }
+
     if (pallet && isSelected) {
         fillFront = '#F7CE55';
         fillBack = '#F7EE55';
@@ -212,49 +237,83 @@ const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel,
                 if (!bigView) return;
                 control(controlKey, (<svg {...{x, y}}><Control
                     item={pallet}
-                    x={isShortPacks ? 112 : 237}
+                    x={isShortPacks ? 112 : 128}
                     y={52}
                     onRemove={() => {control(controlKey)}}
                     onDel={() => {onDel(pallet.id); control(controlKey)}}
                     onEdit={() => {onEdit(pallet); control(controlKey)}}
                 /></svg>))
             }}
-            transform={isShortPacks ? '' : 'scale(2, 1)'}
         >
-            <path {...{strokeWidth, strokeOpacity}} d="M119.814 53.7666H151.983V64.4854L146.517 67.7526H114.348V57.0338L119.814 53.7666Z" fill={fillFront} />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.517 57.033H114.348V67.7518H146.517V57.033Z" fill={fillBack} />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.517 57.033H114.348V67.7518H146.517V57.033Z" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M114.348 57.0338L119.814 53.7666H151.983V64.4854L146.517 67.7526" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M151.983 53.7659L146.517 57.033" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M114.285 57.0332H146.454V67.752L140.987 71.0192H108.818V60.3004L114.285 57.0332Z" fill={fillFront} />
-            <path {...{strokeWidth, strokeOpacity}} d="M140.987 60.3H108.818V71.0189H140.987V60.3Z" fill={fillBack} />
-            <path {...{strokeWidth, strokeOpacity}} d="M140.987 60.3H108.818V71.0189H140.987V60.3Z" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M108.818 60.3004L114.285 57.0332H146.454V67.752L140.987 71.0192" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.454 57.033L140.987 60.3001" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M119.814 43.3359H151.983V54.0548L146.517 57.3219H114.348V46.6031L119.814 43.3359Z" fill={fillFront} />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.517 46.603H114.348V57.3219H146.517V46.603Z" fill={fillBack} />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.517 46.603H114.348V57.3219H146.517V46.603Z" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M114.348 46.6031L119.814 43.3359H151.983V54.0548L146.517 57.3219" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M151.983 43.3359L146.517 46.6031" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M114.285 46.603H146.454V57.3219L140.987 60.589H108.818V49.8702L114.285 46.603Z" fill={fillFront} />
-            <path {...{strokeWidth, strokeOpacity}} d="M140.987 49.8704H108.818V60.5892H140.987V49.8704Z" fill={fillBack} />
-            <path {...{strokeWidth, strokeOpacity}} d="M140.987 49.8704H108.818V60.5892H140.987V49.8704Z" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M108.818 49.8702L114.285 46.603H146.454V57.3219L140.987 60.589" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.454 46.603L140.987 49.8702" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M119.814 32.6553H151.983V43.3741L146.517 46.6413H114.348V35.9224L119.814 32.6553Z" fill={fillFront} />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.517 35.9219H114.348V46.6407H146.517V35.9219Z" fill={fillBack} />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.517 35.9219H114.348V46.6407H146.517V35.9219Z" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M114.348 35.9224L119.814 32.6553H151.983V43.3741L146.517 46.6413" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M151.983 32.6548L146.517 35.922" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M114.285 35.9219H146.454V46.6407L140.987 49.9079H108.818V39.189L114.285 35.9219Z" fill={fillFront} />
-            <path {...{strokeWidth, strokeOpacity}} d="M140.987 39.1887H108.818V49.9075H140.987V39.1887Z" fill={fillBack} />
-            <path {...{strokeWidth, strokeOpacity}} d="M140.987 39.1887H108.818V49.9075H140.987V39.1887Z" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M108.819 39.189L114.286 35.9219H146.455V46.6407L140.988 49.9079" stroke={stroke} strokeMiterlimit="10" />
-            <path {...{strokeWidth, strokeOpacity}} d="M146.454 35.9216L140.987 39.1888" stroke={stroke} strokeMiterlimit="10" />
+            {!isShortPacks && <g>
+                <path {...{strokeWidth, strokeOpacity}} d="M119.814 53.7666H183.983V64.4854L178.517 67.7526H114.348V57.0338L119.814 53.7666Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.517 57.033H114.348V67.7518H178.517V57.033Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.517 57.033H114.348V67.7518H178.517V57.033Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.348 57.0338L119.814 53.7666H183.983V64.4854L178.517 67.7526" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M183.983 53.7659L178.517 57.033" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.285 57.0332H178.454V67.752L172.987 71.0192H108.818V60.3004L114.285 57.0332Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M172.987 60.3H108.818V71.0189H172.987V60.3Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M172.987 60.3H108.818V71.0189H172.987V60.3Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M108.818 60.3004L114.285 57.0332H178.454V67.752L172.987 71.0192" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.454 57.033L172.987 60.3001" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M119.814 43.3359H183.983V54.0548L178.517 57.3219H114.348V46.6031L119.814 43.3359Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.517 46.603H114.348V57.3219H178.517V46.603Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.517 46.603H114.348V57.3219H178.517V46.603Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.348 46.6031L119.814 43.3359H183.983V54.0548L178.517 57.3219" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M183.983 43.3359L178.517 46.6031" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.285 46.603H178.454V57.3219L172.987 60.589H108.818V49.8702L114.285 46.603Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M172.987 49.8704H108.818V60.5892H172.987V49.8704Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M172.987 49.8704H108.818V60.5892H172.987V49.8704Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M108.818 49.8702L114.285 46.603H178.454V57.3219L172.987 60.589" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.454 46.603L172.987 49.8702" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M119.814 32.6553H183.983V43.3741L178.517 46.6413H114.348V35.9224L119.814 32.6553Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.517 35.9219H114.348V46.6407H178.517V35.9219Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.517 35.9219H114.348V46.6407H178.517V35.9219Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.348 35.9224L119.814 32.6553H183.983V43.3741L178.517 46.6413" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M183.983 32.6548L178.517 35.922" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.285 35.9219H178.454V46.6407L172.987 49.9079H108.818V39.189L114.285 35.9219Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M172.987 39.1887H108.818V49.9075H172.987V39.1887Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M172.987 39.1887H108.818V49.9075H172.987V39.1887Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M108.819 39.189L114.286 35.9219H178.455V46.6407L172.988 49.9079" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M178.454 35.9216L172.987 39.1888" stroke={stroke} strokeMiterlimit="10" />
+            </g>}
+            {isShortPacks && <g>
+                <path {...{strokeWidth, strokeOpacity}} d="M119.814 53.7666H151.983V64.4854L146.517 67.7526H114.348V57.0338L119.814 53.7666Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.517 57.033H114.348V67.7518H146.517V57.033Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.517 57.033H114.348V67.7518H146.517V57.033Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.348 57.0338L119.814 53.7666H151.983V64.4854L146.517 67.7526" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M151.983 53.7659L146.517 57.033" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.285 57.0332H146.454V67.752L140.987 71.0192H108.818V60.3004L114.285 57.0332Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M140.987 60.3H108.818V71.0189H140.987V60.3Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M140.987 60.3H108.818V71.0189H140.987V60.3Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M108.818 60.3004L114.285 57.0332H146.454V67.752L140.987 71.0192" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.454 57.033L140.987 60.3001" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M119.814 43.3359H151.983V54.0548L146.517 57.3219H114.348V46.6031L119.814 43.3359Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.517 46.603H114.348V57.3219H146.517V46.603Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.517 46.603H114.348V57.3219H146.517V46.603Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.348 46.6031L119.814 43.3359H151.983V54.0548L146.517 57.3219" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M151.983 43.3359L146.517 46.6031" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.285 46.603H146.454V57.3219L140.987 60.589H108.818V49.8702L114.285 46.603Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M140.987 49.8704H108.818V60.5892H140.987V49.8704Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M140.987 49.8704H108.818V60.5892H140.987V49.8704Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M108.818 49.8702L114.285 46.603H146.454V57.3219L140.987 60.589" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.454 46.603L140.987 49.8702" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M119.814 32.6553H151.983V43.3741L146.517 46.6413H114.348V35.9224L119.814 32.6553Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.517 35.9219H114.348V46.6407H146.517V35.9219Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.517 35.9219H114.348V46.6407H146.517V35.9219Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.348 35.9224L119.814 32.6553H151.983V43.3741L146.517 46.6413" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M151.983 32.6548L146.517 35.922" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M114.285 35.9219H146.454V46.6407L140.987 49.9079H108.818V39.189L114.285 35.9219Z" fill={fillFront} />
+                <path {...{strokeWidth, strokeOpacity}} d="M140.987 39.1887H108.818V49.9075H140.987V39.1887Z" fill={fillBack} />
+                <path {...{strokeWidth, strokeOpacity}} d="M140.987 39.1887H108.818V49.9075H140.987V39.1887Z" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M108.819 39.189L114.286 35.9219H146.455V46.6407L140.988 49.9079" stroke={stroke} strokeMiterlimit="10" />
+                <path {...{strokeWidth, strokeOpacity}} d="M146.454 35.9216L140.987 39.1888" stroke={stroke} strokeMiterlimit="10" />
+            </g>}
 
             {bigView && pallet && <svg x={110} y={0}>
-                <text y={42} fontFamily="sans-serif" fontSize="2.3" fill="black" transform={isShortPacks ? '' : 'scale(0.5, 1)'}>{pallet.qr}</text>
-                {extended && <text y={70} fontFamily="sans-serif" fontSize="2.3" fill="black" transform={isShortPacks ? '' : 'scale(0.5, 1)'}>{pallet.id}</text>}
+                <text y={42} fontFamily="sans-serif" fontSize="2.3" fill="black">{pallet.qr}</text>
+                {showStatus && <text y={49} fontFamily="sans-serif" fontSize="2.3" fill="black">{pallet.status}</text>}
+                {extended && <text y={70} fontFamily="sans-serif" fontSize="2.3" fill="black">{pallet.id}</text>}
             </svg>}
         </g>
     </svg>
@@ -273,9 +332,6 @@ const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = f
         scale = 1.5
     }
     let translateY = Math.round(40 / scale)
-    let translateX = isShortPacks ? 0 : -12
-
-    const startX = isShortPacks ? -60 :  -150
 
     const [selected, setSelected] = useState(false)
     const [control, setControl] = useState(null)
@@ -285,16 +341,17 @@ const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = f
     }, [setControl, setSelected, selected])
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={width} height={height} viewBox={'0 0 400 80' } fill={'none'} transform={bigView ? `translate(0}, ${translateY})` : `scale(2.5) translate(${translateX}, -8)`}>
+        <svg width={width} height={height} viewBox={'0 0 400 80' } fill={'none'} transform={bigView ? `translate(0, ${translateY})` : `scale(2.5)`}>
             <g transform={`scale(${scale})`}>
                 {pallets2.reverse().map((pallet, m) => {
                     const n = isShortPacks ? m : m * 2
 
                     return <PalletBlock
                         controlKey={`${m}`}
-                        x={startX + (40 * n)}
+                        x={-60 + (40 * n)}
                         y={-20}
                         pallet={pallet}
+                        showStatus
                         {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}}
                     />
                 })}
@@ -321,13 +378,13 @@ const PalletOnFork = React.memo(({extended, isShortPacks, pallets, onDel, onEdit
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
         <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.7) translate(0, -30)' : 'scale(5) translate(0, -5)'} >
             {bigView && pallets.slice(isShortPacks ? 2 : 1).map((pallet, i) => {
-                return <PalletBlock controlKey={`overlimit_${i}`} x={isShortPacks ? 10 : -130} y={0 - (32 * i)} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                return <PalletBlock controlKey={`overlimit_${i}`} x={isShortPacks ? 10 : -10} y={0 - (32 * i)} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
             })}
 
-            {bigView && pallets.slice(isShortPacks ? 2 : 1) <= 0 && <PalletBlock controlKey={`overlimit_${0}`} x={isShortPacks ? 10 : -62} y={0} pallet={null} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
+            {bigView && pallets.length === (isShortPacks ? 2 : 1) && <PalletBlock controlKey={`overlimit_${0}`} x={isShortPacks ? 10 : -10} y={0} pallet={null} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
 
-            {isShortPacks && <PalletBlock controlKey={'1'} x={isShortPacks ? 60 : -12} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
-            <PalletBlock controlKey={'2'} x={isShortPacks ? 92 : -44} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            {isShortPacks && <PalletBlock controlKey={'1'} x={isShortPacks ? 48 : -12} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
+            <PalletBlock controlKey={'2'} x={isShortPacks ? 80 : 60} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
             {bigView && control}
         </svg>
@@ -349,19 +406,19 @@ const PalletOnPackingTable = React.memo(({extended, isShortPacks, pallets, onDel
 
     if (isShortPacks) {
         return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-            <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.4) translate(-50)' : 'scale(3) translate(-10)'}>
+            <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.4)' : 'scale(3) translate(-10)'}>
                 {bigView && pallets.slice(8).map((pallet, i) => {
                     return <PalletBlock controlKey={`overlimit_${i}`} x={0} y={7 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
                 })}
 
-                <PalletBlock controlKey={'1'} x={50} y={7} pallet={pallets[6]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'2'} x={50} y={-25} pallet={pallets[8]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'1'} x={50} y={7} pallet={pallets[5]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'2'} x={50} y={-25} pallet={pallets[7]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
-                <PalletBlock controlKey={'3'} x={93} pallet={pallets[5]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'4'} x={93} y={-32} pallet={pallets[7]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'3'} x={93} pallet={pallets[4]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'4'} x={93} y={-32} pallet={pallets[6]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
                 <PalletBlock controlKey={'5'} x={114} y={7} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'6'} x={114} y={-25} pallet={pallets[4]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'6'} x={114} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
                 <PalletBlock controlKey={'7'} x={157} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
                 <PalletBlock controlKey={'8'} x={157} y={-32} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
@@ -372,18 +429,18 @@ const PalletOnPackingTable = React.memo(({extended, isShortPacks, pallets, onDel
     }
 
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
-        <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.4)' : 'scale(3) translate(-10)'}>
+        <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.4)' : 'scale(3) translate(-5)'}>
             {bigView && pallets.slice(4).map((pallet, i) => {
-                return <PalletBlock controlKey={`overlimit_${i}`} x={-140} y={7 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                return <PalletBlock controlKey={`overlimit_${i}`} x={-30} y={7 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
             })}
 
-            <PalletBlock controlKey={'1'} x={0} y={0} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-            <PalletBlock controlKey={'2'} x={0} y={-32} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'1'} x={83} y={0} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'2'} x={83} y={-32} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
-            <PalletBlock controlKey={'3'} x={-43} y={7} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-            <PalletBlock controlKey={'4'} x={-43} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'3'} x={50} y={7} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'4'} x={50} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
 
-            {bigView && control}
+            {bigView && <g transform={'translate='}>{control}</g>}
         </svg>
     </div>
 })
