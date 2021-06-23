@@ -55,17 +55,14 @@ async def flush_to_normal():
     await asyncio.gather(*tasks)
 
 
-async def send_warning_and_back_to_normal(message: str):
+async def send_warning_and_back_to_normal(delay: int, message: str):
     tasks_before_sleep = []
     tasks_before_sleep.append(send_warning())
     tasks_before_sleep.append(set_column_yellow(message))
     tasks_before_sleep.append(add_events('error', message))
 
-    current_settings = await get_system_settings()
-    delay = current_settings.general_settings.applikator_curtain_opening_delay.value
-
     await asyncio.gather(*tasks_before_sleep)
-    await asyncio.sleep(delay - 1.5)
+    await asyncio.sleep(delay)
 
     state = await get_current_state()
     if state.error_msg == message:

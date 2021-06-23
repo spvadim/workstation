@@ -20,7 +20,8 @@ from app.models.cube import Cube, CubeIdentificationAuto
 from app.models.message import TGMessage
 from app.models.multipack import (Multipack, MultipackIdentificationAuto,
                                   MultipackOutput, Status)
-from app.models.pack import Pack, PackCameraInput, PackInReport, PackOutput
+from app.models.pack import (BadPackType, Pack, PackCameraInput, PackInReport,
+                             PackOutput)
 from app.models.pack import Status as PackStatus
 from app.models.packing_table import (PackingTableRecord,
                                       PackingTableRecordInput,
@@ -49,7 +50,7 @@ light_logger_router = APIRouter(route_class=LightLoggerRoute)
 wdiot_logger = logger.bind(name='wdiot')
 
 
-@deep_logger_router.put('/new_pack_after_applikator',
+@light_logger_router.put('/new_pack_after_applikator',
                         response_model=PackCameraInput,
                         response_model_exclude={"id"})
 @version(1, 0)
@@ -77,13 +78,40 @@ async def new_pack_after_applikator(pack: PackCameraInput,
 
     if error_msg:
         current_settings = await get_system_settings()
-        if current_settings.general_settings.send_applikator_tg_message.value:
-            background_tasks.add_task(send_telegram_message,
-                                      TGMessage(text=error_msg))
-        background_tasks.add_task(send_warning_and_back_to_normal, error_msg)
+
+        delay = current_settings.general_settings.applikator_curtain_opening_delay.value
+        background_tasks.add_task(send_warning_and_back_to_normal, delay,
+                                  error_msg)
         return JSONResponse(status_code=400, content={'detail': error_msg})
 
     return pack
+
+
+@deep_logger_router.get('/drop_pack_after_applikator/{bad_type}')
+@version(1, 0)
+async def drop_pack_after_applikator(bad_type: BadPackType,
+                                     background_tasks: BackgroundTasks):
+    mode = await get_current_workmode()
+    if mode.work_mode == 'manual':
+        raise HTTPException(400,
+                            detail='В данный момент используется ручной режим')
+
+    current_settings = await get_system_settings()
+    general_settings = current_settings.general_settings
+    delay_dict = {
+        BadPackType.BAD_HEIGHT:
+        general_settings.applikator_curtain_opening_delay_bad_height.value,
+        BadPackType.BAD_LABEL:
+        general_settings.applikator_curtain_opening_delay_bad_label.value,
+        BadPackType.BAD_PACKING:
+        general_settings.applikator_curtain_opening_delay_bad_packing.value
+    }
+
+    delay = delay_dict[bad_type]
+    background_tasks.add_task(send_warning_and_back_to_normal, delay, bad_type)
+
+    return {"reason": bad_type, "curtain_opening_delay": delay}
+
 
 
 @deep_logger_router.put('/new_pack_before_ejector',

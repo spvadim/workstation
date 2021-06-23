@@ -98,6 +98,9 @@ class GeneralSettings(EmbeddedModel):
     report_max_days: ReportMaxDays
     report_max_cubes: ReportMaxCubes
     applikator_curtain_opening_delay: CurtainOpeningDelay
+    applikator_curtain_opening_delay_bad_height: CurtainOpeningDelay
+    applikator_curtain_opening_delay_bad_label: CurtainOpeningDelay
+    applikator_curtain_opening_delay_bad_packing: CurtainOpeningDelay
     camera_counter_curtain_opening_delay: CurtainOpeningDelay
     dropping_mechanism_opening_delay: CurtainOpeningDelay
     ftp_url: FtpUrl = FtpUrl()
