@@ -513,6 +513,20 @@ function Main() {
             }
         })
 
+        if (pallets.onPackingTable.length === 0) {
+            let res1 = await axios.get(address + "/api/v1_0/packing_table_records");
+            if (settings && settings.params && res1.data.multipacks_amount === 4 * settings.params.multipacks_after_pintset) {
+                let res2 = await axios.get(address + "/api/v1_0/cubes_queue");
+                if (res2.data.length > 0) {
+                    let res3 = await axios.get(`${address}/api/v1_0/cubes/${res2.data[res2.data.length - 1].id}`)
+                    const res4 = await Promise.all(Object.keys(res3.data.multipack_ids_with_pack_ids).map(async (id) => {
+                        return await getPallet(id)
+                    }));
+                    pallets.onPackingTable.push(...res4)
+                }
+            }
+        }
+
         return pallets;
     }
 
