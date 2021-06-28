@@ -3,9 +3,7 @@ import axios from 'axios';
 import { createUseStyles } from 'react-jss';
 import address from "../../address.js";
 import Table from '../../components/Table/index.js';
-import TableAddress from "../../components/Table/TableAddress.js";
 import Select from "../../components/Select/index.js";
-import { resetWarningCache } from "prop-types";
 import { Redirect } from "react-router-dom";
 import { Button } from "src/components";
 
@@ -87,7 +85,7 @@ function Events() {
     const [redirectPage, setRedirectPage] = useState();
 
     const [page, setPage] = useState(1);
-    const [typeError, setTypeError] = useState("error");
+    const [typeError] = useState("error");
     const [processed, setProcessed] = useState("none");
     const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : 
                                         (date_.getMonth() + 1)) + "-" + (date_.getDate().toString().length === 1 ? "0" + date_.getDate() : date_.getDate()));

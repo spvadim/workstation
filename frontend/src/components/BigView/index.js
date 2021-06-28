@@ -1,9 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
-import axios from 'axios';
+import React from "react";
 import { createUseStyles } from 'react-jss';
 import Block from "../../components/Block/index.js";
 import Pallet from "../../components/Pallet/index.js";
-import address from "../../address.js";
 
 const useStyles = createUseStyles({
     content: {
@@ -103,41 +101,41 @@ const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
         })
     }
 
-    function buildPallet(pallet, onlyGray, size) {
-        if (!pallet) return
-        
-        let allColumns = [];
-        let swap = false;
-        let firstColumn = [];
-        let secondColumn = [];
-
-        for (let i = 1; i <= pallet.pack_ids.length; i++) {
-            let block = <Block key={pallet.pack_ids[i-1] + "_"} 
-                               id={pallet.pack_ids[i-1]} 
-                               onClick={() => console.log(123)}
-                               style={{marginBottom: "-9%", zIndex: pallet.pack_ids.length - i}} 
-                               onlyGray={onlyGray} 
-                               size={size} />;
-
-            if (i % 2 !== 0) {
-                firstColumn.push(block)
-            } else {
-                secondColumn.push(block)
-            }
-        }
-
-        allColumns.push((
-            <div style={swap ? {zIndex: 30} : null} className={classes.buildRow}>
-                <div style={swap ? {} : null} className={classes.buildCol}>{firstColumn}</div>
-                <div style={swap ? {} : null} className={classes.buildCol}>{secondColumn}</div>
-            </div>
-        ))
-
-        return allColumns
-    }
+    // function buildPallet(pallet, onlyGray, size) {
+    //     if (!pallet) return
+    //
+    //     let allColumns = [];
+    //     let swap = false;
+    //     let firstColumn = [];
+    //     let secondColumn = [];
+    //
+    //     for (let i = 1; i <= pallet.pack_ids.length; i++) {
+    //         let block = <Block key={pallet.pack_ids[i-1] + "_"}
+    //                            id={pallet.pack_ids[i-1]}
+    //                            onClick={() => console.log(123)}
+    //                            style={{marginBottom: "-9%", zIndex: pallet.pack_ids.length - i}}
+    //                            onlyGray={onlyGray}
+    //                            size={size} />;
+    //
+    //         if (i % 2 !== 0) {
+    //             firstColumn.push(block)
+    //         } else {
+    //             secondColumn.push(block)
+    //         }
+    //     }
+    //
+    //     allColumns.push((
+    //         <div style={swap ? {zIndex: 30} : null} className={classes.buildRow}>
+    //             <div style={swap ? {} : null} className={classes.buildCol}>{firstColumn}</div>
+    //             <div style={swap ? {} : null} className={classes.buildCol}>{secondColumn}</div>
+    //         </div>
+    //     ))
+    //
+    //     return allColumns
+    // }
 
     function buildPallets(pallets, onlyGray, size) {
-        return pallets.map((pallet, i) => <Pallet zIndex={i} pallet={pallet} onlyGray={onlyGray} size={size}/>)
+        return pallets.map((pallet, i) => <Pallet key={pallet.id} zIndex={i} pallet={pallet} onlyGray={onlyGray} size={size}/>)
     }
 
     return (

@@ -1,8 +1,5 @@
 import React from 'react';
 import { createUseStyles } from 'react-jss';
-import { Paper } from 'src/components';
-import imgError from 'src/assets/images/error.svg';
-import imgNotification from 'src/assets/images/notification.svg';
 
 const iconHeight = 57;
 const verticalPadding = 18;

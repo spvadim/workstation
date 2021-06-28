@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import Block from "../../components/Block/index.js";
 
@@ -81,7 +81,7 @@ const Pallet = React.memo(({pallet, zIndex, onlyGray, size}) => {
     function buildPallet(pallet, onlyGray, size) {
         if (!pallet) return
         
-        console.log(pallet)
+        // console.log(pallet)
 
         let allColumns = [];
         let swap = false;

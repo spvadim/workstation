@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { createUseStyles } from 'react-jss';
 import axios from "axios";
-import { Redirect } from "react-router-dom";
+// import { Redirect } from "react-router-dom";
 
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
-import { Notification, NotificationImage } from "../../components/Notification/index.js";
-import { Text, Paper, InputRadio, Loader, Switch, Button, Link, TextField, NotificationPanel } from 'src/components';
-import { color } from 'src/theme';
+import { InputRadio, Button, TextField } from 'src/components';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
@@ -197,11 +195,11 @@ function Create_mobile() {
             setNotificationErrorText("");
         }, 2000);
 
-        if (!settings.id) { setNotificationErrorText("Параметры партии не заданы!"); return false }
-        else if (!batchNumber) { setNotificationErrorText("Номер партии не задан!"); return false }
-        else if (!cubeQr) { setNotificationErrorText("QR куба не задан!"); return false }
-        else if (!barcode) { setNotificationErrorText("Штрихкод не задан!"); return false }
-        else if (multipacksTableData.length === 0) { setNotificationErrorText("Очередь паллет пуста!"); return false }
+        if (!settings.id) {setNotificationErrorText("Параметры партии не заданы!"); return false}
+        else if (!batchNumber) {setNotificationErrorText("Номер партии не задан!"); return false}
+        else if (!cubeQr) {setNotificationErrorText("QR куба не задан!"); return false}
+        else if (!barcode) {setNotificationErrorText("Штрихкод не задан!"); return false}
+        else if (multipacksTableData.length === 0) {setNotificationErrorText("Очередь паллет пуста!"); return false}
     
         
         return true;
@@ -296,6 +294,8 @@ function Create_mobile() {
     
         setPackQr("");
     }
+
+    if (page) console.log("redirect"); // return <Redirect to="/" />
 
     return (
         <div style={{padding: "10px 15px"}}>

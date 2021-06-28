@@ -286,21 +286,21 @@ function Main() {
             .catch(e => setNotificationErrorText(e.response.data.detail))
     }, [setMode]);
 
-    useEffect(() => {
-        const request2 = () => {
-            axios.get(address + "/api/v1_0/packing_table_records")
-                .then(res => {
-                    // setPackingTableRecords(res.data);
-                    // if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
-                    //     setNotificationText("Надо отсканировать QR куба")
-                    // } 
-            });
-        }
-        
-        request2();
-        const interval1 = setInterval(() => request2(), 1000);
-        return () => clearInterval(interval1);
-    }, [batchSettings, mode]);
+    // useEffect(() => {
+    //     const request2 = () => {
+    //         axios.get(address + "/api/v1_0/packing_table_records")
+    //             .then(res => {
+    //                 // setPackingTableRecords(res.data);
+    //                 // if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
+    //                 //     setNotificationText("Надо отсканировать QR куба")
+    //                 // }
+    //         });
+    //     }
+    //
+    //     request2();
+    //     const interval1 = setInterval(() => request2(), 1000);
+    //     return () => clearInterval(interval1);
+    // }, [batchSettings, mode]);
 
     useEffect(() => {
         const request = () => {
@@ -387,25 +387,25 @@ function Main() {
             })
     }
 
-    const flushStateColumn = () => {
-        axios.patch(address + "/api/v1_0/flush_state")
-            .then(() => {setNotificationColumnErrorText("")}) // setRedBackground(false)})
-            .catch(e => setNotificationErrorText(e.response.detail[0].msg))
-    }
+    // const flushStateColumn = () => {
+    //     axios.patch(address + "/api/v1_0/flush_state")
+    //         .then(() => {setNotificationColumnErrorText("")}) // setRedBackground(false)})
+    //         .catch(e => setNotificationErrorText(e.response.detail[0].msg))
+    // }
 
-    const flushPintsetError = () => {
-        axios.patch(address + "/api/v1_0/flush_pintset")
-            .then(res => {
-                if (res.status === 200) {
-                    setReturnNotificationText(notificationText);
-                    setNotificationText("Ошибка с пинцета успешно сброшена");
-                    setNotificationPintsetErrorText("");
-                    // setRedBackground(false);
-                    setTimeout(() => returnNotification(), 2000);
-                }
-            })
-            .catch(res => setNotificationErrorText(res.response.detail[0].msg))
-    }
+    // const flushPintsetError = () => {
+    //     axios.patch(address + "/api/v1_0/flush_pintset")
+    //         .then(res => {
+    //             if (res.status === 200) {
+    //                 setReturnNotificationText(notificationText);
+    //                 setNotificationText("Ошибка с пинцета успешно сброшена");
+    //                 setNotificationPintsetErrorText("");
+    //                 // setRedBackground(false);
+    //                 setTimeout(() => returnNotification(), 2000);
+    //             }
+    //         })
+    //         .catch(res => setNotificationErrorText(res.response.detail[0].msg))
+    // }
 
     const createIncompleteCube = () => {
         axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + inputQrCubeRef.current.value.replace("/", "%2F"))
@@ -828,10 +828,12 @@ function Main() {
             <div className={classes.header}>
                 <div className={classes.notificationPanel}>
                     { events.map(event => {
-                            return <Notification_new text={event.message}
-                                                 onClose={() => closeProcessEvent(event.id)}
-                                                  />
-                            })
+                        return <Notification_new
+                            key={event.id}
+                            text={event.message}
+                            onClose={() => closeProcessEvent(event.id)}
+                              />
+                        })
                     }
                     {events.length > 1 ? <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button> : null}
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
@@ -846,21 +848,21 @@ function Main() {
                 </div>
 
                 <div className={classes.headerCenter}>
-                    <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
+                    <Button onClick={() => {setPage("batch_params")}} >Новая партия</Button>
 
                     <Button onClick={() => {
                         setModalDisassemble(true);
                         setForceFocus("inputDisassemble");
                     }}>Разобрать куб по его QR</Button>
 
-                    <Button onClick={() => { setModalCube([createIncompleteCube]); setForceFocus("inputQrCube") }} >Сформировать неполный куб</Button>
+                    <Button onClick={() => {setModalCube([createIncompleteCube]); setForceFocus("inputQrCube")}} >Сформировать неполный куб</Button>
                 
                     <Button onClick={() => {
                         setModalDelete2Pallet(true);
                         
                     }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
 
-                    <Button onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }} >Заменить пачку на упаковке</Button>
+                    <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}

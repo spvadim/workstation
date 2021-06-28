@@ -4,10 +4,7 @@ module.exports = {
         "es2021": true,
         "node": true,
     },
-    "extends": [
-        "eslint:recommended",
-        "plugin:react/recommended"
-    ],
+    "extends": [],
     "parserOptions": {
         "ecmaFeatures": {
             "jsx": true
@@ -32,7 +29,7 @@ module.exports = {
         "arrow-spacing": "off",
         "block-scoped-var": "off",
         "block-spacing": [
-            "warn",
+            "off",
             "never"
         ],
         "brace-style": "off",

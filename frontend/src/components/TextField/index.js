@@ -48,7 +48,7 @@ function TextField({ className, outlined, width, forceFocus, hidden, ...restProp
         opacity: 100,
     }
 
-    if (hidden) { style.opacity = 0 }
+    if (hidden) {style.opacity = 0}
 
     return <input ref={ref} className={['text-field', classes.root, className].join(' ')} style={style} {...restProps} />
 }

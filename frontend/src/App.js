@@ -10,6 +10,7 @@ import Create from './pages/Create/index.js';
 import Create_mobile from './pages/Create/mobile.js';
 import Admin from './pages/Admin/index.js';
 import Events from './pages/Events/index.js';
+import QrScanner from './pages/QrScanner/index.js';
 import imgBackground from 'src/assets/images/background.svg';
 import { color } from 'src/theme';
 
@@ -46,6 +47,7 @@ function App() {
 				<Route exact path="/create" component={window.screen.width < 600 ? Create_mobile : Create} />
 				<Route exact path="/admin" component={Admin} />
 				<Route exact path="/events" component={Events} />
+				<Route exact path="/scanner" component={QrScanner} />
 			</div>
 			<Footer />
 		</div>

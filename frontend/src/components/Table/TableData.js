@@ -4,7 +4,7 @@ import React from "react";
 import Table from './index';
 
 const TableData = React.memo(({
-    columns, buttonEdit, buttonDelete, callback, rows, className, onDelete, hideTracksWhenNotNeeded
+    columns, buttonEdit, buttonDelete, rows, className, onDelete, hideTracksWhenNotNeeded
 }) => {
 
     // const createRow = (row) => {

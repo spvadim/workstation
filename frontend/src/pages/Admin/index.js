@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from 'axios';
-import { Redirect } from "react-router-dom";
 import address from "../../address.js";
 import { createUseStyles } from "react-jss";
 
 import ToolTip from "../../components/ToolTip";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import Table from "../../components/Table/index.js";
-import { Notification, NotificationImage } from "../../components/Notification/index.js";
-import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
+import { Notification } from "../../components/Notification/index.js";
+import { Button, NotificationPanel, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 import imgHint from "src/assets/images/hint.png";
@@ -113,7 +112,7 @@ function Admin() {
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [editSettings, setEditSettings] = useState({});
-    const [choosedSetting, setChoosedSetting] = useState("");
+    const [choosedSetting] = useState("");
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/settings")
@@ -144,7 +143,7 @@ function Admin() {
 
             let setting = settings[sKey]; 
             return (
-                <div>
+                <div key={setting.id}>
                     <span className={classes.title}>{setting.title}:</span>
                     {
                         <div className={classes.settingInner}>

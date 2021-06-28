@@ -163,7 +163,6 @@ const getTableProps = (type, extended) => ({
     },
 });
 
-let timer;
 function Edit({ description, type, extended }) {
     const classes = useStyles();
     const tableProps = getTableProps(type, extended);
@@ -171,8 +170,8 @@ function Edit({ description, type, extended }) {
     const [newQrCube, setNewQrCube] = useState("");
     const [cubeId, setCubeId] = useState("");
     const [valueQr, setValueQr] = useState('');
-    const [valueFlag, setValueFlag] = useState(false);
-    const [barcode, setBarcode] = useState("placeholder");
+    // const [valueFlag, setValueFlag] = useState(false);
+    // const [barcode, setBarcode] = useState("placeholder");
     const [errorText, setErrorText] = useState("");
     const [errorText2, setErrorText2] = useState("");
     const [addTableData, setAddTableData] = useState([]);
@@ -181,8 +180,8 @@ function Edit({ description, type, extended }) {
     const [containTableData, setContainTableData] = useState("/loader");
     const [modalCancel, setModalCancel] = useState(false);
     const [modalSubmit, setModalSubmit] = useState(false);
-    const [toProcess, setToProcess] = useState(false);
-    const [toProcessDump, setToProcessDump] = useState(false);
+    // const [toProcess, setToProcess] = useState(false);
+    const [toProcessDump] = useState(false);
 
     // useEffect(() => {
     //     if (valueFlag) {
@@ -205,7 +204,7 @@ function Edit({ description, type, extended }) {
                     setContainTableData(await getPacks(res.data.pack_ids));
                 } else if (type === "cubes") {
                     setContainTableData(await getPacksFromMultipacks(Object.keys(res.data.multipack_ids_with_pack_ids)));
-                    setToProcess(res.data.to_process);
+                    // setToProcess(res.data.to_process);
                     setCubeId(res.data.id);
                 }
             })
@@ -378,7 +377,7 @@ function Edit({ description, type, extended }) {
                 <TextField
                     placeholder="QR..."
                     onChange={async e => {
-                        setValueFlag(true);
+                        // setValueFlag(true);
                         setValueQr(e.target.value);
                     }}
                     onKeyPress={e => (e.charCode === 13) && deleteOrAddPack()}

@@ -6,8 +6,8 @@ import { Redirect } from "react-router-dom";
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
-import { Notification, NotificationImage } from "../../components/Notification/index.js";
-import { Text, Paper, InputRadio, Loader, Switch, Button, Link, TextField, NotificationPanel } from 'src/components';
+import { Notification } from "../../components/Notification/index.js";
+import { Text, InputRadio, Button, TextField, NotificationPanel } from 'src/components';
 import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
@@ -176,7 +176,7 @@ const tableProps = {
 
 };
 
-function Create({ description, type, extended }) {
+function Create() {
     const classes = useStyles();
     const [page, setPage] = useState('');
     const [batchNumber, setBatchNumber] = useState('');
@@ -265,11 +265,11 @@ function Create({ description, type, extended }) {
     }
 
     const checkExist = () => {
-        if (!settings.id) { setNotificationErrorText("Параметры партии не заданы!"); return false }
-        else if (!batchNumber) { setNotificationErrorText("Номер партии не задан!"); return false }
-        else if (!cubeQr) { setNotificationErrorText("QR куба не задан!"); return false }
-        else if (!barcode) { setNotificationErrorText("Штрихкод не задан!"); return false }
-        else if (multipacksTableData.length === 0) { setNotificationErrorText("Очередь паллет пуста!"); return false }
+        if (!settings.id) {setNotificationErrorText("Параметры партии не заданы!"); return false}
+        else if (!batchNumber) {setNotificationErrorText("Номер партии не задан!"); return false}
+        else if (!cubeQr) {setNotificationErrorText("QR куба не задан!"); return false}
+        else if (!barcode) {setNotificationErrorText("Штрихкод не задан!"); return false}
+        else if (multipacksTableData.length === 0) {setNotificationErrorText("Очередь паллет пуста!"); return false}
 
         return true;
     }
@@ -503,6 +503,7 @@ function Create({ description, type, extended }) {
                         [
                             <Notification
                                 title="Ошибка"
+                                key={notificationErrorText + "_key"}
                                 description={notificationErrorText}
                                 onClose={() => setNotificationErrorText("")}
                                 error

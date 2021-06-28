@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createUseStyles } from 'react-jss';
 
 const useStyles = createUseStyles({
@@ -245,28 +245,34 @@ const Block = React.memo(({ id, onlyGray, onAdd, onDelete, onEdit, onClick, size
     const [mode, setMode] = useState(0); // 0 : edge, 1 : blue, 2 : gray, 3 : yellow 
     
     const changeModeLogic = mode => {
-        if (controlledMode) return
-        else if (mode === 0) setMode(1)
-        else if (mode === 1) setMode(0)
-        else if (mode === 2) setMode(3)
-        else if (mode === 3) setMode(2)
+        if (!controlledMode) {
+            if (mode === 0) setMode(1)
+            else if (mode === 1) setMode(0)
+            else if (mode === 2) setMode(3)
+            else if (mode === 3) setMode(2)
+        }
+
     };
 
     const drawBlock = (mode) => {
         switch(mode) {
-            case 0: return edgeBox(classes, onClick ? () => onClick() : 
+            case 0: edgeBox(classes, onClick ? () => onClick() :
                                                       () => changeModeLogic(mode), size)
+                break;
 
-            case 1: return blueBox(classes, onClick ? () => onClick() : 
+            case 1: blueBox(classes, onClick ? () => onClick() :
                                                       () => changeModeLogic(mode), onAdd, size)
+                break;
 
-            case 2: return grayBox(classes, onClick ? () => onClick() : 
+            case 2: grayBox(classes, onClick ? () => onClick() :
                                                       () => changeModeLogic(mode), size, id)
+                break;
 
-            case 3: return yellowBox(classes, onClick ? () => onClick() : 
+            case 3: yellowBox(classes, onClick ? () => onClick() :
                                                         () => changeModeLogic(mode), onEdit, onDelete, size, id)
+                break;
 
-            default: return
+            default: break;
         }
     };
 
@@ -278,7 +284,7 @@ const Block = React.memo(({ id, onlyGray, onAdd, onDelete, onEdit, onClick, size
     
     return (
         <div id={id} className={classes.buildBox} style={size ? {width: size[0], height: size[1]} : null} {...restProps}>
-            {onlyGray ? grayBox(classes, () => {return}, size) :
+            {onlyGray ? grayBox(classes, null, size) :
                         drawBlock(controlledMode ? controlledMode : mode)}
         </div>
     )

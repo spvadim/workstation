@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from "axios";
 import address from "../../address.js";
 import { Redirect } from "react-router-dom";
-import { TextField } from 'src/components';
 
 import Input from "./Input";
 
 
-const InputTextQr = React.forwardRef(({ setNotification, setNotificationError, mode, hidden, ...restProps }, ref) => {
+const InputTextQr = React.forwardRef(({setNotificationError, mode, hidden, ...restProps }, ref) => {
     const [page, setPage] = useState("");
     const [cubeData, setCubeData] = useState({});
 

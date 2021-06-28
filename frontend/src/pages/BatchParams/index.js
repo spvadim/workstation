@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { createUseStyles } from "react-jss";
 import axios from 'axios';
 import { Redirect } from "react-router-dom";
-import { useCookies } from "react-cookie";
+// import { useCookies } from "react-cookie";
 import address from "../../address.js";
 import { Paper, Button, InputRadio, TextField, Text, Loader, TouchPanel } from "src/components";
 
@@ -75,7 +75,7 @@ function BatchParams() {
     const [date, setDate] = useState(date_.getFullYear() + "-" + ((date_.getMonth() + 1).toString().length === 1 ? "0" + (date_.getMonth() + 1) : (date_.getMonth() + 1)) + "-" +
                                                                (date_.getDate().toString().length === 1 ? "0" + date_.getDate() : date_.getDate()) + " 00:00");
 
-    const [cookies, setCookie] = useCookies([]);
+    // const [cookies, setCookie] = useCookies([]);
 
 
     useEffect(() => {

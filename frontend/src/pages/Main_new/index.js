@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from 'axios';
 import { createUseStyles } from 'react-jss';
 import Block from "../../components/Block/index.js";
@@ -309,7 +309,7 @@ const tableProps = (extended) => ({
 function Main() {
 	const classes = useStyles();
 
-    const [extented, setExtended] = useState(false);
+    const [extented] = useState(false);
     const [settings, setSettings] = useState(false);
 
     const [packs, setPacks] = useState({
@@ -502,7 +502,7 @@ function Main() {
     }
 
     function buildPallets(pallets, onlyGray, size) {
-        return pallets.map((pallet, i) => <Pallet zIndex={i} pallet={pallet} onlyGray={onlyGray} size={size}/>)
+        return pallets.map((pallet, i) => <Pallet key={pallet.id + '_key'} zIndex={i} pallet={pallet} onlyGray={onlyGray} size={size}/>)
     }
 
     return (
@@ -545,7 +545,6 @@ function Main() {
                         <span className={classes.tableTitle}>Очередь кубов</span>
                         <TableAddress
                             columns={tableProps(extented).columns}
-                            setModal={() => {return}}
                             type="cubes"
                             extended={extented}
                             address="/api/v1_0/cubes_queue"
@@ -567,13 +566,13 @@ function Main() {
                                     <div className={classes.buildRow}>
                                         <div className={classes.variants__itemContainer}>
                                             <span className={classes.more} style={packs.onAssemble_after.length > 2 ? {display: "block"} : {display: "none"}}>{packs.onAssemble_after.length - 2}</span>
-                                            {packs.onAssemble_after.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)}
+                                            {packs.onAssemble_after.slice(0, 2).map(pack => <Block key={pack.id} onlyGray size={[70, 25]} />)}
                                         </div>
                                     </div>
                                     <div className={classes.buildRow}>
                                         <div className={classes.variants__itemContainer}>
                                             <span className={classes.more} style={packs.underPintset.length > 2 ? {display: "block"} : {display: "none"}}>{packs.underPintset.length - 2}</span> 
-                                            {packs.underPintset.slice(0, 2).map(() => <Block onlyGray size={[70, 25]} />)}
+                                            {packs.underPintset.slice(0, 2).map(pack => <Block key={pack.id} onlyGray size={[70, 25]} />)}
                                         </div>
                                     </div>
                                 </div>
