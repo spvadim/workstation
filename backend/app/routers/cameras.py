@@ -51,8 +51,8 @@ wdiot_logger = logger.bind(name='wdiot')
 
 
 @light_logger_router.put('/new_pack_after_applikator',
-                        response_model=PackCameraInput,
-                        response_model_exclude={"id"})
+                         response_model=PackCameraInput,
+                         response_model_exclude={"id"})
 @version(1, 0)
 async def new_pack_after_applikator(pack: PackCameraInput,
                                     background_tasks: BackgroundTasks):
@@ -113,7 +113,6 @@ async def drop_pack_after_applikator(bad_type: BadPackType,
     return {"reason": bad_type, "curtain_opening_delay": delay}
 
 
-
 @deep_logger_router.put('/new_pack_before_ejector',
                         response_model=PackCameraInput,
                         response_model_exclude={"id"})
@@ -171,10 +170,11 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     # elif not await check_qr_unique(Pack, pack.qr):
     #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
 
+    current_settings = await get_system_settings()
+
     if error_msg:
         background_tasks.add_task(send_telegram_message,
                                   TGMessage(text=error_msg))
-        current_settings = await get_system_settings()
         if current_settings.general_settings.pintset_stop.value:
             background_tasks.add_task(off_pintset,
                                       current_settings.pintset_settings)
@@ -193,7 +193,9 @@ async def new_pack_after_pintset(pack: PackCameraInput,
     await engine.save(PackInReport(**pack.dict(), ftp_url=ftp_url))
     await engine.save(pack)
 
-    max_packs = 8 * batch.params.multipacks_after_pintset
+    multiplier = current_settings.desync_settings.max_packs_multiplier.value
+
+    max_packs = multiplier * batch.params.multipacks_after_pintset
     if await count_packs_queue() > max_packs:
         background_tasks.add_task(turn_sync_error,
                                   f'В очереди больше {max_packs} пачек')
@@ -265,7 +267,9 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         pack.to_process = to_process
         pack.status = PackStatus.ON_ASSEMBLY
 
-    max_packs_on_assembly = 7 * multipacks_after_pintset
+    current_settings = await get_system_settings()
+    multiplier = current_settings.desync_settings.max_packs_on_assembly_multiplier.value
+    max_packs_on_assembly = multiplier * multipacks_after_pintset
     if packs_on_assembly_amount + multipacks_after_pintset > max_packs_on_assembly:
         sync_error_msg = f'В сборке более {max_packs_on_assembly} пачек'
 
@@ -394,7 +398,10 @@ async def pintset_finish(background_tasks: BackgroundTasks):
         new_multipacks.append(multipack)
     await engine.save_all(new_multipacks)
 
-    max_multipacks_exited_pintset = (2 * multipacks_after_pintset) + 1
+    current_settings = await get_system_settings()
+
+    multiplier = current_settings.desync_settings.max_multipacks_exited_pintset_multiplier.value
+    max_multipacks_exited_pintset = (multiplier * multipacks_after_pintset) + 1
     multipacks_exited_pintset_amount = await count_exited_pintset_multipacks()
 
     if multipacks_exited_pintset_amount > max_multipacks_exited_pintset:
@@ -424,7 +431,9 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
 
     await engine.save(wrapping_multipack)
 
-    if await count_wrapping_multipacks() > 1:
+    current_settings = await get_system_settings()
+    max_wrapping_multipacks = current_settings.desync_settings.max_wrapping_multipacks.value
+    if await count_wrapping_multipacks() > max_wrapping_multipacks:
         background_tasks.add_task(turn_sync_error,
                                   'В обмотке более одной паллеты')
     return wrapping_multipack
@@ -451,8 +460,10 @@ async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
 
     await engine.save(entered_pitchfork_multipack)
 
+    current_settings = await get_system_settings()
+    multiplier = current_settings.desync_settings.max_multipacks_entered_pitchfork_multiplier.value
     multipacks_entered_pitchfork = await count_multipacks_entered_pitchfork()
-    if multipacks_entered_pitchfork > multipacks_after_pintset * 2:
+    if multipacks_entered_pitchfork > multipacks_after_pintset * multiplier:
         background_tasks.add_task(turn_sync_error,
                                   (f'На вилах более '
                                    f'{multipacks_after_pintset * 2} паллет:'
@@ -496,7 +507,9 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
 
     await engine.save_all(entered_pitchfork_multipacks)
 
-    max_multipacks_on_packing_table = multipacks_after_pintset * 4
+    current_settings = await get_system_settings()
+    multiplier = current_settings.desync_settings.max_multipacks_on_packing_table_multiplier.value
+    max_multipacks_on_packing_table = multipacks_after_pintset * multiplier
     multipacks_on_packing_table = await count_multipacks_on_packing_table()
 
     if multipacks_on_packing_table > max_multipacks_on_packing_table:
