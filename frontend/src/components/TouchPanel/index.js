@@ -24,7 +24,7 @@ function TouchPanel({ addNumber, deleteNumber }) {
 
     return (
         <div className={classes.touchPanel}>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n) => <TouchPanelButtonNumber number={n} callback={addNumber}/>)}
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n) => <TouchPanelButtonNumber key={n} number={n} callback={addNumber}/>)}
             <TouchPanelButton callback={deleteNumber} />
         </div>
     );

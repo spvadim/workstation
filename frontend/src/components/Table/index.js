@@ -1,7 +1,6 @@
 import React from "react";
 import { createUseStyles } from "react-jss";
 import { borderRadius, color } from "src/theme";
-import { Scrollbars } from 'src/components';
 import imgTrash from "src/assets/images/trash.svg";
 import imgEdit from "src/assets/images/edit.svg";
 import imgEye from "src/assets/images/eye.png";
@@ -110,19 +109,19 @@ const useStyles = createUseStyles({
     },
 })
 
-function resizeHeader(head, body) {
-    const row = body.children[0];
-
-    if (!row) {
-        return;
-    }
-    Array.from(head.children).forEach((headCell, index) => {
-        headCell.style.width = row.children[index].clientWidth + 'px';
-    });
-}
+// function resizeHeader(head, body) {
+//     const row = body.children[0];
+//
+//     if (!row) {
+//         return;
+//     }
+//     Array.from(head.children).forEach((headCell, index) => {
+//         headCell.style.width = row.children[index].clientWidth + 'px';
+//     });
+// }
 
 function Table({
-    rows, columns, bodyRef, className, buttonEdit, buttonDelete, buttonVisible, onVisible, onEdit, onDelete, hideTracksWhenNotNeeded
+    rows, columns, bodyRef, className, buttonEdit, buttonDelete, buttonVisible, onVisible, onEdit, onDelete
 }) {
     const headRef = React.useRef(null);
     // const bodyRef = React.useRef(null);

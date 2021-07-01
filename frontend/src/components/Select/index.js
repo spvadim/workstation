@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import axios from 'axios';
+import React from "react";
 import { createUseStyles } from 'react-jss';
-import address from "../../address.js";
 
 const useStyles = createUseStyles({
     select: {

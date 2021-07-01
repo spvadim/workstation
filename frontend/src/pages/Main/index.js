@@ -8,10 +8,10 @@ import ModalWindow from "../../components/ModalWindow/index.js";
 
 // import ColumnError from "../../components/ColumnError/index.js";
 // import { Notification, NotificationImage } from "../../components/Notification/index.js";
-import { Notification_new } from "../../components/Notification_new/index.js";
-import { Notification } from "../../components/Notification/index.js";
+import { Notification_new } from "../../components/Notification_new";
+import { Notification } from "../../components/Notification";
 
-import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
+import { Button, Text, NotificationPanel, Switch} from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 // import imgScanner from 'src/assets/images/scanner.svg';
@@ -19,7 +19,6 @@ import imgOk from 'src/assets/images/ok.svg';
 // import imgQR from 'src/assets/images/qr.svg';
 
 import { Redirect } from "react-router-dom";
-import { useCookies } from "react-cookie";
 
 import address from "../../address.js";
 import { createUseStyles } from "react-jss";
@@ -62,11 +61,13 @@ const getTableProps = (extended) => ({
                 { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
+                { name: "status", title: "Статус", width: 100 },
                 { name: "id", title: "id", width: 200 },
             ] : [
                 { name: "index", title: "№", width: 48 },
                 { name: "created_at", title: "Создано", width: 123 },
                 { name: "qr", title: "qr" },
+                { name: "status", title: "Статус", width: 100 },
             ],
     },
 
@@ -129,10 +130,14 @@ const useStyles = createUseStyles({
     },
     footer: {
         display: 'flex',
+        position: "absolute",
         justifyContent: 'space-between',
-        paddingBottom: 22,
+        // paddingBottom: 22,
         paddingLeft: 27,
         paddingRight: 27,
+        bottom: "1em",
+        width: "calc(100% - 60px)"
+        // marginTop: 50,
     },
     switchContainer: {
         userSelect: 'none',
@@ -192,15 +197,15 @@ function Main() {
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
     const [modalDesync, setModalDesync] = useState(false);
 
-    const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
-    const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
-    const [valueQrCube, setValueQrCube] = useState('');
-    const [valueQrToChangePack, setValueQrToChangePack] = useState('');
-    const [valueQrToChangeNewPack, setValueQrToChangeNewPack] = useState('');
+    // const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
+    // const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
+    // const [valueQrCube, setValueQrCube] = useState('');
+    // const [valueQrToChangePack, setValueQrToChangePack] = useState('');
+    // const [valueQrToChangeNewPack, setValueQrToChangeNewPack] = useState('');
 
     const [events, setEvents] = useState([]);
 
-    const [packingTableRecords, setPackingTableRecords] = useState("");
+    // const [packingTableRecords, setPackingTableRecords] = useState("");
     const [notificationText, setNotificationText] = useState("");
     const [notificationText2, setNotificationText2] = useState("");
     const [returnNotificationText, setReturnNotificationText] = useState("");
@@ -281,40 +286,41 @@ function Main() {
             .catch(e => setNotificationErrorText(e.response.data.detail))
     }, [setMode]);
 
-    useEffect(() => {
-        const request2 = () => {
-            axios.get(address + "/api/v1_0/packing_table_records")
-                .then(res => {
-                    setPackingTableRecords(res.data);
-                    // if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
-                    //     setNotificationText("Надо отсканировать QR куба")
-                    // } 
-            });
-        }
-        
-        request2();
-        const interval1 = setInterval(() => request2(), 1000);
-        return () => clearInterval(interval1);
-    }, [batchSettings, mode]);
+    // useEffect(() => {
+    //     const request2 = () => {
+    //         axios.get(address + "/api/v1_0/packing_table_records")
+    //             .then(res => {
+    //                 // setPackingTableRecords(res.data);
+    //                 // if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
+    //                 //     setNotificationText("Надо отсканировать QR куба")
+    //                 // }
+    //         });
+    //     }
+    //
+    //     request2();
+    //     const interval1 = setInterval(() => request2(), 1000);
+    //     return () => clearInterval(interval1);
+    // }, [batchSettings, mode]);
 
     useEffect(() => {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => {
                 let temp = res.data;
-                if (temp.state === "normal") setNotificationColumnErrorText("") 
+                if (temp.state === "normal") setNotificationColumnErrorText("")
                     else {setNotificationColumnErrorText(temp.error_msg)}  // setRedBackground(true)}
-                if (temp.pintset_state === "normal") setNotificationPintsetErrorText("") 
+                if (temp.pintset_state === "normal") setNotificationPintsetErrorText("")
                     else {setNotificationPintsetErrorText(temp.pintset_error_msg)}  // setRedBackground(true)}
-                if (temp.packing_table_state === "normal") setModalPackingTableError("") 
+                if (temp.packing_table_state === "normal") setModalPackingTableError("")
                     else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg)} // setRedBackground(true)}
-                if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("") 
+                if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("")
                     else {setModalWithdrawal(temp.pintset_withdrawal_error_msg)} // setRedBackground(true)}
-                if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg)} // setRedBackground(true)} 
+                if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg); setRedBackground(true)} //
                     else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}    
                 else {setModalDesync("")}
 
-                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);    
+                // if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);
+                if (temp.sync_state !== "error") setRedBackground(false);
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
@@ -381,25 +387,25 @@ function Main() {
             })
     }
 
-    const flushStateColumn = () => {
-        axios.patch(address + "/api/v1_0/flush_state")
-            .then(() => {setNotificationColumnErrorText("")}) // setRedBackground(false)})
-            .catch(e => setNotificationErrorText(e.response.detail[0].msg))
-    }
+    // const flushStateColumn = () => {
+    //     axios.patch(address + "/api/v1_0/flush_state")
+    //         .then(() => {setNotificationColumnErrorText("")}) // setRedBackground(false)})
+    //         .catch(e => setNotificationErrorText(e.response.detail[0].msg))
+    // }
 
-    const flushPintsetError = () => {
-        axios.patch(address + "/api/v1_0/flush_pintset")
-            .then(res => {
-                if (res.status === 200) {
-                    setReturnNotificationText(notificationText);
-                    setNotificationText("Ошибка с пинцета успешно сброшена");
-                    setNotificationPintsetErrorText("");
-                    // setRedBackground(false);
-                    setTimeout(() => returnNotification(), 2000);
-                }
-            })
-            .catch(res => setNotificationErrorText(res.response.detail[0].msg))
-    }
+    // const flushPintsetError = () => {
+    //     axios.patch(address + "/api/v1_0/flush_pintset")
+    //         .then(res => {
+    //             if (res.status === 200) {
+    //                 setReturnNotificationText(notificationText);
+    //                 setNotificationText("Ошибка с пинцета успешно сброшена");
+    //                 setNotificationPintsetErrorText("");
+    //                 // setRedBackground(false);
+    //                 setTimeout(() => returnNotification(), 2000);
+    //             }
+    //         })
+    //         .catch(res => setNotificationErrorText(res.response.detail[0].msg))
+    // }
 
     const createIncompleteCube = () => {
         axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + inputQrCubeRef.current.value.replace("/", "%2F"))
@@ -418,8 +424,6 @@ function Main() {
     const closeProcessEvent = id => {
         axios.patch(address + "/api/v1_0/events/" + id)
     }
-
-    console.log(notificationText2)
 
     return (
         <div className={classes.Main}>
@@ -681,7 +685,7 @@ function Main() {
                 >
                     <Button onClick={() => {
                         axios.patch(address + "/api/v1_0/flush_packing_table_with_remove")
-                            .then(() => setModalPackingTableError(false), setValueQrModalPackingTable(""))
+                            .then(() => setModalPackingTableError(false), /*setValueQrModalPackingTable("")*/)
                             .catch(e => {
                                 console.log(e.response);
                                 setNotificationErrorText(e.response.data.detail)
@@ -692,7 +696,7 @@ function Main() {
                     </Button>
                     <Button onClick={() => {
                         axios.patch(address + "/api/v1_0/flush_packing_table")
-                            .then(() => setModalPackingTableError(false), setValueQrModalPackingTable("")) // setRedBackground(false), )
+                            .then(() => setModalPackingTableError(false), /*setValueQrModalPackingTable("")*/) // setRedBackground(false), )
                             .catch(e => setNotificationErrorText(e.responce.data.detail))
                     }}>
                         Отмена
@@ -824,10 +828,12 @@ function Main() {
             <div className={classes.header}>
                 <div className={classes.notificationPanel}>
                     { events.map(event => {
-                            return <Notification_new text={event.message}
-                                                 onClose={() => closeProcessEvent(event.id)}
-                                                  />
-                            })
+                        return <Notification_new
+                            key={event.id}
+                            text={event.message}
+                            onClose={() => closeProcessEvent(event.id)}
+                              />
+                        })
                     }
                     {events.length > 1 ? <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button> : null}
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
@@ -842,21 +848,21 @@ function Main() {
                 </div>
 
                 <div className={classes.headerCenter}>
-                    <Button onClick={() => { setPage("batch_params") }} >Новая партия</Button>
+                    <Button onClick={() => {setPage("batch_params")}} >Новая партия</Button>
 
                     <Button onClick={() => {
                         setModalDisassemble(true);
                         setForceFocus("inputDisassemble");
                     }}>Разобрать куб по его QR</Button>
 
-                    <Button onClick={() => { setModalCube([createIncompleteCube]); setForceFocus("inputQrCube") }} >Сформировать неполный куб</Button>
+                    <Button onClick={() => {setModalCube([createIncompleteCube]); setForceFocus("inputQrCube")}} >Сформировать неполный куб</Button>
                 
                     <Button onClick={() => {
                         setModalDelete2Pallet(true);
                         
                     }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
 
-                    <Button onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }} >Заменить пачку на упаковке</Button>
+                    <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
@@ -931,12 +937,30 @@ function Main() {
                     )]
                 }
                 errors={
-                    notificationErrorText && (
+                    [notificationErrorText && (
                         <Notification
                             error
                             description={notificationErrorText}
                         />
-                    )
+                    ),
+                    notificationColumnErrorText && (
+                        <Notification
+                            error
+                            description={notificationColumnErrorText}
+                        />
+                    ),
+                    notificationDesyncErrorText && (
+                        <Notification
+                            error
+                            description={notificationDesyncErrorText}
+                        />
+                    ),
+                    notificationPintsetErrorText && (
+                        <Notification
+                            error
+                            description={notificationPintsetErrorText}
+                        />
+                    )]
                 }
             />
 

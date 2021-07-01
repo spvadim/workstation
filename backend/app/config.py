@@ -35,6 +35,17 @@ default_applikator_curtain_opening_delay = CurtainOpeningDelay(
     value=os.getenv('APPLIKATOR_CURTAIN_OPENING_DELAY'),
     title='Задержка открытия шторки после аппликатора',
     desc='Введите задержку открытия шторки после аппликатора в секундах')
+default_applikator_curtain_opening_delay_bad_height = CurtainOpeningDelay(
+    title='Задержка открытия шторки после аппликатора при плохой высоте пачки',
+    desc='Введите задержку открытия шторки после аппликатора в секундах')
+default_applikator_curtain_opening_delay_bad_label = CurtainOpeningDelay(
+    title=
+    'Задержка открытия шторки после аппликатора при плохой этикетке пачки',
+    desc='Введите задержку открытия шторки после аппликатора в секундах')
+default_applikator_curtain_opening_delay_bad_packing = CurtainOpeningDelay(
+    title=
+    'Задержка открытия шторки после аппликатора при плохой упаковки пачки',
+    desc='Введите задержку открытия шторки после аппликатора в секундах')
 default_camera_counter_curtain_opening_delay = CurtainOpeningDelay(
     title='Задержка открытия шторки после камеры-счетчика',
     desc='Введите задержку открытия шторки после камеры-счетчика в секундах')
@@ -48,7 +59,14 @@ default_general_settings = GeneralSettings(
     report_max_days=default_report_max_days,
     report_max_cubes=default_report_max_cubes,
     applikator_curtain_opening_delay=default_applikator_curtain_opening_delay,
-    camera_counter_curtain_opening_delay=default_camera_counter_curtain_opening_delay,
+    applikator_curtain_opening_delay_bad_height=
+    default_applikator_curtain_opening_delay_bad_height,
+    applikator_curtain_opening_delay_bad_label=
+    default_applikator_curtain_opening_delay_bad_label,
+    applikator_curtain_opening_delay_bad_packing=
+    default_applikator_curtain_opening_delay_bad_packing,
+    camera_counter_curtain_opening_delay=
+    default_camera_counter_curtain_opening_delay,
     dropping_mechanism_opening_delay=default_dropping_mechanism_opening_delay)
 
 # set default pintset settings

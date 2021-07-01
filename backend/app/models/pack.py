@@ -14,6 +14,12 @@ class Status(str, Enum):
     ON_ASSEMBLY = 'на сборке'
 
 
+class BadPackType(str, Enum):
+    BAD_HEIGHT = 'bad_height'
+    BAD_LABEL = 'bad_label'
+    BAD_PACKING = 'bad_packing'
+
+
 class Pack(Model):
     qr: str
     barcode: str

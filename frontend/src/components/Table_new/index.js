@@ -1,26 +1,26 @@
-import React, { useState, useEffect, useRef } from "react";
-import axios from 'axios';
-import { createUseStyles } from 'react-jss';
-import address from "../../address.js";
+import React from "react";
+import { useStyles } from './styles';
 
-const useStyles = createUseStyles({
-    header: {
-        display: 'flex',
-        justifyContent: 'space-between',
-    },
-});
-
-const Table_new = React.memo(({ columns }) => {
+const Table_new = React.memo(({ columns, rows, className }) => {
     const classes = useStyles();
 
-    console.log(columns.then(async res => await res))
-
     return (
-        <>
-            <div className={classes.header}>
-                {1}
-            </div>
-        </>
+        <table className={className}>
+            <thead>
+                <tr>
+                    {columns.map(column => <th style={column.width ? {width: column.width} : null}
+                                               className={classes.columnCell}
+                                               key={column.name + "_key"}>{column.title}</th>)}
+                </tr>
+            </thead>
+            <tbody>
+                {rows.map(row => {
+                    return <tr key={row.id ? row.id : null}>
+                        {columns.map(column => <th className={classes.rowCell}>{row[column.name]}</th>)}
+                    </tr>
+                })}
+            </tbody>
+        </table>
     )
 })
 
