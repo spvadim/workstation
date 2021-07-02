@@ -56,6 +56,7 @@ class PackPatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
     to_process: Optional[bool]
+    status: Optional[Status]
 
     Config = ModelConfig
 
