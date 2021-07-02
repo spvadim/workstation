@@ -20,10 +20,10 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.1",
     "web-vitals": "^0.2.4"
-  },
+  }, 
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "react-scripts --max-old-space-size=1536 start",
+    "build": "react-scripts --max-old-space-size=1536 build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -41,8 +41,5 @@
   },
   "eslintConfig": {
     "extends": "react-app"
-  },
-  "devDependencies": {
-    "file-loader": "^6.1.1"
   }
 }
