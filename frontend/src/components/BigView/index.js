@@ -48,7 +48,7 @@ const useStyles = createUseStyles({
         display: 'flex',
         position: 'relative',
         // gap: "10%",
-        // paddingRight: "4em", 
+        // paddingRight: "4em",
     },
 
     columnsContainer2: {
@@ -57,10 +57,10 @@ const useStyles = createUseStyles({
         gap: "5%",
         paddingLeft: "2em",
         paddingBottom: "1em",
-        paddingRight: "4em", 
+        paddingRight: "4em",
         flexWrap: "wrap-reverse",
     },
-    
+
 })
 
 const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
@@ -75,8 +75,8 @@ const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
             let columnItemsTemp = [];
             for (let i = 1; i <= data[column].length; i++) {
                 columnItemsTemp.push((
-                    <Block key={data[column][i-1].id} 
-                           id={data[column][i-1].id} 
+                    <Block key={data[column][i-1].id}
+                           id={data[column][i-1].id}
                            style={{marginBottom: "-9%", zIndex: data[column].length - i}} />
                 ))
 
@@ -141,10 +141,10 @@ const BigView = React.memo(({ data, dataType, perColumn=4 }) => {
     return (
         <div className={classes.content}>
             <div className={dataType === "palletsPackingTable" ? classes.columnsContainer2 : classes.columnsContainer}>
-                {dataType === "packs" ? buildPacks() : buildPallets(data, false, [301, 113])} 
+                {dataType === "packs" ? buildPacks() : buildPallets(data, false, [301, 113])}
             </div>
-                
-            
+
+
         </div>
     )
 })
