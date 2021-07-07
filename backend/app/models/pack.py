@@ -1,23 +1,24 @@
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional
-from .model_config import ModelConfig
+
 from odmantic import Model
 from odmantic.bson import ObjectId
 from pydantic import BaseModel
 
+from .model_config import ModelConfig
 from .production_batch import ProductionBatchNumber
 
 
 class Status(str, Enum):
-    UNDER_PINTSET = 'под пинцетом'
-    ON_ASSEMBLY = 'на сборке'
+    UNDER_PINTSET = "под пинцетом"
+    ON_ASSEMBLY = "на сборке"
 
 
 class BadPackType(str, Enum):
-    BAD_HEIGHT = 'bad_height'
-    BAD_LABEL = 'bad_label'
-    BAD_PACKING = 'bad_packing'
+    BAD_HEIGHT = "bad_height"
+    BAD_LABEL = "bad_label"
+    BAD_PACKING = "bad_packing"
 
 
 class Pack(Model):

@@ -11,12 +11,12 @@ from .production_batch import ProductionBatchNumber
 
 
 class Status(str, Enum):
-    EXIT_PINTSET = 'вышел из пинцета'
-    WRAPPING = 'в обмотке'
-    ADDED_QR = 'нанесен QR'
-    ENTER_PITCHFORK = 'зашел на вилы'
-    ON_PACKING_TABLE = 'на упаковочном столе'
-    IN_CUBE = 'в кубе'
+    EXIT_PINTSET = "вышел из пинцета"
+    WRAPPING = "в обмотке"
+    ADDED_QR = "нанесен QR"
+    ENTER_PITCHFORK = "зашел на вилы"
+    ON_PACKING_TABLE = "на упаковочном столе"
+    IN_CUBE = "в кубе"
 
 
 class Multipack(Model):

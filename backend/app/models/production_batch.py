@@ -13,10 +13,7 @@ class ProductionBatchNumber(EmbeddedModel):
 
     class Config(ModelConfig):
         schema_extra = {
-            "example": {
-                "batch_number": 100,
-                "batch_date": '2021-01-20 00:00'
-            }
+            "example": {"batch_number": 100, "batch_date": "2021-01-20 00:00"}
         }
 
 

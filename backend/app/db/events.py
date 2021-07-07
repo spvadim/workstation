@@ -1,19 +1,21 @@
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from app.models.event import Event, EventFilters, EventsOutput, EventType
-from app.utils.naive_current_datetime import get_naive_datetime
 from odmantic import ObjectId, query
 
+from ..models.event import Event, EventFilters, EventsOutput, EventType
+from ..utils.naive_current_datetime import get_naive_datetime
 from .engine import engine
 from .system_settings import get_system_settings
 
 
-async def add_events(event_type: EventType,
-                     message: str,
-                     time: Optional[datetime] = None,
-                     camera_numbers: Optional[List[int]] = None,
-                     processed: Optional[bool] = False) -> List[Event]:
+async def add_events(
+    event_type: EventType,
+    message: str,
+    time: Optional[datetime] = None,
+    camera_numbers: Optional[List[int]] = None,
+    processed: Optional[bool] = False,
+) -> List[Event]:
     if not time:
         time = await get_naive_datetime()
 
@@ -31,33 +33,38 @@ async def add_events(event_type: EventType,
 
         if event_type == EventType.MANUAL_INTERVENTION:
 
-            error_event = Event(time=time,
-                                event_type=EventType.ERROR,
-                                processed=processed,
-                                message=message)
+            error_event = Event(
+                time=time,
+                event_type=EventType.ERROR,
+                processed=processed,
+                message=message,
+            )
             event_list.append(error_event)
 
         for camera in camera_numbers:
-            lower_event = Event(time=time,
-                                message=message,
-                                time_on_video=lower_bound,
-                                camera_number=camera,
-                                event_type=event_type)
+            lower_event = Event(
+                time=time,
+                message=message,
+                time_on_video=lower_bound,
+                camera_number=camera,
+                event_type=event_type,
+            )
 
-            upper_event = Event(time=time,
-                                message=message,
-                                time_on_video=upper_bound,
-                                camera_number=camera,
-                                event_type=event_type)
+            upper_event = Event(
+                time=time,
+                message=message,
+                time_on_video=upper_bound,
+                camera_number=camera,
+                event_type=event_type,
+            )
 
             event_list.append(lower_event)
             event_list.append(upper_event)
 
     else:
-        event = Event(time=time,
-                      event_type=event_type,
-                      processed=processed,
-                      message=message)
+        event = Event(
+            time=time, event_type=event_type, processed=processed, message=message
+        )
         event_list.append(event)
 
     return await engine.save_all(event_list)
@@ -87,10 +94,12 @@ async def get_events(filters: EventFilters) -> EventsOutput:
 
     amount = await engine.count(Event, *queries)
 
-    events = await engine.find(Event,
-                               *queries,
-                               sort=query.desc(Event.id),
-                               skip=filters.skip,
-                               limit=filters.limit)
+    events = await engine.find(
+        Event,
+        *queries,
+        sort=query.desc(Event.id),
+        skip=filters.skip,
+        limit=filters.limit
+    )
 
     return EventsOutput(amount=amount, events=events)
