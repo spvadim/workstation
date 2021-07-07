@@ -7,20 +7,20 @@ from .model_config import ModelConfig
 
 
 class WorkMode(str, Enum):
-    AUTO = 'auto'
-    MANUAL = 'manual'
+    AUTO = "auto"
+    MANUAL = "manual"
 
 
 class State(str, Enum):
-    NORMAL = 'normal'
-    WARNING = 'warning'
-    ERROR = 'error'
+    NORMAL = "normal"
+    WARNING = "warning"
+    ERROR = "error"
 
 
 class SyncState(str, Enum):
-    NORMAL = 'normal'
-    ERROR = 'error'
-    FIXING = 'fixing'
+    NORMAL = "normal"
+    ERROR = "error"
+    FIXING = "fixing"
 
 
 class Mode(EmbeddedModel):

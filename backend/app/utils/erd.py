@@ -1,32 +1,35 @@
-from app.db.system_settings import get_system_settings
 from loguru import logger
 from pysnmp.hlapi.asyncio import *
 
-erd_logger = logger.bind(name='erd')
+from ..db.system_settings import get_system_settings
+
+erd_logger = logger.bind(name="erd")
 on = Integer(1)
 off = Integer(0)
 
 
-async def first_erd_set_cmd(key,
-                            value,
-                            engine=SnmpEngine(),
-                            context=ContextData()):
+async def first_erd_set_cmd(key, value, engine=SnmpEngine(), context=ContextData()):
     current_settings = await get_system_settings()
     erd_settings = current_settings.erd_settings
     community_string = erd_settings.erd_community_string.value
     port_snmp = erd_settings.erd_snmp_port.value
     ip_address_host = erd_settings.erd_ip.value
-    return await setCmd(engine, CommunityData(community_string),
-                        UdpTransportTarget((ip_address_host, port_snmp)),
-                        context, ObjectType(ObjectIdentity(key), value))
+    return await setCmd(
+        engine,
+        CommunityData(community_string),
+        UdpTransportTarget((ip_address_host, port_snmp)),
+        context,
+        ObjectType(ObjectIdentity(key), value),
+    )
 
 
 # изменение состояния
 async def first_erd_snmp_set(key, value):
     errorIndication, errorStatus, errorIndex, varBinds = await first_erd_set_cmd(
-        key, value)
+        key, value
+    )
     for name, val in varBinds:
-        return (val.prettyPrint())
+        return val.prettyPrint()
 
 
 async def first_erd_get_cmd(key, engine=SnmpEngine(), context=ContextData()):
@@ -35,39 +38,44 @@ async def first_erd_get_cmd(key, engine=SnmpEngine(), context=ContextData()):
     community_string = erd_settings.erd_community_string.value
     port_snmp = erd_settings.erd_snmp_port.value
     ip_address_host = erd_settings.erd_ip.value
-    return await getCmd(engine, CommunityData(community_string),
-                        UdpTransportTarget((ip_address_host, port_snmp)),
-                        context, ObjectType(ObjectIdentity(key)))
+    return await getCmd(
+        engine,
+        CommunityData(community_string),
+        UdpTransportTarget((ip_address_host, port_snmp)),
+        context,
+        ObjectType(ObjectIdentity(key)),
+    )
 
 
 # получение состояния
 async def first_erd_snmp_get(key):
-    errorIndication, errorStatus, errorIndex, varBinds = await first_erd_get_cmd(
-        key)
+    errorIndication, errorStatus, errorIndex, varBinds = await first_erd_get_cmd(key)
     for name, val in varBinds:
-        return (val.prettyPrint())
+        return val.prettyPrint()
 
 
-async def second_erd_set_cmd(key,
-                             value,
-                             engine=SnmpEngine(),
-                             context=ContextData()):
+async def second_erd_set_cmd(key, value, engine=SnmpEngine(), context=ContextData()):
     current_settings = await get_system_settings()
     erd_settings = current_settings.second_erd_settings
     community_string = erd_settings.erd_community_string.value
     port_snmp = erd_settings.erd_snmp_port.value
     ip_address_host = erd_settings.erd_ip.value
-    return await setCmd(engine, CommunityData(community_string),
-                        UdpTransportTarget((ip_address_host, port_snmp)),
-                        context, ObjectType(ObjectIdentity(key), value))
+    return await setCmd(
+        engine,
+        CommunityData(community_string),
+        UdpTransportTarget((ip_address_host, port_snmp)),
+        context,
+        ObjectType(ObjectIdentity(key), value),
+    )
 
 
 # изменение состояния
 async def second_erd_snmp_set(key, value):
     errorIndication, errorStatus, errorIndex, varBinds = await second_erd_set_cmd(
-        key, value)
+        key, value
+    )
     for name, val in varBinds:
-        return (val.prettyPrint())
+        return val.prettyPrint()
 
 
 async def second_erd_get_cmd(key, engine=SnmpEngine(), context=ContextData()):
@@ -76,21 +84,24 @@ async def second_erd_get_cmd(key, engine=SnmpEngine(), context=ContextData()):
     community_string = erd_settings.erd_community_string.value
     port_snmp = erd_settings.erd_snmp_port.value
     ip_address_host = erd_settings.erd_ip.value
-    return await getCmd(engine, CommunityData(community_string),
-                        UdpTransportTarget((ip_address_host, port_snmp)),
-                        context, ObjectType(ObjectIdentity(key)))
+    return await getCmd(
+        engine,
+        CommunityData(community_string),
+        UdpTransportTarget((ip_address_host, port_snmp)),
+        context,
+        ObjectType(ObjectIdentity(key)),
+    )
 
 
 # получение состояния
 async def second_erd_snmp_get(key):
-    errorIndication, errorStatus, errorIndex, varBinds = await second_erd_get_cmd(
-        key)
+    errorIndication, errorStatus, errorIndex, varBinds = await second_erd_get_cmd(key)
     for name, val in varBinds:
-        return (val.prettyPrint())
+        return val.prettyPrint()
 
 
 async def snmp_set_yellow_on():
-    erd_logger.info('Включение желтого цвета на колонне')
+    erd_logger.info("Включение желтого цвета на колонне")
 
     current_settings = await get_system_settings()
     yellow_oid = current_settings.erd_settings.erd_yellow_oid.value
@@ -98,7 +109,7 @@ async def snmp_set_yellow_on():
 
 
 async def snmp_set_yellow_off():
-    erd_logger.info('Выключение желтого цвета на колонне')
+    erd_logger.info("Выключение желтого цвета на колонне")
 
     current_settings = await get_system_settings()
     yellow_oid = current_settings.erd_settings.erd_yellow_oid.value
@@ -106,7 +117,7 @@ async def snmp_set_yellow_off():
 
 
 async def snmp_set_red_on():
-    erd_logger.info('Включение красного цвета на колонне')
+    erd_logger.info("Включение красного цвета на колонне")
 
     current_settings = await get_system_settings()
     red_oid = current_settings.erd_settings.erd_red_oid.value
@@ -114,7 +125,7 @@ async def snmp_set_red_on():
 
 
 async def snmp_set_red_off():
-    erd_logger.info('Выключение красного цвета на колонне')
+    erd_logger.info("Выключение красного цвета на колонне")
 
     current_settings = await get_system_settings()
     red_oid = current_settings.erd_settings.erd_red_oid.value
@@ -122,7 +133,7 @@ async def snmp_set_red_off():
 
 
 async def snmp_set_green_on():
-    erd_logger.info('Включение зеленого цвета на колонне')
+    erd_logger.info("Включение зеленого цвета на колонне")
 
     current_settings = await get_system_settings()
     green_oid = current_settings.erd_settings.erd_green_oid.value
@@ -130,7 +141,7 @@ async def snmp_set_green_on():
 
 
 async def snmp_set_green_off():
-    erd_logger.info('Выключение зеленого цвета на колонне')
+    erd_logger.info("Выключение зеленого цвета на колонне")
 
     current_settings = await get_system_settings()
     green_oid = current_settings.erd_settings.erd_green_oid.value
@@ -138,7 +149,7 @@ async def snmp_set_green_off():
 
 
 async def snmp_set_buzzer_on():
-    erd_logger.info('Включение зуммера')
+    erd_logger.info("Включение зуммера")
 
     current_settings = await get_system_settings()
     buzzer_oid = current_settings.erd_settings.erd_buzzer_oid.value
@@ -146,7 +157,7 @@ async def snmp_set_buzzer_on():
 
 
 async def snmp_set_buzzer_off():
-    erd_logger.info('Выключение зуммера')
+    erd_logger.info("Выключение зуммера")
 
     current_settings = await get_system_settings()
     buzzer_oid = current_settings.erd_settings.erd_buzzer_oid.value
@@ -154,7 +165,7 @@ async def snmp_set_buzzer_off():
 
 
 async def snmp_raise_damper():
-    erd_logger.info('Подъем шторки')
+    erd_logger.info("Подъем шторки")
 
     current_settings = await get_system_settings()
     first_oid = current_settings.second_erd_settings.erd_first_oid.value
@@ -163,7 +174,7 @@ async def snmp_raise_damper():
 
 
 async def snmp_finish_damper():
-    erd_logger.info('Опускание шторки')
+    erd_logger.info("Опускание шторки")
 
     current_settings = await get_system_settings()
     first_oid = current_settings.second_erd_settings.erd_first_oid.value
@@ -172,7 +183,7 @@ async def snmp_finish_damper():
 
 
 async def snmp_raise_ejector():
-    erd_logger.info('Подъем сбрасывателя')
+    erd_logger.info("Подъем сбрасывателя")
 
     current_settings = await get_system_settings()
     second_oid = current_settings.second_erd_settings.erd_second_oid.value
@@ -181,7 +192,7 @@ async def snmp_raise_ejector():
 
 
 async def snmp_finish_ejector():
-    erd_logger.info('Опускание сбрасывателя')
+    erd_logger.info("Опускание сбрасывателя")
 
     current_settings = await get_system_settings()
     second_oid = current_settings.second_erd_settings.erd_second_oid.value

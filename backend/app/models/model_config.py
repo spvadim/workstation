@@ -11,7 +11,8 @@ def orjson_dumps(v, *, default):
 
 class ModelConfig:
     json_encoders = {
-        **BSON_TYPES_ENCODERS, datetime: lambda v: v.strftime("%d.%m.%Y %H:%M")
+        **BSON_TYPES_ENCODERS,
+        datetime: lambda v: v.strftime("%d.%m.%Y %H:%M"),
     }
     json_loads = orjson.loads
     json_dumps = orjson_dumps
@@ -19,8 +20,8 @@ class ModelConfig:
 
 class ReportModelConfig:
     json_encoders = {
-        **BSON_TYPES_ENCODERS, datetime:
-        lambda v: v.strftime("%d.%m.%Y %H:%M:%S.%f")[:-3]
+        **BSON_TYPES_ENCODERS,
+        datetime: lambda v: v.strftime("%d.%m.%Y %H:%M:%S.%f")[:-3],
     }
     json_loads = orjson.loads
     json_dumps = orjson_dumps

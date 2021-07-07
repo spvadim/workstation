@@ -1,9 +1,10 @@
-from app.db.system_settings import get_system_settings
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
 from fastapi_mail.errors import ConnectionErrors
 from loguru import logger
 
-email_logger = logger.bind(name='email')
+from ..db.system_settings import get_system_settings
+
+email_logger = logger.bind(name="email")
 
 
 async def send_email(subject: str, body: str) -> bool:
@@ -24,18 +25,20 @@ async def send_email(subject: str, body: str) -> bool:
         MAIL_SSL=mail_settings.mail_ssl.value,
     )
 
-    message = MessageSchema(subject=subject,
-                            recipients=[mail_settings.mail_to.value],
-                            body=body,
-                            subtype="html")
+    message = MessageSchema(
+        subject=subject,
+        recipients=[mail_settings.mail_to.value],
+        body=body,
+        subtype="html",
+    )
 
     fm = FastMail(conf)
-    email_logger.info('Попытка отправки email')
+    email_logger.info("Попытка отправки email")
     try:
         await fm.send_message(message)
-        email_logger.info('Email отправлен')
+        email_logger.info("Email отправлен")
     except ConnectionErrors as e:
-        email_logger.error(f'{e}')
+        email_logger.error(f"{e}")
         return False
 
     return True

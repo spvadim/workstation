@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
-from app.db.system_settings import get_system_settings
+
+from ..db.system_settings import get_system_settings
 
 
 async def get_current_tz() -> int:
@@ -9,5 +10,5 @@ async def get_current_tz() -> int:
 
 async def get_naive_datetime() -> datetime:
     tz = await get_current_tz()
-    current_datetime = (datetime.utcnow() + timedelta(hours=tz))
+    current_datetime = datetime.utcnow() + timedelta(hours=tz)
     return current_datetime

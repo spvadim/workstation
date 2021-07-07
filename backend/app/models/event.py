@@ -9,9 +9,9 @@ from .model_config import ReportModelConfig
 
 
 class EventType(str, Enum):
-    DESYNC = 'desync'
-    MANUAL_INTERVENTION = 'manual_intervention'
-    ERROR = 'error'
+    DESYNC = "desync"
+    MANUAL_INTERVENTION = "manual_intervention"
+    ERROR = "error"
 
 
 class Event(Model):

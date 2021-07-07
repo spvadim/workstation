@@ -11,6 +11,7 @@ class InterceptHandler(logging.Handler):
     """
     Default handler from examples in loguru documentaion.
     """
+
     def emit(self, record: logging.LogRecord):
         # Get corresponding Loguru level if it exists
         try:
@@ -24,8 +25,9 @@ class InterceptHandler(logging.Handler):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth,
-                   exception=record.exc_info).log(level, record.getMessage())
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
 
 
 class Rotator:
@@ -33,9 +35,7 @@ class Rotator:
         now = datetime.datetime.now()
 
         self._size_limit = size
-        self._time_limit = now.replace(hour=at.hour,
-                                       minute=at.minute,
-                                       second=at.second)
+        self._time_limit = now.replace(hour=at.hour, minute=at.minute, second=at.second)
 
         if now >= self._time_limit:
             # The current time is already past the target time so it would rotate already.
@@ -61,10 +61,9 @@ def format_record(record: dict) -> str:
 
     format_string = LOGURU_FORMAT
     if record["extra"].get("payload") is not None:
-        record["extra"]["payload"] = pformat(record["extra"]["payload"],
-                                             indent=4,
-                                             compact=True,
-                                             width=88)
+        record["extra"]["payload"] = pformat(
+            record["extra"]["payload"], indent=4, compact=True, width=88
+        )
         format_string += "\n<level>{extra[payload]}</level>"
 
     format_string += "{exception}\n"
@@ -89,9 +88,11 @@ def init_logging():
     # disable handlers for specific uvicorn loggers
     # to redirect their output to the default uvicorn logger
     intercept_handler = InterceptHandler()
-    loggers = (logging.getLogger(name)
-               for name in logging.root.manager.loggerDict
-               if name.startswith("uvicorn."))
+    loggers = (
+        logging.getLogger(name)
+        for name in logging.root.manager.loggerDict
+        if name.startswith("uvicorn.")
+    )
     for uvicorn_logger in loggers:
         uvicorn_logger.handlers = [intercept_handler]
 
@@ -101,44 +102,53 @@ def init_logging():
     # rotator = Rotator(size=5e+8, at=datetime.time(0, 0, 0))
 
     # set logs output, level and format
-    logger.configure(handlers=[{
-        "sink": sys.stdout,
-        "level": logging.DEBUG,
-        "format": format_record,
-        "enqueue": True
-    }, {
-        "sink": "logs/deep_logs.log",
-        "level": logging.DEBUG,
-        "format": format_record,
-        "filter": make_filter('deep'),
-        # "rotation": rotator.should_rotate,
-        "enqueue": True
-    }, {
-        "sink": "logs/wdiot_logs.log",
-        "level": logging.DEBUG,
-        "format": format_record,
-        "filter": make_filter('wdiot'),
-        # "rotation": rotator.should_rotate,
-        "enqueue": True
-    }, {
-        "sink": "logs/erd_logs.log",
-        "level": logging.DEBUG,
-        "format": format_record,
-        "filter": make_filter('erd'),
-        # "rotation": rotator.should_rotate,
-        "enqueue": True
-    }, {
-        "sink": "logs/tg_logs.log",
-        "level": logging.DEBUG,
-        "format": format_record,
-        "filter": make_filter('tg'),
-        # "rotation": rotator.should_rotate,
-        "enqueue": True
-    }, {
-        "sink": "logs/email_logs.log",
-        "level": logging.DEBUG,
-        "format": format_record,
-        "filter": make_filter('email'),
-        # "rotation": rotator.should_rotate,
-        "enqueue": True
-    }])
+    logger.configure(
+        handlers=[
+            {
+                "sink": sys.stdout,
+                "level": logging.DEBUG,
+                "format": format_record,
+                "enqueue": True,
+            },
+            {
+                "sink": "logs/deep_logs.log",
+                "level": logging.DEBUG,
+                "format": format_record,
+                "filter": make_filter("deep"),
+                # "rotation": rotator.should_rotate,
+                "enqueue": True,
+            },
+            {
+                "sink": "logs/wdiot_logs.log",
+                "level": logging.DEBUG,
+                "format": format_record,
+                "filter": make_filter("wdiot"),
+                # "rotation": rotator.should_rotate,
+                "enqueue": True,
+            },
+            {
+                "sink": "logs/erd_logs.log",
+                "level": logging.DEBUG,
+                "format": format_record,
+                "filter": make_filter("erd"),
+                # "rotation": rotator.should_rotate,
+                "enqueue": True,
+            },
+            {
+                "sink": "logs/tg_logs.log",
+                "level": logging.DEBUG,
+                "format": format_record,
+                "filter": make_filter("tg"),
+                # "rotation": rotator.should_rotate,
+                "enqueue": True,
+            },
+            {
+                "sink": "logs/email_logs.log",
+                "level": logging.DEBUG,
+                "format": format_record,
+                "filter": make_filter("email"),
+                # "rotation": rotator.should_rotate,
+                "enqueue": True,
+            },
+        ]
+    )

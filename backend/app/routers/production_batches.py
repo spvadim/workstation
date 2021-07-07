@@ -1,39 +1,39 @@
 from typing import List
 
-from app.db.db_utils import get_by_id_or_404, get_last_batch
-from app.db.engine import engine
-from app.models.production_batch import (PatchParamsScheme, ProductionBatch,
-                                         ProductionBatchInput,
-                                         ProductionBatchParams)
-from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import APIRouter
 from fastapi_versioning import version
 from odmantic import ObjectId
 
+from ..db.db_utils import get_by_id_or_404, get_last_batch
+from ..db.engine import engine
+from ..models.production_batch import (
+    PatchParamsScheme,
+    ProductionBatch,
+    ProductionBatchInput,
+    ProductionBatchParams,
+)
+from ..utils.naive_current_datetime import get_naive_datetime
 from .custom_routers import DeepLoggerRoute, LightLoggerRoute
 
 deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
 light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
-@light_logger_router.get("/batches_params",
-                         response_model=List[ProductionBatchParams])
+@light_logger_router.get("/batches_params", response_model=List[ProductionBatchParams])
 @version(1, 0)
 async def get_all_params():
     all_params = await engine.find(ProductionBatchParams)
     return all_params
 
 
-@light_logger_router.put("/batches_params",
-                         response_model=ProductionBatchParams)
+@light_logger_router.put("/batches_params", response_model=ProductionBatchParams)
 @version(1, 0)
 async def create_params(params: ProductionBatchParams):
     await engine.save(params)
     return params
 
 
-@deep_logger_router.patch("/batches_params/{id}",
-                           response_model=ProductionBatchParams)
+@deep_logger_router.patch("/batches_params/{id}", response_model=ProductionBatchParams)
 @version(1, 0)
 async def update_params_by_id(id: ObjectId, patch: PatchParamsScheme):
     params = await get_by_id_or_404(ProductionBatchParams, id)
@@ -68,7 +68,7 @@ async def get_all_batches():
     return all_batches
 
 
-@light_logger_router.get('/batches/{id}', response_model=ProductionBatch)
+@light_logger_router.get("/batches/{id}", response_model=ProductionBatch)
 @version(1, 0)
 async def get_batch_by_id(id: ObjectId):
     batch = await get_by_id_or_404(ProductionBatch, id)

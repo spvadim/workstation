@@ -1,34 +1,50 @@
 from typing import List
 
-from app.db.db_utils import (check_qr_unique, delete_cube,
-                             get_batch_by_number_or_return_last,
-                             get_by_id_or_404, get_by_qr_or_404,
-                             get_cubes_queue, get_first_cube_without_qr,
-                             get_last_batch, get_last_cube_in_queue,
-                             get_last_cube_without_qr, get_multipacks_queue,
-                             get_packs_queue, check_cube_qr)
-from app.db.engine import engine
-from app.models.cube import (Cube, CubeEditSchema, CubeInput, CubeOutput,
-                             CubePatchSchema, CubeQr, CubeWithNewContent)
-from app.models.multipack import Multipack, Status
-from app.models.pack import Pack
-from app.models.production_batch import ProductionBatch, ProductionBatchParams
-from app.utils.naive_current_datetime import get_naive_datetime
 from fastapi import APIRouter, HTTPException, Query
 from fastapi_versioning import version
 from odmantic import ObjectId
 
+from ..db.db_utils import (
+    check_cube_qr,
+    check_qr_unique,
+    delete_cube,
+    get_batch_by_number_or_return_last,
+    get_by_id_or_404,
+    get_by_qr_or_404,
+    get_cubes_queue,
+    get_first_cube_without_qr,
+    get_last_batch,
+    get_last_cube_in_queue,
+    get_last_cube_without_qr,
+    get_multipacks_queue,
+    get_packs_queue,
+)
+from ..db.engine import engine
+from ..models.cube import (
+    Cube,
+    CubeEditSchema,
+    CubeInput,
+    CubeOutput,
+    CubePatchSchema,
+    CubeQr,
+    CubeWithNewContent,
+)
+from ..models.multipack import Multipack, Status
+from ..models.pack import Pack
+from ..models.production_batch import ProductionBatch, ProductionBatchParams
+from ..utils.naive_current_datetime import get_naive_datetime
 from .custom_routers import DeepLoggerRoute, LightLoggerRoute
 
 deep_logger_router = APIRouter(route_class=DeepLoggerRoute)
 light_logger_router = APIRouter(route_class=LightLoggerRoute)
 
 
-@deep_logger_router.put('/cubes', response_model=Cube)
+@deep_logger_router.put("/cubes", response_model=Cube)
 @version(1, 0)
 async def create_cube(cube_input: CubeInput):
     batch = await get_batch_by_number_or_return_last(
-        batch_number=cube_input.batch_number)
+        batch_number=cube_input.batch_number
+    )
 
     multipack_ids_with_pack_ids = {}
     multipacks_to_update = []
@@ -43,16 +59,19 @@ async def create_cube(cube_input: CubeInput):
     packs_in_multipacks = batch.params.packs
     multipacks_in_cubes = batch.params.multipacks
     created_at = await get_naive_datetime()
-    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
-                batch_number=batch_number,
-                multipacks_in_cubes=multipacks_in_cubes,
-                packs_in_multipacks=packs_in_multipacks,
-                created_at=created_at)
+    cube = Cube(
+        multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
+        batch_number=batch_number,
+        multipacks_in_cubes=multipacks_in_cubes,
+        packs_in_multipacks=packs_in_multipacks,
+        created_at=created_at,
+    )
 
     if cube_input.qr:
         if not await check_cube_qr(cube_input.qr):
             raise HTTPException(
-                400, detail=f'QR кода {cube_input.qr} нет в таблице QR-ов')
+                400, detail=f"QR кода {cube_input.qr} нет в таблице QR-ов"
+            )
         cube.qr = cube_input.qr
         cube.added_qr_at = await get_naive_datetime()
 
@@ -63,18 +82,18 @@ async def create_cube(cube_input: CubeInput):
     return cube
 
 
-@deep_logger_router.put('/cube_with_new_content', response_model=Cube)
+@deep_logger_router.put("/cube_with_new_content", response_model=Cube)
 @version(1, 0)
 async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     batch_number = cube_input.batch_number
     batch = await engine.find_one(
-        ProductionBatch, ProductionBatch.number.batch_number == batch_number)
+        ProductionBatch, ProductionBatch.number.batch_number == batch_number
+    )
     if not batch:
-        raise HTTPException(404, detail='Такой партии не существует!')
+        raise HTTPException(404, detail="Такой партии не существует!")
     batch_number = batch.number
 
-    params = await get_by_id_or_404(ProductionBatchParams,
-                                    cube_input.params_id)
+    params = await get_by_id_or_404(ProductionBatchParams, cube_input.params_id)
     packs_in_multipacks = params.packs
     multipacks_in_cubes = params.multipacks
     barcode = cube_input.barcode_for_packs
@@ -83,62 +102,67 @@ async def create_cube_with_new_content(cube_input: CubeWithNewContent):
     if await check_cube_qr(cube_input.qr):
 
         if not cube_input.content:
-            raise HTTPException(400, 'Пустой куб')
+            raise HTTPException(400, "Пустой куб")
 
         if len(cube_input.content) > multipacks_in_cubes:
             raise HTTPException(
-                400,
-                f'Мультипаков должно быть не больше {multipacks_in_cubes}')
+                400, f"Мультипаков должно быть не больше {multipacks_in_cubes}"
+            )
 
         for multipack in cube_input.content:
 
             if len(multipack) > packs_in_multipacks:
                 raise HTTPException(
                     400,
-                    f'Пачек в мультипаке должно быть не больше {packs_in_multipacks}'
+                    f"Пачек в мультипаке должно быть не больше {packs_in_multipacks}",
                 )
 
             for pack in multipack:
-                if not await check_qr_unique(Pack, pack['qr']):
+                if not await check_qr_unique(Pack, pack["qr"]):
                     raise HTTPException(
-                        400,
-                        f'Пачка с QR-кодом {pack["qr"]} уже есть в системе')
+                        400, f'Пачка с QR-кодом {pack["qr"]} уже есть в системе'
+                    )
     else:
-        raise HTTPException(
-            400, f'Куб с QR-кодом {cube_input.qr} уже есть в системе')
+        raise HTTPException(400, f"Куб с QR-кодом {cube_input.qr} уже есть в системе")
 
     multipack_ids_with_pack_ids = {}
 
     for multipack in cube_input.content:
         pack_ids = []
         for pack in multipack:
-            new_pack = Pack(qr=pack['qr'],
-                            barcode=barcode,
-                            batch_number=batch_number,
-                            in_queue=False,
-                            created_at=current_time)
+            new_pack = Pack(
+                qr=pack["qr"],
+                barcode=barcode,
+                batch_number=batch_number,
+                in_queue=False,
+                created_at=current_time,
+            )
             await engine.save(new_pack)
             pack_ids.append(new_pack.id)
 
-        new_multipack = Multipack(pack_ids=pack_ids,
-                                  batch_number=batch_number,
-                                  created_at=current_time,
-                                  status=Status.IN_CUBE)
+        new_multipack = Multipack(
+            pack_ids=pack_ids,
+            batch_number=batch_number,
+            created_at=current_time,
+            status=Status.IN_CUBE,
+        )
         await engine.save(new_multipack)
         multipack_ids_with_pack_ids[str(new_multipack.id)] = pack_ids
 
-    cube = Cube(multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
-                qr=cube_input.qr,
-                batch_number=batch_number,
-                created_at=current_time,
-                packs_in_multipacks=packs_in_multipacks,
-                multipacks_in_cubes=multipacks_in_cubes)
+    cube = Cube(
+        multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
+        qr=cube_input.qr,
+        batch_number=batch_number,
+        created_at=current_time,
+        packs_in_multipacks=packs_in_multipacks,
+        multipacks_in_cubes=multipacks_in_cubes,
+    )
 
     await engine.save(cube)
     return cube
 
 
-@deep_logger_router.put('/cube_finish_manual', response_model=Cube)
+@deep_logger_router.put("/cube_finish_manual", response_model=Cube)
 @version(1, 0)
 async def finish_cube(qr: str):
     batch = await get_last_batch()
@@ -148,10 +172,10 @@ async def finish_cube(qr: str):
     packs_queue = await get_packs_queue()
 
     if not (multipacks_queue or packs_queue):
-        raise HTTPException(400, detail='Невозможно сформировать неполный куб')
+        raise HTTPException(400, detail="Невозможно сформировать неполный куб")
 
     if not await check_cube_qr(qr):
-        raise HTTPException(400, detail=f'{qr} нет в таблице QRов')
+        raise HTTPException(400, detail=f"{qr} нет в таблице QRов")
     batch_number = batch.number
     needed_multipacks = batch.params.multipacks
     needed_packs = batch.params.packs
@@ -160,7 +184,7 @@ async def finish_cube(qr: str):
 
     if delta > 0:
         chunked_packs = [
-            packs_queue[i:i + needed_packs]
+            packs_queue[i : i + needed_packs]
             for i in range(0, len(packs_queue), needed_packs)
         ]
 
@@ -175,9 +199,9 @@ async def finish_cube(qr: str):
                 pack_ids.append(chunk[i].id)
             await engine.save_all(chunk)
 
-            multipack = Multipack(batch_number=batch.number,
-                                  pack_ids=pack_ids,
-                                  created_at=current_time)
+            multipack = Multipack(
+                batch_number=batch.number, pack_ids=pack_ids, created_at=current_time
+            )
             await engine.save(multipack)
             multipacks_queue.append(multipack)
 
@@ -188,87 +212,88 @@ async def finish_cube(qr: str):
 
     for i in range(len(multipacks_for_cube)):
         multipacks_for_cube[i].status = Status.IN_CUBE
-        multipack_ids_with_pack_ids[str(
-            multipacks_for_cube[i].id)] = multipacks_for_cube[i].pack_ids
+        multipack_ids_with_pack_ids[
+            str(multipacks_for_cube[i].id)
+        ] = multipacks_for_cube[i].pack_ids
     await engine.save_all(multipacks_for_cube)
 
-    cube = Cube(qr=qr,
-                multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
-                batch_number=batch_number,
-                multipacks_in_cubes=needed_multipacks,
-                packs_in_multipacks=needed_packs,
-                created_at=current_time,
-                added_qr_at=current_time)
+    cube = Cube(
+        qr=qr,
+        multipack_ids_with_pack_ids=multipack_ids_with_pack_ids,
+        batch_number=batch_number,
+        multipacks_in_cubes=needed_multipacks,
+        packs_in_multipacks=needed_packs,
+        created_at=current_time,
+        added_qr_at=current_time,
+    )
 
     await engine.save(cube)
     return cube
 
 
-@light_logger_router.get('/cubes_queue', response_model=List[CubeOutput])
+@light_logger_router.get("/cubes_queue", response_model=List[CubeOutput])
 @version(1, 0)
 async def get_current_cubes():
     cubes_queue = await get_cubes_queue()
     return cubes_queue
 
 
-@light_logger_router.get('/cubes/{id}', response_model=Cube)
+@light_logger_router.get("/cubes/{id}", response_model=Cube)
 @version(1, 0)
 async def get_cube_by_id(id: ObjectId):
     cube = await get_by_id_or_404(Cube, id)
     return cube
 
 
-@light_logger_router.get('/cubes/', response_model=Cube)
+@light_logger_router.get("/cubes/", response_model=Cube)
 @version(1, 0)
 async def get_cube_by_qr(qr: str = Query(None)):
     cube = await get_by_qr_or_404(Cube, qr)
     return cube
 
 
-@deep_logger_router.patch('/add_qr_to_first_unidentified_cube/',
-                          response_model=Cube)
+@deep_logger_router.patch("/add_qr_to_first_unidentified_cube/", response_model=Cube)
 @version(1, 0)
 async def add_qr_to_first_unidentified_cube(qr: str):
     if not await check_cube_qr(qr):
-        raise HTTPException(400, detail=f'QR={qr} нет в таблице QRов')
+        raise HTTPException(400, detail=f"QR={qr} нет в таблице QRов")
     cube = await get_first_cube_without_qr()
     if not cube:
-        raise HTTPException(400, detail='В очереди нет кубов без QR')
+        raise HTTPException(400, detail="В очереди нет кубов без QR")
     cube.qr = qr
     await engine.save(cube)
     return cube
 
 
-@deep_logger_router.patch('/add_qr_to_last_unidentified_cube/',
-                          response_model=Cube)
+@deep_logger_router.patch("/add_qr_to_last_unidentified_cube/", response_model=Cube)
 @version(1, 0)
 async def add_qr_to_last_unidentified_cube(qr: str):
     if not await check_cube_qr(qr):
-        raise HTTPException(400, detail=f'В таблице нет QR={qr}')
+        raise HTTPException(400, detail=f"В таблице нет QR={qr}")
     cube = await get_last_cube_without_qr()
     if not cube:
-        raise HTTPException(400, detail='В очереди нет кубов без QR')
+        raise HTTPException(400, detail="В очереди нет кубов без QR")
     cube.qr = qr
     await engine.save(cube)
     return cube
 
 
-@deep_logger_router.patch('/add_qr_to_last_cube/', response_model=Cube)
+@deep_logger_router.patch("/add_qr_to_last_cube/", response_model=Cube)
 @version(1, 0)
 async def add_qr_to_last_cube(qr: str):
     if not await check_cube_qr(qr):
-        raise HTTPException(400, detail=f'В таблице нет QR={qr}')
+        raise HTTPException(400, detail=f"В таблице нет QR={qr}")
     cube = await get_last_cube_in_queue()
     if not cube:
-        raise HTTPException(400, detail='В очереди нет кубов')
+        raise HTTPException(400, detail="В очереди нет кубов")
     if cube.qr:
-        raise HTTPException(400, detail='У последнего куба в очереди есть QR')
+        raise HTTPException(400, detail="У последнего куба в очереди есть QR")
     cube.qr = qr
     await engine.save(cube)
     return cube
 
 
-@light_logger_router.get('/find_cube_by_included_qr/', response_model=Cube)
+@light_logger_router.get("/find_cube_by_included_qr/", response_model=Cube)
 @version(1, 0)
 async def get_cube_by_included_qr(qr: str = Query(None)):
     multipack_or_pack = await engine.find_one(Multipack, Multipack.qr == qr)
@@ -292,13 +317,13 @@ async def get_cube_by_included_qr(qr: str = Query(None)):
     raise HTTPException(404)
 
 
-@deep_logger_router.delete('/cubes/{id}', response_model=Cube)
+@deep_logger_router.delete("/cubes/{id}", response_model=Cube)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
     return await delete_cube(id)
 
 
-@deep_logger_router.patch('/cubes/{id}', response_model=Cube)
+@deep_logger_router.patch("/cubes/{id}", response_model=Cube)
 @version(1, 0)
 async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
     cube = await get_by_id_or_404(Cube, id)
@@ -306,7 +331,8 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
     if patch.qr:
         if not await check_cube_qr(patch.qr):
             raise HTTPException(
-                400, detail=f'QR-код {patch.qr} не существует в системе')
+                400, detail=f"QR-код {patch.qr} не существует в системе"
+            )
         cube.added_qr_at = await get_naive_datetime()
 
     patch_dict = patch.dict(exclude_unset=True)
@@ -316,7 +342,7 @@ async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
     return cube
 
 
-@deep_logger_router.patch('/edit_cube/{id}', response_model=Cube)
+@deep_logger_router.patch("/edit_cube/{id}", response_model=Cube)
 @version(1, 0)
 async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
     cube = await get_by_id_or_404(Cube, id)
@@ -344,13 +370,13 @@ async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
 
     if pack_ids_to_delete:
         raise HTTPException(
-            404,
-            f'В данном кубе не обнаружено пачек с такими id: {pack_ids_to_delete}'
+            404, f"В данном кубе не обнаружено пачек с такими id: {pack_ids_to_delete}"
         )
 
     if current_packs_amount + len(pack_qrs) > max_packs_amount:
         raise HTTPException(
-            400, f'Переполнение куба: пачек более чем {max_packs_amount}')
+            400, f"Переполнение куба: пачек более чем {max_packs_amount}"
+        )
 
     packs_to_add = []
     multipacks_to_update = []
@@ -359,13 +385,14 @@ async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
         qrs = pack_qrs[:free_space]
         for qr in qrs:
             if not await check_qr_unique(Pack, qr):
-                raise HTTPException(
-                    400, f'В системе уже существует пачка с QR={qr}')
-            pack = Pack(qr=qr,
-                        barcode=packs_barcode,
-                        batch_number=batch_number,
-                        in_queue=False,
-                        created_at=current_time)
+                raise HTTPException(400, f"В системе уже существует пачка с QR={qr}")
+            pack = Pack(
+                qr=qr,
+                barcode=packs_barcode,
+                batch_number=batch_number,
+                in_queue=False,
+                created_at=current_time,
+            )
             packs_to_add.append(pack)
             multipack_ids_with_pack_ids[k].append(pack.id)
 
@@ -387,20 +414,20 @@ async def edit_cube_by_id(id: ObjectId, edit_schema: CubeEditSchema):
     return cube
 
 
-@light_logger_router.get('/cube_qrs', response_model=List[CubeQr])
+@light_logger_router.get("/cube_qrs", response_model=List[CubeQr])
 @version(1, 0)
 async def get_cube_qrs():
     return await engine.find(CubeQr)
 
 
-@deep_logger_router.put('/cube_qrs', response_model=List[CubeQr])
+@deep_logger_router.put("/cube_qrs", response_model=List[CubeQr])
 @version(1, 0)
 async def add_cube_qrs(qrs: List[str]):
     cube_qrs = [CubeQr(qr=qr) for qr in qrs]
     return await engine.save_all(cube_qrs)
 
 
-@deep_logger_router.delete('/cube_qrs', response_model=CubeQr)
+@deep_logger_router.delete("/cube_qrs", response_model=CubeQr)
 @version(1, 0)
 async def delete_cube_qr_by_id(id: ObjectId):
     cube_qr = await engine.find_one(CubeQr, CubeQr.id == id)

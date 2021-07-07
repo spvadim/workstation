@@ -4,13 +4,13 @@ from odmantic import Model
 from pydantic import BaseModel
 
 from ..model_config import ModelConfig
+from .desync_settings import DesyncConstantSettings
 from .email_settings import MailSettings
 from .erd_settings import ERDSettings, SecondERDSettings
 from .general_settings import GeneralSettings
 from .location_settings import LocationSettings
 from .pintset_settings import PintsetSettings
 from .telegram_settings import TGSettings
-from .desync_settings import DesyncConstantSettings
 
 
 class SystemSettings(Model):

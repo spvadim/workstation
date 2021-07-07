@@ -1,5 +1,5 @@
-from app.models.system_settings.system_settings import SystemSettings
-from app.config import default_settings
+from ..config import default_settings
+from ..models.system_settings.system_settings import SystemSettings
 from .engine import engine
 
 

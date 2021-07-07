@@ -1,11 +1,8 @@
-from datetime import datetime as dt
-
-import httpx
-from app.db.system_settings import get_system_settings
-from app.models.message import TGMessage
 from loguru import logger
 
-tg_logger = logger.bind(name='tg')
+from ..models.message import TGMessage
+
+tg_logger = logger.bind(name="tg")
 
 
 async def send_telegram_message(msg: TGMessage, img=None) -> bool:
@@ -13,7 +10,7 @@ async def send_telegram_message(msg: TGMessage, img=None) -> bool:
     функция отправки сообщения в телеграмм канал
     """
 
-    tg_logger.info('Отправка сообщения в телеграмм')
+    tg_logger.info("Отправка сообщения в телеграмм")
 
     # TODO: add new setting for tg (to send or not to send: that's the question)
     # cs = await get_system_settings()
