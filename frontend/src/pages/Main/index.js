@@ -362,6 +362,12 @@ function Main() {
         return (
             <Redirect to="/events" />
         );
+        // testing
+    }else if(page === "main_new")
+    {
+        return(
+            <Redirect to = "main_new"/>
+        );
     }
 
     const returnNotification = () => {
@@ -863,6 +869,7 @@ function Main() {
                     }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
 
                     <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
+                    <Button onClick={() => setPage("main_new")}>Новый интерфейс</Button>
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
@@ -875,7 +882,7 @@ function Main() {
                     forceFocus={!modalCube && !modalPackingTableError}
                     hidden={!extended}
                     ref={inputQrRef}
-                />
+                />               
 
             </div>
 
