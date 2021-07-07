@@ -1,4 +1,5 @@
 import asyncio
+from time import sleep
 
 from loguru import logger
 
@@ -12,8 +13,10 @@ from ..db.db_utils import (
     set_column_yellow,
     sync_error,
 )
+from ..db.engine import pymongo_db as db
 from ..db.events import add_events
 from ..db.system_settings import get_system_settings
+from ..models.system_settings.pintset_settings import PintsetSettings
 from .email import send_email
 from .erd import (
     snmp_finish_damper,
@@ -29,6 +32,7 @@ from .erd import (
     snmp_set_yellow_off,
     snmp_set_yellow_on,
 )
+from .pintset import off_pintset, on_pintset
 
 wdiot_logger = logger.bind(name="wdiot")
 
@@ -109,6 +113,41 @@ async def drop_pack(message: str):
         add_events("error", message),
     ]
     await asyncio.gather(*tasks_after_ejector)
+
+
+def drop_pack_after_pintset(error_msg: str, pintset_settings: PintsetSettings):
+    wdiot_logger.info("Заморозил пинцет")
+    off_pintset(pintset_settings)
+
+    wdiot_logger.info("Взвел ошибку на пинцете")
+    db.system_status.find_one_and_update(
+        {},
+        {
+            "$set": {
+                "system_state.pintset_state": "error",
+                "system_state.pintset_error_msg": error_msg,
+            }
+        },
+    )
+
+    wdiot_logger.info("Удалил пачки под пинцетом")
+    db.pack.delete_many({"status": "под пинцетом"})
+    delay = pintset_settings.pintset_curtain_opening_duration.value
+    sleep(delay)
+
+    if db.system_status.find_one({})["system_state"]["pintset_error_msg"] == error_msg:
+        wdiot_logger.info("Убираю ошибку на пинцете")
+        db.system_status.find_one_and_update(
+            {},
+            {
+                "$set": {
+                    "system_state.pintset_state": "normal",
+                    "system_state.pintset_error_msg": None,
+                }
+            },
+        )
+        wdiot_logger.info("Разморозил пинцет")
+        on_pintset(pintset_settings)
 
 
 async def turn_default_error(message: str):

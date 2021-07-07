@@ -2,6 +2,7 @@ import os
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from odmantic import AIOEngine
+from pymongo import MongoClient
 
 from ..models.cube import Cube
 from ..models.event import Event
@@ -12,8 +13,12 @@ username = os.environ["DB_USER"]
 password = os.environ["DB_PASSWORD"]
 db = os.environ["DB_NAME"]
 
-client = AsyncIOMotorClient(f"mongodb://{username}:{password}@mongo:27017/{db}")
+uri = f"mongodb://{username}:{password}@mongo:27017/{db}"
+client = AsyncIOMotorClient(uri)
 engine = AIOEngine(motor_client=client, database=db)
+
+pymongo_client = MongoClient(uri)
+pymongo_db = pymongo_client[db]
 
 
 async def models_startup():

@@ -17,7 +17,7 @@ class PintsetRack(EmbeddedModel):
 
 class PintsetSlot(EmbeddedModel):
     title: str = "Slot контроллера пинцета"
-    desc: str = "Введите Slot контоллера пинцета, " "нужно вводить слот основного CPU"
+    desc: str = "Введите Slot контоллера пинцета, нужно вводить слот основного CPU"
     value: int
     value_type: str = "integer"
 
@@ -59,16 +59,23 @@ class PintsetBitNumber(EmbeddedModel):
 
 class PintsetTurningOffValue(EmbeddedModel):
     title: str = "Значение, при котором контроллер останавливает пинцет"
-    desc: str = "Выберите значение, при котором контроллер " "останавливает пинцет"
+    desc: str = "Выберите значение, при котором контроллер останавливает пинцет"
     value: bool
     value_type: str = "bool"
 
 
 class PintsetTurningOnValue(EmbeddedModel):
     title: str = "Значение, при котором контроллер включает пинцет"
-    desc: str = "Выберите значение, при котором контроллер " "включает пинцет"
+    desc: str = "Выберите значение, при котором контроллер включает пинцет"
     value: bool
     value_type: str = "bool"
+
+
+class PintsetCurtainOpeningDuration(EmbeddedModel):
+    title: str = "На сколько секунд поднимается шторка после пинцета"
+    desc: str = "Введите, на сколько секунд поднимается шторка после пинцета"
+    value: int = 10
+    value_type: str = "integer"
 
 
 class PintsetSettings(EmbeddedModel):
@@ -84,3 +91,6 @@ class PintsetSettings(EmbeddedModel):
     pintset_bit_number: PintsetBitNumber
     pintset_turning_off_value: PintsetTurningOffValue
     pintset_turning_on_value: PintsetTurningOnValue
+    pintset_curtain_opening_duration: PintsetCurtainOpeningDuration = (
+        PintsetCurtainOpeningDuration()
+    )
