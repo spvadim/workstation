@@ -301,6 +301,8 @@ const useStyles = createUseStyles({
 
     tableTitle: {
         marginLeft: 12,
+        fontSize: 24,
+        fontWeight: 700,
     },
 
     more: {
@@ -400,6 +402,7 @@ function Main() {
     const [modalEditPack, setModalEditPack] = useState(false);
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
     const [modalDesync, setModalDesync] = useState(false);
+    const [modalAddPack, setModalAddPack] = useState(false);
 
     const [forceFocus, setForceFocus] = useState("inputQr");
     const [notificationText, setNotificationText] = useState("");
@@ -434,6 +437,8 @@ function Main() {
     const inputChangePackOldRef = useRef();
     const inputChangePackNewRef = useRef();
     const inputEditPackNewRef = useRef();
+    const inputAddPackQrRef = useRef();
+    const inputAddPackBarcodeRef = useRef();
 
     const dictRefs = {
         inputQr: inputQrRef,
@@ -442,6 +447,8 @@ function Main() {
         inputChangePackOld: inputChangePackOldRef,
         inputChangePackNew: inputChangePackNewRef,
         inputEditPackNewRef: inputEditPackNewRef,
+        inputAddPackQrRef: inputAddPackQrRef,
+        inputAddPackBarcodeRef: inputAddPackBarcodeRef,
     }
 
     const isShortPacks = !(settings && settings.params && settings.params.multipacks_after_pintset === 1)
@@ -515,7 +522,7 @@ function Main() {
 
         if (pallets.onPackingTable.length === 0) {
             let res1 = await axios.get(address + "/api/v1_0/packing_table_records");
-            if (settings && settings.params && res1.data.multipacks_amount === 4 * settings.params.multipacks_after_pintset) {
+            if (settings && settings.params && res1.data.multipacks_amount === (4 * settings.params.multipacks_after_pintset)) {
                 let res2 = await axios.get(address + "/api/v1_0/cubes_queue");
                 if (res2.data.length > 0) {
                     let res3 = await axios.get(`${address}/api/v1_0/cubes/${res2.data[res2.data.length - 1].id}`)
@@ -613,6 +620,21 @@ function Main() {
     }
 
     useEffect(() => {
+        async function getMode() {
+            let response = await axios.get(address + "/api/v1_0/get_mode");
+            setMode(response.data.work_mode);
+            if (response.data.work_mode === "auto") {
+                setNotificationText2("");
+            } else {
+                setNotificationText2("Сосканируйте QR куба для редактирования");
+            }
+        }
+
+        const interval = setInterval(getMode, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => {
@@ -691,6 +713,19 @@ function Main() {
     const editPallet = useCallback((row) => {
         history.push('/edit', {description: row, type: 'multipacks', extended})
     }, [extended, history])
+
+    const addPallet = useCallback((status) => {
+        axios.put(address + "/api/v1_0/multipacks", {
+            "status": status,
+            "pack_ids": [],
+            "to_process": false
+        });
+    }, []);
+
+    const addPack = useCallback((status) => {
+        setModalAddPack(status);
+        setForceFocus("inputAddPackQrRef");
+    }, [setModalAddPack]);
 
     return (
 		<div className={classes.box}>
@@ -992,6 +1027,50 @@ function Main() {
             </ModalWindow>
             }
 
+            {modalAddPack &&
+            <ModalWindow
+                title={`Добавление пачки "${modalAddPack}"`}
+                description="Для этого введите сначала QR пачки, потом barcode пачки."
+            >
+                <Button onClick={() => {setModalAddPack(false); setForceFocus("inputQr")}}>
+                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    Отмена
+                </Button>
+
+                <Input
+                    id="inputAddPackQr"
+                    ref={inputAddPackQrRef}
+                    onKeyPress={async e => {
+                        if (e.charCode === 13) {
+                            setForceFocus("inputAddPackBarcodeRef");
+                        }
+                    }}
+                />
+
+                <Input
+                    id="inputAddPackBarcode"
+                    ref={inputAddPackBarcodeRef}
+                    onKeyPress={async e => {
+                        if (e.charCode === 13) {
+                            let qr = inputAddPackQrRef.current.value;
+                            let barcode = inputAddPackBarcodeRef.current.value;
+
+                            axios.put(address + "/api/v1_0/packs", {
+                                "qr": qr,
+                                "barcode": barcode,
+                                "status": modalAddPack,
+                                "to_process": false,
+                                "in_queue": true
+                            }).catch(e => setNotificationErrorText(e.response.data.detail))
+
+                            setModalAddPack(false);
+                            setForceFocus("inputQr");
+                        }
+                    }}
+                />
+            </ModalWindow>
+            }
+
 
 
 			<header className={classes.header}>
@@ -1104,6 +1183,7 @@ function Main() {
                             pallets={pallets.onPackingTable}
                             onDel={delPallet}
                             onEdit={editPallet}
+                            onAdd={() => { addPallet("на упаковочном столе") }}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.onFork && <PalletOnFork
@@ -1111,6 +1191,7 @@ function Main() {
                             pallets={pallets.onFork}
                             onDel={delPallet}
                             onEdit={editPallet}
+                            onAdd={() => { addPallet("зашел на вилы") }}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.onWinder && <PalletOnWinder
@@ -1118,6 +1199,7 @@ function Main() {
                             pallets={pallets.others}
                             onDel={delPallet}
                             onEdit={editPallet}
+                            onAdd={() => { addPallet("в обмотчике") }}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.pallet && <PacksOnAssemble
@@ -1125,6 +1207,7 @@ function Main() {
                             packs={packs.onAssemble_before}
                             onDel={delPack}
                             onEdit={editPack}
+                            onAdd={() => { addPack("на сборке") }}
                             bigView
                         />}
                         {bigViewMode === bigViewModes.pintset && <PacksOnPintset
@@ -1133,6 +1216,7 @@ function Main() {
                             packsBottom={packs.underPintset.slice()}
                             onDel={delPack}
                             onEdit={editPack}
+                            onAdd={() => { addPack("под пинцетом") }}
                             bigView
                         />}
                     </div>

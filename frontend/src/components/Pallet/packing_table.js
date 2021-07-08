@@ -51,19 +51,19 @@ function addEmptyItems(items, n, addItem) {
 const Control = React.memo(({item, x = 0, y = 0, viewBox, onRemove, onAdd, onDel, onEdit}) => {
     return <svg fill={'none'} {...{x, y, viewBox}}>
         {!item && <g>
-            <g onClick={onAdd}><image transform={'scale(0.14) translate(30)'} href={'add.svg'} /></g>
-            <g onClick={onRemove}><image transform={'scale(0.14) translate(100)'} href={'remove.svg'} /></g>
+            {onAdd && <g onClick={onAdd}><image transform={'scale(0.14) translate(30)'} href={'add.svg'} /></g>}
+            {onRemove && <g onClick={onRemove}><image transform={'scale(0.14) translate(100)'} href={'remove.svg'} /></g>}
         </g>}
 
         {item && <g>
-            <g onClick={onEdit}><image transform={'scale(0.14)'} href={'edit.svg'} /></g>
-            <g onClick={onDel}><image transform={'scale(0.14) translate(65)'} href={'del.svg'} /></g>
-            <g onClick={onRemove}><image transform={'scale(0.14) translate(130)'} href={'remove.svg'} /></g>
+            {onEdit && <g onClick={onEdit}><image transform={'scale(0.14)'} href={'edit.svg'} /></g>}
+            {onDel && <g onClick={onDel}><image transform={'scale(0.14) translate(65)'} href={'del.svg'} /></g>}
+            {onRemove && <g onClick={onRemove}><image transform={'scale(0.14) translate(130)'} href={'remove.svg'} /></g>}
         </g>}
     </svg>
 });
 
-const PackBlock = React.memo(({extended, isShortPacks, pack, bigView, onDel, onEdit, x = 0, y = 0, controlKey, control, selected}) => {
+const PackBlock = React.memo(({extended, isShortPacks, pack, bigView, onDel, onEdit, onAdd, x = 0, y = 0, controlKey, control, selected}) => {
     const isSelected = selected === controlKey
     const strokeWidth = bigView ? 1: 1;
     let strokeOpacity = 1;
@@ -102,8 +102,9 @@ const PackBlock = React.memo(({extended, isShortPacks, pack, bigView, onDel, onE
                     y={-19}
                     viewBox="0 0 165 44"
                     onRemove={() => {control(controlKey)}}
-                    onDel={() => {onDel(pack.id); control(controlKey)}}
-                    onEdit={() => {onEdit(pack.id); control(controlKey)}}
+                    onDel={onDel && (() => {onDel(pack.id); control(controlKey)})}
+                    onEdit={onEdit && (() => {onEdit(pack.id); control(controlKey)})}
+                    onAdd={onAdd && (() => {onAdd(); control(controlKey)})}
                 /></svg>))
             }}
         >
@@ -130,7 +131,7 @@ const PackBlock = React.memo(({extended, isShortPacks, pack, bigView, onDel, onE
     </svg>
 });
 
-const PacksOnPintset = React.memo(({extended, isShortPacks, packsTop, packsBottom, bigView = false, onDel, onEdit}) => {
+const PacksOnPintset = React.memo(({extended, isShortPacks, packsTop, packsBottom, bigView = false, onDel, onEdit, onAdd}) => {
     const classes = useStyles();
 
     const width = bigView ? 1300 : 120
@@ -156,15 +157,15 @@ const PacksOnPintset = React.memo(({extended, isShortPacks, packsTop, packsBotto
                 return <PackBlock key={pack.id} controlKey={`bottom_overlimit_${i}`} x={isShortPacks ? -110 : -380} y={380 - (85 * i)} pack={pack} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
             })}
 
-            {isShortPacks && <PackBlock controlKey={'bottom_1'} x={200} y={380} pack={packsBottom[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
-            <PackBlock controlKey={'bottom_2'} x={isShortPacks ? 455 : 200} y={380} pack={packsBottom[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            {isShortPacks && <PackBlock controlKey={'bottom_1'} x={200} y={380} pack={packsBottom[1]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />}
+            <PackBlock controlKey={'bottom_2'} x={isShortPacks ? 455 : 200} y={380} pack={packsBottom[0]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
 
             {bigView && <g transform={'translate(0, -100)'}>{control}</g>}
         </svg>
     </div>
 });
 
-const PacksOnAssemble = React.memo(({extended, isShortPacks, packs, bigView = false, onDel, onEdit}) => {
+const PacksOnAssemble = React.memo(({extended, isShortPacks, packs, bigView = false, onDel, onEdit, onAdd}) => {
     const classes = useStyles();
 
     const width = bigView ? 1300 : 120
@@ -184,16 +185,16 @@ const PacksOnAssemble = React.memo(({extended, isShortPacks, packs, bigView = fa
             {chunk(packs2, isShortPacks ? 4 : 2).map((group, i) => {
                 if (isShortPacks) {
                     return <g key={group.map(item => item && item.id).join(' ')}>
-                        <PackBlock controlKey={`${i}_1`} x={680} y={214 - (i * 85)} pack={group[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                        <PackBlock controlKey={`${i}_2`} x={308} y={214 - (i * 85)} pack={group[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                        <PackBlock controlKey={`${i}_3`} x={520} y={240 - (i * 85)} pack={group[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                        <PackBlock controlKey={`${i}_4`} x={108} y={240 - (i * 85)} pack={group[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                        <PackBlock controlKey={`${i}_1`} x={680} y={214 - (i * 85)} pack={group[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected, onAdd}} />
+                        <PackBlock controlKey={`${i}_2`} x={308} y={214 - (i * 85)} pack={group[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected, onAdd}} />
+                        <PackBlock controlKey={`${i}_3`} x={520} y={240 - (i * 85)} pack={group[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected, onAdd}} />
+                        <PackBlock controlKey={`${i}_4`} x={108} y={240 - (i * 85)} pack={group[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected, onAdd}} />
                     </g>
                 }
 
                 return <g key={group.map(item => item && item.id).join(' ')}>
-                    <PackBlock controlKey={`${i}_1`} x={308} y={214 - (i * 85)} pack={group[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                    <PackBlock controlKey={`${i}_2`} x={108} y={240 - (i * 85)} pack={group[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                    <PackBlock controlKey={`${i}_1`} x={308} y={214 - (i * 85)} pack={group[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected, onAdd}} />
+                    <PackBlock controlKey={`${i}_2`} x={108} y={240 - (i * 85)} pack={group[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected, onAdd}} />
                 </g>
             })}
 
@@ -202,7 +203,7 @@ const PacksOnAssemble = React.memo(({extended, isShortPacks, packs, bigView = fa
     </div>
 });
 
-const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel, onEdit, x = 0, y = 0, controlKey, control, selected, showStatus}) => {
+const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel, onEdit, onAdd, x = 0, y = 0, controlKey, control, selected, showStatus}) => {
     const isSelected = selected === controlKey
     const strokeWidth = bigView ? 0.2: 1;
     let strokeOpacity = 1;
@@ -240,8 +241,9 @@ const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel,
                     x={isShortPacks ? 112 : 128}
                     y={52}
                     onRemove={() => {control(controlKey)}}
-                    onDel={() => {onDel(pallet.id); control(controlKey)}}
-                    onEdit={() => {onEdit(pallet); control(controlKey)}}
+                    onDel={onDel && (() => {onDel(pallet.id); control(controlKey)})}
+                    onEdit={onEdit && (() => {onEdit(pallet); control(controlKey)})}
+                    onAdd={onAdd && (() => {onAdd(); control(controlKey)})}
                 /></svg>))
             }}
         >
@@ -319,7 +321,7 @@ const PalletBlock = React.memo(({extended, isShortPacks, pallet, bigView, onDel,
     </svg>
 })
 
-const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = false, onDel, onEdit}) => {
+const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = false, onDel, onEdit, onAdd}) => {
     const classes = useStyles();
 
     const width = bigView ? 1300 : 120
@@ -353,7 +355,7 @@ const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = f
                         y={-20}
                         pallet={pallet}
                         showStatus
-                        {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}}
+                        {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}}
                     />
                 })}
 
@@ -363,7 +365,7 @@ const PalletOnWinder = React.memo(({extended, isShortPacks, pallets, bigView = f
     </div>
 });
 
-const PalletOnFork = React.memo(({extended, isShortPacks, pallets, onDel, onEdit, bigView = false}) => {
+const PalletOnFork = React.memo(({extended, isShortPacks, pallets, onDel, onEdit, onAdd, bigView = false}) => {
     const classes = useStyles();
 
     const width = bigView ? 1300 : 120
@@ -379,20 +381,20 @@ const PalletOnFork = React.memo(({extended, isShortPacks, pallets, onDel, onEdit
     return <div className={bigView ? classes.bigViewContainer : classes.palletContainer}>
         <svg width={width} height={height} viewBox={'0 0 400 80'} fill={'none'} transform={bigView ? 'scale(1.7) translate(0, -30)' : 'scale(5) translate(0, -5)'} >
             {bigView && pallets.slice(isShortPacks ? 2 : 1).map((pallet, i) => {
-                return <PalletBlock key={pallet.id} controlKey={`overlimit_${i}`} x={isShortPacks ? 10 : -10} y={0 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                return <PalletBlock key={pallet.id} controlKey={`overlimit_${i}`} x={isShortPacks ? 10 : -10} y={0 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
             })}
 
-            {bigView && pallets.length === (isShortPacks ? 2 : 1) && <PalletBlock controlKey={`overlimit_${0}`} x={isShortPacks ? 10 : -10} y={0} pallet={null} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
+            {bigView && pallets.length === (isShortPacks ? 2 : 1) && <PalletBlock controlKey={`overlimit_${0}`} x={isShortPacks ? 10 : -10} y={0} pallet={null} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />}
 
-            {isShortPacks && <PalletBlock controlKey={'1'} x={isShortPacks ? 48 : -12} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />}
-            <PalletBlock controlKey={'2'} x={isShortPacks ? 80 : 60} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            {isShortPacks && <PalletBlock controlKey={'1'} x={isShortPacks ? 48 : -12} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />}
+            <PalletBlock controlKey={'2'} x={isShortPacks ? 80 : 60} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
 
             {bigView && control}
         </svg>
     </div>
 })
 
-const PalletOnPackingTable = React.memo(({extended, isShortPacks, pallets, onDel, onEdit, bigView = false}) => {
+const PalletOnPackingTable = React.memo(({extended, isShortPacks, pallets, onDel, onEdit, onAdd, bigView = false}) => {
     const classes = useStyles();
 
     const width = bigView ? 1300 : 120
@@ -412,17 +414,17 @@ const PalletOnPackingTable = React.memo(({extended, isShortPacks, pallets, onDel
                     return <PalletBlock key={pallet.id} controlKey={`overlimit_${i}`} x={0} y={7 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
                 })}
 
-                <PalletBlock controlKey={'1'} x={50} y={7} pallet={pallets[5]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'2'} x={50} y={-25} pallet={pallets[7]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'1'} x={50} y={7} pallet={pallets[5]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
+                <PalletBlock controlKey={'2'} x={50} y={-25} pallet={pallets[7]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
 
-                <PalletBlock controlKey={'3'} x={93} pallet={pallets[4]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'4'} x={93} y={-32} pallet={pallets[6]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'3'} x={93} pallet={pallets[4]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
+                <PalletBlock controlKey={'4'} x={93} y={-32} pallet={pallets[6]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
 
-                <PalletBlock controlKey={'5'} x={114} y={7} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'6'} x={114} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'5'} x={114} y={7} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
+                <PalletBlock controlKey={'6'} x={114} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
 
-                <PalletBlock controlKey={'7'} x={157} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-                <PalletBlock controlKey={'8'} x={157} y={-32} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+                <PalletBlock controlKey={'7'} x={157} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
+                <PalletBlock controlKey={'8'} x={157} y={-32} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
 
                 {bigView && control}
             </svg>
@@ -435,11 +437,11 @@ const PalletOnPackingTable = React.memo(({extended, isShortPacks, pallets, onDel
                 return <PalletBlock key={pallet.id} controlKey={`overlimit_${i}`} x={-30} y={7 - (32 * i)} pallet={pallet} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
             })}
 
-            <PalletBlock controlKey={'1'} x={83} y={0} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-            <PalletBlock controlKey={'2'} x={83} y={-32} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'1'} x={83} y={0} pallet={pallets[0]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
+            <PalletBlock controlKey={'2'} x={83} y={-32} pallet={pallets[1]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
 
-            <PalletBlock controlKey={'3'} x={50} y={7} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
-            <PalletBlock controlKey={'4'} x={50} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, control: select, extended, selected}} />
+            <PalletBlock controlKey={'3'} x={50} y={7} pallet={pallets[2]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
+            <PalletBlock controlKey={'4'} x={50} y={-25} pallet={pallets[3]} {...{bigView, isShortPacks, onDel, onEdit, onAdd, control: select, extended, selected}} />
 
             {bigView && <g transform={'translate='}>{control}</g>}
         </svg>
