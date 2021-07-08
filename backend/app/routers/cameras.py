@@ -232,7 +232,8 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     mode = await get_current_workmode()
     if mode.work_mode == "manual":
         raise HTTPException(400, detail="В данный момент используется ручной режим")
-    sync_error_msg = None
+
+    sync_error_msg = ""
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
     packs_under_pintset = await get_packs_under_pintset()
@@ -241,7 +242,7 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     packs_on_assembly_amount = await count_packs_on_assembly()
     packs_on_assembly_irl = await get_last_pintset_amount()
     if packs_on_assembly_irl != packs_on_assembly_amount:
-        sync_error_msg = f"Рассинхрон физической ({packs_on_assembly_irl}) и логической ({packs_on_assembly_amount}) очереди пачек на сборке"
+        sync_error_msg += f"Рассинхрон физической ({packs_on_assembly_irl}) и логической ({packs_on_assembly_amount}) очереди пачек на сборке."
 
     if delta < 0:
         to_process = True
@@ -298,7 +299,7 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     multiplier = current_settings.desync_settings.max_packs_on_assembly_multiplier.value
     max_packs_on_assembly = multiplier * multipacks_after_pintset
     if packs_on_assembly_amount + multipacks_after_pintset > max_packs_on_assembly:
-        sync_error_msg = f"В сборке более {max_packs_on_assembly} пачек"
+        sync_error_msg += f" В сборке более {max_packs_on_assembly} пачек"
 
     if sync_error_msg:
         background_tasks.add_task(turn_sync_error, sync_error_msg)
@@ -511,16 +512,16 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
 
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
-    sync_error_msg = None
+    sync_error_msg = ""
 
     multipacks_on_packing_table_system = await count_multipacks_on_packing_table()
     multipacks_on_packing_table_nn = await get_last_packing_table_amount()
     if multipacks_on_packing_table_system != multipacks_on_packing_table_nn:
-        sync_error_msg = (
+        sync_error_msg += (
             f"Рассинхрон логической "
             f"{multipacks_on_packing_table_system} "
             f"и физической {multipacks_on_packing_table_nn} "
-            f"очереди на упаковочном столе"
+            f"очереди на упаковочном столе."
         )
 
     entered_pitchfork_multipacks = await get_multipacks_entered_pitchfork()
@@ -547,8 +548,8 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
     multipacks_on_packing_table = await count_multipacks_on_packing_table()
 
     if multipacks_on_packing_table > max_multipacks_on_packing_table:
-        sync_error_msg = (
-            f"На упаковочном столе "
+        sync_error_msg += (
+            f" На упаковочном столе "
             f"паллет более {max_multipacks_on_packing_table}:"
             f" их {multipacks_on_packing_table}"
         )
