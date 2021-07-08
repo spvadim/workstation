@@ -9,7 +9,7 @@ import ModalWindow from '../../components/ModalWindow';
 import imgOk from 'src/assets/images/ok.svg';
 import imgCross from 'src/assets/images/cross.svg';
 import Input from '../../components/InputText/Input';
-import { Button, Text, Link, NotificationPanel, Switch, TextField } from "src/components";
+import { Button, NotificationPanel, Switch } from "src/components";
 import {Notification} from '../../components/Notification';
 import InputTextQr from '../../components/InputText/InputTextQr';
 import {Notification_new} from '../../components/Notification_new';
@@ -525,9 +525,9 @@ function Main() {
             if (settings && settings.params && res1.data.multipacks_amount === (4 * settings.params.multipacks_after_pintset)) {
                 let res2 = await axios.get(address + "/api/v1_0/cubes_queue");
                 if (res2.data.length > 0) {
-                    let res3 = await axios.get(`${address}/api/v1_0/cubes/${res2.data[res2.data.length - 1].id}`)
+                    let res3 = await axios.get(`${address}/api/v1_0/cubes/${res2.data[res2.data.length - 1].id}`);
                     const res4 = await Promise.all(Object.keys(res3.data.multipack_ids_with_pack_ids).map(async (id) => {
-                        return await getPallet(id)
+                        return getPallet(id).catch((e) => { console.log(e); return null })
                     }));
                     pallets.onPackingTable.push(...res4)
                 }
@@ -575,7 +575,7 @@ function Main() {
 
         const interval = setInterval(getPallets, 1000);
         return () => clearInterval(interval);
-    }, [setPallets]);
+    }, [setPallets, settings]);
 
     useEffect(() => {
         async function getSettings() {
