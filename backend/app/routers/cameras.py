@@ -273,12 +273,12 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         ]
 
         if delta > 0:
-            packs_under_pintset, packs_to_delete2 = (
+            packs_under_pintset, packs_to_delete = (
                 packs_under_pintset[:-delta],
-                packs_under_pintset[-delta:],
+                packs_to_delete + packs_under_pintset[-delta:],
             )
 
-        for pack in packs_to_delete + packs_to_delete2:
+        for pack in packs_to_delete:
 
             await engine.delete(pack)
 
