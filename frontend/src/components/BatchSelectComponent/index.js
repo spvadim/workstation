@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import address from 'src/address';
 
 function BatchSelectComponent() {
    
@@ -7,17 +8,16 @@ function BatchSelectComponent() {
   useEffect(() => {
   async function getBatches() {
     const response = await fetch( address +"/api/v1_0/batches");
-    //console.log(response)
     const body = await response.json();
-    //console.log(body)
     const numbers = body.map(item =>{
       return{
         label:item.number.batch_number,
         value:item.number.batch_number
       }
     })    
-   setItems(numbers) 
-  }
+    const numberslice = numbers.slice(-10)
+    setItems(numberslice)    
+  }  
   getBatches();
 }, []);
 return (
