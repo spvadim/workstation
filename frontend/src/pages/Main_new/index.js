@@ -147,6 +147,13 @@ const useStyles = createUseStyles({
     },
 
     header__button: {
+        display: 'flex',
+        justifyContent: 'center',
+        flexGrow: 1,
+        flexBasis: 0,
+    },
+
+  /*  header__button: {
         marginRight: 12,
         marginTop: 12,
         minHeight: 115,
@@ -155,7 +162,7 @@ const useStyles = createUseStyles({
             marginRight: 0,
         },
         boxSizing: 'border-box',
-    },
+    },*/
 
     header__qr: {
         width: 177,
