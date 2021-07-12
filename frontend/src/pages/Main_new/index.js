@@ -1130,10 +1130,7 @@ function Main() {
                         hidden={!extended}
                         ref={inputQrRef}
                     />
-                    <Button onClick={() => {
-                        setModalDisassemble(true);
-                        setForceFocus("inputDisassemble");
-                    }}>Старый интерфейс</Button>
+                     <Button onClick={() => setPage("/")}>Старый интерфейс</Button>
                 </div>
             </header>
 
