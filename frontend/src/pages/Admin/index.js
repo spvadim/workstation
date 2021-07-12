@@ -15,7 +15,7 @@ import imgHint from "src/assets/images/hint.png";
 const useStyles = createUseStyles({
     tableContainer: {
         width: 634,
-        height: 300,
+        height: 600,
     },
     container2: {
         height: "100%",

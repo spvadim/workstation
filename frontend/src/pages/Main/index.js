@@ -869,7 +869,7 @@ function Main() {
                     }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
 
                     <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
-                    <Button onClick={() => setPage("main_new")}>Новый интерфейс</Button>
+                   
                 </div>
 
                 {/* <div className={classes.headerRight}> </div> */}
@@ -883,7 +883,7 @@ function Main() {
                     hidden={!extended}
                     ref={inputQrRef}
                 />               
-
+                 <Button onClick={() => setPage("main_new")}>Новый интерфейс</Button>
             </div>
 
             <div className={classes.tableContainer}>

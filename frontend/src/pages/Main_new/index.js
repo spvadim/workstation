@@ -687,6 +687,8 @@ function Main() {
         history.push('/create')
     } else if (page === "events") {
         history.push('/events')
+    } else if (page === "main") {
+        history.push('/')
     }
 
     const returnNotification = () => {
@@ -1156,6 +1158,10 @@ function Main() {
                         hidden={!extended}
                         ref={inputQrRef}
                     />
+                    <button
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => setPage("main")}
+                        >Старый интерфейс</button>
                 </div>
             </header>
 
