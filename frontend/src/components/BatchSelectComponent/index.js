@@ -7,26 +7,25 @@ function BatchSelectComponent() {
   useEffect(() => {
   async function getBatches() {
     const response = await fetch( address +"/api/v1_0/batches");
-    console.log(response)
+    //console.log(response)
     const body = await response.json();
-    console.log(body)
+    //console.log(body)
     const numbers = body.map(item =>{
       return{
         label:item.number.batch_number,
         value:item.number.batch_number
       }
-    })  
-    const numberslice = numbers.slice(-10)
-   setItems(numberslice) 
+    })    
+   setItems(numbers) 
   }
   getBatches();
 }, []);
 return (
   <select>
       {items.map(({ label, value }) => (
-  <option key={value} value={value}>
+    <option key={value} value={value}>
        {label}
-  </option>
+    </option>
    ))}
   </select>  
 );
