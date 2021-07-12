@@ -1131,7 +1131,7 @@ function Main() {
                         ref={inputQrRef}
                     />
                      <Button onClick={() => setPage("/")}>Старый интерфейс</Button>
-                </div>
+                    </div>
             </header>
 
             <main className={[classes.container, classes.main].join(" ")}>
