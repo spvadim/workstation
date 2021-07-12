@@ -23,7 +23,7 @@ const useStyles = createUseStyles({
         height: "100%",
     },
 
-    btn: {
+     btn: {
         padding: "14px 18px",
         display: "flex",
         alignItems: "center",
@@ -100,10 +100,36 @@ const useStyles = createUseStyles({
         backgroundColor: "#d4d4d4",
         borderRadius: 7,
     },
-
     header: {
-        position: 'relative',
+        '& .button': {
+            marginRight: 12,
+        },
+        display: 'flex',
+        paddingLeft: 48,
+        paddingRight: 48,
+        paddingTop: 31,
+        paddingBottom: 70,
+
+        //position: 'relative',
     },
+    headerInfo: {
+        display: 'flex',
+        flexGrow: 1,
+        flexBasis: 0,
+        justifyContent: 'space-between',
+    },
+    headerCenter: {
+        display: 'flex',
+        justifyContent: 'center',
+        flexGrow: 1,
+        flexBasis: 0,
+    },
+    headerRight: ({ mode }) => ({
+        ...mode === 'auto' && { visibility: 'hidden' },
+        display: 'flex',
+        flexGrow: 1,
+        flexBasis: 0,
+    }),
 
     header__container: {
         display: 'flex',
@@ -146,14 +172,7 @@ const useStyles = createUseStyles({
         marginLeft: 12,
     },
 
-    header__button: {
-        display: 'flex',
-        justifyContent: 'center',
-        flexGrow: 1,
-        flexBasis: 0,
-    },
-
-  /*  header__button: {
+       header__button: {
         marginRight: 12,
         marginTop: 12,
         minHeight: 115,
@@ -162,7 +181,7 @@ const useStyles = createUseStyles({
             marginRight: 0,
         },
         boxSizing: 'border-box',
-    },*/
+    },
 
     header__qr: {
         width: 177,
@@ -184,13 +203,17 @@ const useStyles = createUseStyles({
     },
 
     main: {
+        backgroundColor: ({ redBackground }) => redBackground && "#CC3333",
+        display: 'flex',
+        flexDirection: 'column',
         height: "100%",
+      /*  height: "100%",
         flex: 1,
         display: "flex",
         alignItems: "stretch",
         justifyContent: 'space-between',
         paddingTop: 20,
-        paddingBottom: 20,
+        paddingBottom: 20,*/
     },
 
     buildCol: {
@@ -1139,7 +1162,28 @@ function Main() {
                     <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
                     <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
                 </div>
-                    <div className={classes.header__buttonList}>
+                <div className={classes.headerCenter}>
+                    <Button onClick={() => {setPage("batch_params")}} >Новая партия</Button>
+
+                    <Button onClick={() => {
+                        setModalDisassemble(true);
+                        setForceFocus("inputDisassemble");
+                    }}>Разобрать куб по его QR</Button>
+
+                    <Button onClick={() => {setModalCube([createIncompleteCube]); setForceFocus("inputQrCube")}} >Сформировать неполный куб</Button>
+                
+                    <Button onClick={() => {
+                        setModalDelete2Pallet(true);
+                        
+                    }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
+
+                    <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
+                   
+                </div>
+
+                {/* <div className={classes.headerRight}> </div> */}
+                <Button onClick={() => setPage("create")}>Новый куб</Button>
+                    {/*<div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => { setPage("batch_params") }}
@@ -1174,7 +1218,7 @@ function Main() {
                             className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => setPage("create")}
                         >Новый куб</button>
-                    </div>
+                        </div>*/}
 
                     <InputTextQr
                         id="inputQr"
