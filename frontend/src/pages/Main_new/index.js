@@ -384,6 +384,7 @@ const tableProps = (extended) => ({
 })
 
 function Main() {
+    const [batchSettings, setBatchSettings] = useState({});
     const history = useHistory();
     const [redBackground, setRedBackground] = useState(false);
     const [mode, setMode] = useState('auto');
@@ -451,6 +452,19 @@ function Main() {
         inputAddPackQrRef: inputAddPackQrRef,
         inputAddPackBarcodeRef: inputAddPackBarcodeRef,
     }
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/current_batch")
+            .then(res => {
+                setBatchSettings({
+                    batchNumber: res.data.number.batch_number,
+                    batchDate: res.data.number.batch_date.split("T")[0].split("-").reverse(), 
+                    multipacks: res.data.params.multipacks,
+                    packs: res.data.params.packs,
+                    multipacksAfterPintset: res.data.params.multipacks_after_pintset,
+                })
+            })
+            
+        }, [setBatchSettings])
 
     const isShortPacks = !(settings && settings.params && settings.params.multipacks_after_pintset === 1)
     const limitPintset = isShortPacks ? 2 : 1
