@@ -6,17 +6,12 @@ import InputTextQr from "../../components/InputText/InputTextQr.js";
 import Input from "../../components/InputText/Input.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
 
-// import ColumnError from "../../components/ColumnError/index.js";
-// import { Notification, NotificationImage } from "../../components/Notification/index.js";
 import { Notification_new } from "../../components/Notification_new";
 import { Notification } from "../../components/Notification";
 
 import { Button, Text, NotificationPanel, Switch} from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
-// import imgScanner from 'src/assets/images/scanner.svg';
-// import imgScannerActive from 'src/assets/images/scanner-active.svg';
-// import imgQR from 'src/assets/images/qr.svg';
 
 import { Redirect } from "react-router-dom";
 

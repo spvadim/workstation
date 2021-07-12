@@ -110,7 +110,7 @@ const useStyles = createUseStyles({
         justifyContent: "space-between",
     },
 
-    header__info: {
+    /*header__info: {
         display: 'flex',
         alignItems: "start",
         flexWrap: 'wrap',
@@ -135,7 +135,7 @@ const useStyles = createUseStyles({
         "& strong": {
             fontSize: 24,
         },
-    },
+    },*/
 
     header__buttonList: {
         display: 'flex',
@@ -1088,7 +1088,7 @@ function Main() {
                 </div>
 
                 <div className={[classes.container, classes.header__container].join(' ')}>
-                    <ul className={classes.header__info}>
+                 {/*   <ul className={classes.header__info}>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Партия №:</h3>
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
@@ -1109,7 +1109,14 @@ function Main() {
                                 <strong>{settings && settings.params.multipacks_after_pintset}</strong>&#32;мультипак
                             </p>
                         </li>
-                    </ul>
+                </ul>*/}
+                <div className={classes.headerInfo}>
+                    <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
+                    <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
+                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
+                    <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
+                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
+                </div>
                     <div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}

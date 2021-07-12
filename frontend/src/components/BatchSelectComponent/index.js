@@ -14,9 +14,10 @@ function BatchSelectComponent() {
         label:item.number.batch_number,
         value:item.number.batch_number
       }
-    })    
+    }) 
+    setItems(numbers)    
     const numberslice = numbers.slice(-10)
-    setItems(numberslice)    
+      
   }  
   getBatches();
 }, []);
