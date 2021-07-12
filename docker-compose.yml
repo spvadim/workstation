@@ -1,38 +1,39 @@
 version: '3.7'
-services: 
-    mongo:
-      image: mongo
-      env_file:
-        - .env
-      volumes:
-        - db:/data/db
-        - ./init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh
-      ports:
+services:
+  mongo:
+    image: mongo
+    env_file:
+      - .env
+    volumes:
+      - db:/data/db
+      - ./init-mongo.sh:/docker-entrypoint-initdb.d/init-mongo.sh
+    ports:
       - 27017:27017
 
-    docker-fastapi:
-      container_name: docker-fastapi
-      env_file:
-        - .env
-      build: 
-          context: ./backend/
-          dockerfile: Dockerfile
-      depends_on:
-          - mongo
-      volumes:
-        - ./logs:/app/logs
-      restart: always
+  docker-fastapi:
+    container_name: docker-fastapi
+    env_file:
+      - .env
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+    volumes:
+      - ./logs:/app/logs
+    restart: always
 
-    nginx:
-      depends_on: 
-        - docker-fastapi
-      container_name: proxy-app
-      build: 
-          context: ./frontend/
-          dockerfile: Dockerfile
-      ports: 
-          - "80:80"
-      restart: always
+  nginx:
+    depends_on:
+      - docker-fastapi
+    container_name: proxy-app
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
 
 volumes:
   db:

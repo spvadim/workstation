@@ -199,3 +199,5 @@ resmoke.ini
 frontend/src/address.js
 frontend/src/address.js
 frontend/src/address.js
+
+/ssl-certification/rootCA.srl
