@@ -136,34 +136,6 @@ const useStyles = createUseStyles({
         alignItems: 'center',
         justifyContent: "space-between",
     },
-
-    /*header__info: {
-        display: 'flex',
-        alignItems: "start",
-        flexWrap: 'wrap',
-        flex: 3,
-    },
-
-    header__infoItem: {
-        marginRight: 35,
-        marginTop: 10,
-        listStyle: 'none',
-        "&:last-child": {
-            marginRight: 0,
-        },
-    },
-
-    header__infoItemName: {
-        fontWeight: 400,
-    },
-
-    header__infoItemDesc: {
-        fontSize: 18,
-        "& strong": {
-            fontSize: 24,
-        },
-    },*/
-
     header__buttonList: {
         display: 'flex',
         alignItems: "center",
@@ -207,14 +179,7 @@ const useStyles = createUseStyles({
         display: 'flex',
         flexDirection: 'column',
         height: "100%",
-      /*  height: "100%",
-        flex: 1,
-        display: "flex",
-        alignItems: "stretch",
-        justifyContent: 'space-between',
-        paddingTop: 20,
-        paddingBottom: 20,*/
-    },
+      },
 
     buildCol: {
         display: "flex",
@@ -247,10 +212,6 @@ const useStyles = createUseStyles({
     },
 
     variants__list: {
-        // display: "grid",
-        // gridTemplateColumns: "repeat(5, 1fr)",
-        // gap: "30px 30px",
-        // listStyle: "none",
         display: 'flex',
         flex: 2,
         position: 'relative',
@@ -1065,7 +1026,7 @@ function Main() {
                         .then(() => {
                             setNotificationDesyncErrorText("Рассинхрон");
                             setModalDesync(false);
-                            // setRedBackground(false);
+                            
                         })
                 }}>
                     <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
@@ -1133,28 +1094,6 @@ function Main() {
                 </div>
 
                 <div className={[classes.container, classes.header__container].join(' ')}>
-                 {/*   <ul className={classes.header__info}>
-                        <li className={classes.header__infoItem}>
-                            <h3 className={classes.header__infoItemName}>Партия №:</h3>
-                            <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
-                        </li>
-                        <li className={classes.header__infoItem}>
-                            <h3 className={classes.header__infoItemName}>Куб:</h3>
-                            <p className={classes.header__infoItemDesc}>
-                                <strong>{settings && settings.params.multipacks}</strong>&#32;мультипака
-                            </p>
-                        </li>
-                            <li className={classes.header__infoItem}>
-                            <h3 className={classes.header__infoItemName}>Мультипак:</h3>
-                            <p className={classes.header__infoItemDesc}><strong>{settings && settings.params.packs}</strong>&#32;пачeк</p>
-                        </li>
-                        <li className={classes.header__infoItem}>
-                            <h3 className={classes.header__infoItemName}>Пинцет:</h3>
-                            <p className={classes.header__infoItemDesc}>
-                                <strong>{settings && settings.params.multipacks_after_pintset}</strong>&#32;мультипак
-                            </p>
-                        </li>
-                </ul>*/}
                 <div className={classes.headerInfo}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
                     <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
@@ -1178,49 +1117,9 @@ function Main() {
                     }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
 
                     <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
-                   
+                    <Button onClick={() => setPage("create")}>Новый куб</Button>
                 </div>
-
-                {/* <div className={classes.headerRight}> </div> */}
-                <Button onClick={() => setPage("create")}>Новый куб</Button>
-                    {/*<div className={classes.header__buttonList}>
-                        <button
-                            className={[classes.btn, classes.header__button].join(' ')}
-                            onClick={() => { setPage("batch_params") }}
-                        >Новая партия</button>
-
-                        <button
-                            className={[classes.btn, classes.header__button].join(' ')}
-                            onClick={() => {
-                                setModalDisassemble(true);
-                                setForceFocus("inputDisassemble");
-                            }}
-                        >Разобрать куб по его QR</button>
-
-                        <button
-                            className={[classes.btn, classes.header__button].join(' ')}
-                            onClick={() => { setModalCube([createIncompleteCube]); setForceFocus("inputQrCube") }}
-                        >Сформировать неполный куб</button>
-
-                        <button
-                            className={[classes.btn, classes.header__button].join(' ')}
-                            onClick={() => {
-                                setModalDelete2Pallet(true);
-                            }}
-                        >Удалить паллет(ы) для перезагрузки обмотчика</button>
-
-                        <button
-                            className={[classes.btn, classes.header__button].join(' ')}
-                            onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }}
-                        >Заменить пачку на упаковке</button>
-
-                        <button
-                            className={[classes.btn, classes.header__button].join(' ')}
-                            onClick={() => setPage("create")}
-                        >Новый куб</button>
-                        </div>*/}
-
-                    <InputTextQr
+                <InputTextQr
                         id="inputQr"
                         placeholder="QR..."
                         className={[classes.btn, classes.btn_border, classes.header__qr].join(' ')}
@@ -1231,10 +1130,10 @@ function Main() {
                         hidden={!extended}
                         ref={inputQrRef}
                     />
-                    <button
-                            className={[classes.btn, classes.header__button].join(' ')}
-                            onClick={() => setPage("main")}
-                        >Старый интерфейс</button>
+                    <Button onClick={() => {
+                        setModalDisassemble(true);
+                        setForceFocus("inputDisassemble");
+                    }}>Старый интерфейс</Button>
                 </div>
             </header>
 
