@@ -22,21 +22,8 @@ const useStyles = createUseStyles({
         padding: "0 36px",
         height: "100%",
     },
-/*  marginRight: 12,
-        },
-        display: 'flex',
-        paddingLeft: 48,
-        paddingRight: 48,
-        paddingTop: 31,
-        paddingBottom: 70,*/
      btn: {
-        marginRight: 12,
-        display: 'flex',
-        paddingLeft: 48,
-        paddingRight: 48,
-        paddingTop: 31,
-        paddingBottom: 70,
-      /*  padding: "14px 18px",
+        padding: "14px 18px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -47,7 +34,7 @@ const useStyles = createUseStyles({
         borderRadius: 10,
         border: "1px solid #000",
         cursor: "pointer",
-        transition: "background-color 0.3s ease",*/
+        transition: "background-color 0.3s ease",
         "&:hover": {
             backgroundColor: "#f7ce55",
         },
