@@ -1,7 +1,10 @@
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+# скрипт упадёт от любой ошибки в процессе
+set -e
 
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
+
+# import DNS_DOMAINS, IP_DOMAINS, DOMAIN_CERT_DAYS
 . "${SCRIPTPATH}/../.env"
-# DOMAIN and DOMAIN_CERT_DAYS imported
 
 CA_PATH="${SCRIPTPATH}"
 DOMAIN_PATH="${SCRIPTPATH}/../frontend/nginx/ssl"
@@ -17,15 +20,16 @@ domain_crt="${DOMAIN_PATH}/${DOMAIN_KEYPAIR}.crt"
 domain_key="${DOMAIN_PATH}/${DOMAIN_KEYPAIR}.key"
 domain_csr="/tmp/${DOMAIN_KEYPAIR}.csr"
 domain_dhparam="${DOMAIN_PATH}/dhparam.pem"
-subject="/C=SE/ST=None/L=NB/O=None/CN=${DOMAIN}"
+
+subject="/C=RU/ST=None/L=Ekaterinburg/O=Akson/CN=Akson Testing Cert"
 
 if [ ! -f "${ca_crt}" ]; then
-    echo 'Please run "create_root_cert_and_key.sh" first, and try again!'
-    exit;
+  echo 'Please run "create_root_cert_and_key.sh" first, and try again!'
+  exit
 fi
 if [ ! -f "${v3_ext_template}" ]; then
-    echo 'Please download the "v3.ext" file and try again!'
-    exit;
+  echo 'Please download the "v3.ext" file and try again!'
+  exit
 fi
 
 # создаём новые ключ и запрос на подпись сертификата
@@ -37,8 +41,26 @@ openssl req -new -newkey rsa:2048 -sha256 -nodes \
 # проверяем корректность получившегося запроса
 openssl req -in "${domain_csr}" -noout -text
 
-# встраиваем имя домена в шаблон v3.ext
-cat "${v3_ext_template}" | sed "s/%%DOMAIN%%/${DOMAIN}/g" > "${v3_ext}"
+# парсим список доменов
+IFS=';' read -ra ip_domains <<<"$IP_DOMAINS"
+IFS=';' read -ra dns_domains <<<"$DNS_DOMAINS"
+
+# обрабатываем список доменов для вставки в шаблон
+domains=""
+
+i=1
+for domain in "${ip_domains[@]}"; do
+  domains="${domains}IP.$((i++)) = $domain\n"
+done
+i=1
+for domain in "${dns_domains[@]}"; do
+  domains="${domains}DNS.$((i++)) = $domain\n"
+done
+
+domains="${domains::-2}"
+
+# встраиваем домены в v3.ext шаблон
+sed "s/%%DOMAINS%%/${domains}/g" <"${v3_ext_template}" >"${v3_ext}"
 
 # подписываем запрос нашим (root) CA-keypair, получаем подписанный сертификат
 openssl x509 -req \
