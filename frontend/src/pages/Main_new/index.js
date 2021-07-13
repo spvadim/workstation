@@ -128,6 +128,7 @@ const useStyles = createUseStyles({
 
     header__infoItemName: {
         fontWeight: 400,
+        display: inline,
     },
 
     header__infoItemDesc: {
@@ -135,6 +136,7 @@ const useStyles = createUseStyles({
         "& strong": {
             fontSize: 24,
         },
+        display: inline,
     },
 
     header__buttonList: {
@@ -1087,11 +1089,23 @@ function Main() {
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
                 </div>
 
+                {/* <div className={classes.headerInfo}>
+                    <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
+                    <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
+                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
+                    <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
+                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
+                </div>*/}
+
                 <div className={[classes.container, classes.header__container].join(' ')}>
                     <ul className={classes.header__info}>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Партия №:</h3>
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
+                        </li>
+                        <li className={classes.header__infoItem}>
+                        <h3 className={classes.header__infoItemName}>Дата:</h3>
+                        <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_date}</strong></p>
                         </li>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Куб:</h3>
@@ -1100,7 +1114,7 @@ function Main() {
                             </p>
                         </li>
                             <li className={classes.header__infoItem}>
-                            <h3 className={classes.header__infoItemName}>Мультипак:</h3>
+                            <h3 className={classes.header__infoItemName}>Паллета:</h3>
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.params.packs}</strong>&#32;пачeк</p>
                         </li>
                         <li className={classes.header__infoItem}>
