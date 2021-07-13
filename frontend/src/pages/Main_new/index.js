@@ -13,7 +13,6 @@ import { Button, NotificationPanel, Switch } from "src/components";
 import {Notification} from '../../components/Notification';
 import InputTextQr from '../../components/InputText/InputTextQr';
 import {Notification_new} from '../../components/Notification_new';
-import { HeaderInfo } from './HeaderInfo';
 
 const useStyles = createUseStyles({
 	container: {
@@ -128,7 +127,7 @@ const useStyles = createUseStyles({
     },
 
     header__infoItemName: {
-        fontWeight: 400,       
+        fontWeight: 400,
     },
 
     header__infoItemDesc: {
@@ -359,7 +358,7 @@ const useStyles = createUseStyles({
         fontSize: 24,
         fontWeight: 700,
     },
-   });
+});
 
 const bigViewModes = {
     pintset: 'pintset',
@@ -390,7 +389,7 @@ function Main() {
     const [extended, setExtended] = useState(false);
     const [settings, setSettings] = useState(false);
     const [page, setPage] = useState('');
-    const [batchSettings, setBatchSettings] = useState({});
+
     const [modalAgree, setModalAgree] = useState(false);
     const [modalDisassemble, setModalDisassemble] = useState(false);
     const [modalCube, setModalCube] = useState(false);
@@ -451,19 +450,6 @@ function Main() {
         inputAddPackQrRef: inputAddPackQrRef,
         inputAddPackBarcodeRef: inputAddPackBarcodeRef,
     }
-    useEffect(() => {
-        axios.get(address + "/api/v1_0/current_batch")
-            .then(res => {
-                setBatchSettings({
-                    batchNumber: res.data.number.batch_number,
-                    batchDate: res.data.number.batch_date.split("T")[0].split("-").reverse(), 
-                    multipacks: res.data.params.multipacks,
-                    packs: res.data.params.packs,
-                    multipacksAfterPintset: res.data.params.multipacks_after_pintset,
-                })
-            })
-            
-        }, [setBatchSettings])
 
     const isShortPacks = !(settings && settings.params && settings.params.multipacks_after_pintset === 1)
     const limitPintset = isShortPacks ? 2 : 1
@@ -1101,56 +1087,11 @@ function Main() {
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
                 </div>
 
-                <div className={classes.headerInfo}>
-                    <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
-                    <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
-                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
-                    <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
-                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
-                </div>
-
                 <div className={[classes.container, classes.header__container].join(' ')}>
-                <div className={classes.headerCenter}>
-                    <Button onClick={() => {setPage("batch_params")}} >Новая партия</Button>
-
-                    <Button onClick={() => {
-                        setModalDisassemble(true);
-                        setForceFocus("inputDisassemble");
-                    }}>Разобрать куб по его QR</Button>
-
-                    <Button onClick={() => {setModalCube([createIncompleteCube]); setForceFocus("inputQrCube")}} >Сформировать неполный куб</Button>
-                
-                    <Button onClick={() => {
-                        setModalDelete2Pallet(true);
-                        
-                    }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
-
-                    <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
-                   
-                </div>
-
-                {/* <div className={classes.headerRight}> </div> */}
-                <Button onClick={() => setPage("create")}>Новый куб</Button>
-                <InputTextQr
-                    id="inputQr"
-                    setNotification={setNotificationText}
-                    setNotificationError={setNotificationErrorText}
-                    mode={mode}
-                    forceFocus={!modalCube && !modalPackingTableError}
-                    hidden={!extended}
-                    ref={inputQrRef}
-                />               
-                 <Button onClick={() => setPage("main")}>Старый интерфейс</Button>
-            </div>
-
-                 {/*   <ul className={classes.header__info}>
+                    <ul className={classes.header__info}>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Партия №:</h3>
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
-                        </li>
-                        <li className={classes.header__infoItem}>
-                        <h3 className={classes.header__infoItemName}>Дата:</h3>
-                        <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_date}</strong></p>
                         </li>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Куб:</h3>
@@ -1159,7 +1100,7 @@ function Main() {
                             </p>
                         </li>
                             <li className={classes.header__infoItem}>
-                            <h3 className={classes.header__infoItemName}>Паллета:</h3>
+                            <h3 className={classes.header__infoItemName}>Мультипак:</h3>
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.params.packs}</strong>&#32;пачeк</p>
                         </li>
                         <li className={classes.header__infoItem}>
@@ -1168,8 +1109,8 @@ function Main() {
                                 <strong>{settings && settings.params.multipacks_after_pintset}</strong>&#32;мультипак
                             </p>
                         </li>
-                </ul>*/}
-                   {/* <div className={classes.header__buttonList}>
+                    </ul>
+                    <div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => { setPage("batch_params") }}
@@ -1221,7 +1162,7 @@ function Main() {
                             className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => setPage("main")}
                         >Старый интерфейс</button>
-                        </div>*/}
+                </div>
             </header>
 
             <main className={[classes.container, classes.main].join(" ")}>
