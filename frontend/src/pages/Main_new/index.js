@@ -390,7 +390,7 @@ function Main() {
     const [extended, setExtended] = useState(false);
     const [settings, setSettings] = useState(false);
     const [page, setPage] = useState('');
-
+    const [batchSettings, setBatchSettings] = useState({});
     const [modalAgree, setModalAgree] = useState(false);
     const [modalDisassemble, setModalDisassemble] = useState(false);
     const [modalCube, setModalCube] = useState(false);
