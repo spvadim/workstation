@@ -127,8 +127,7 @@ const useStyles = createUseStyles({
     },
 
     header__infoItemName: {
-        fontWeight: 400,
-        display: inline,
+        fontWeight: 400,       
     },
 
     header__infoItemDesc: {
@@ -136,7 +135,6 @@ const useStyles = createUseStyles({
         "& strong": {
             fontSize: 24,
         },
-        display: inline,
     },
 
     header__buttonList: {
@@ -360,7 +358,7 @@ const useStyles = createUseStyles({
         fontSize: 24,
         fontWeight: 700,
     },
-});
+   });
 
 const bigViewModes = {
     pintset: 'pintset',
