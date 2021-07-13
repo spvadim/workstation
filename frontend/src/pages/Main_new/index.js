@@ -450,6 +450,19 @@ function Main() {
         inputAddPackQrRef: inputAddPackQrRef,
         inputAddPackBarcodeRef: inputAddPackBarcodeRef,
     }
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/current_batch")
+            .then(res => {
+                setBatchSettings({
+                    batchNumber: res.data.number.batch_number,
+                    batchDate: res.data.number.batch_date.split("T")[0].split("-").reverse(), 
+                    multipacks: res.data.params.multipacks,
+                    packs: res.data.params.packs,
+                    multipacksAfterPintset: res.data.params.multipacks_after_pintset,
+                })
+            })
+            
+        }, [setBatchSettings])
 
     const isShortPacks = !(settings && settings.params && settings.params.multipacks_after_pintset === 1)
     const limitPintset = isShortPacks ? 2 : 1
@@ -1087,16 +1100,16 @@ function Main() {
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
                 </div>
 
-                {/* <div className={classes.headerInfo}>
+                <div className={classes.headerInfo}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
                     <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
                     <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
                     <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
                     <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
-                </div>*/}
+                </div>
 
                 <div className={[classes.container, classes.header__container].join(' ')}>
-                    <ul className={classes.header__info}>
+                 {/*   <ul className={classes.header__info}>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Партия №:</h3>
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
@@ -1121,7 +1134,7 @@ function Main() {
                                 <strong>{settings && settings.params.multipacks_after_pintset}</strong>&#32;мультипак
                             </p>
                         </li>
-                    </ul>
+                </ul>*/}
                     <div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}
