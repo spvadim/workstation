@@ -23,7 +23,8 @@ const useStyles = createUseStyles({
         height: "100%",
     },
      btn: {
-        padding: "14px 18px",
+        //padding: "14px 18px",
+        padding: "31px 48px 70px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
