@@ -1110,6 +1110,39 @@ function Main() {
                 </div>
 
                 <div className={[classes.container, classes.header__container].join(' ')}>
+                <div className={classes.headerCenter}>
+                    <Button onClick={() => {setPage("batch_params")}} >Новая партия</Button>
+
+                    <Button onClick={() => {
+                        setModalDisassemble(true);
+                        setForceFocus("inputDisassemble");
+                    }}>Разобрать куб по его QR</Button>
+
+                    <Button onClick={() => {setModalCube([createIncompleteCube]); setForceFocus("inputQrCube")}} >Сформировать неполный куб</Button>
+                
+                    <Button onClick={() => {
+                        setModalDelete2Pallet(true);
+                        
+                    }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
+
+                    <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
+                   
+                </div>
+
+                {/* <div className={classes.headerRight}> </div> */}
+                <Button onClick={() => setPage("create")}>Новый куб</Button>
+                <InputTextQr
+                    id="inputQr"
+                    setNotification={setNotificationText}
+                    setNotificationError={setNotificationErrorText}
+                    mode={mode}
+                    forceFocus={!modalCube && !modalPackingTableError}
+                    hidden={!extended}
+                    ref={inputQrRef}
+                />               
+                 <Button onClick={() => setPage("main")}>Старый интерфейс</Button>
+            </div>
+
                  {/*   <ul className={classes.header__info}>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Партия №:</h3>
@@ -1136,7 +1169,7 @@ function Main() {
                             </p>
                         </li>
                 </ul>*/}
-                    <div className={classes.header__buttonList}>
+                   {/* <div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => { setPage("batch_params") }}
@@ -1188,7 +1221,7 @@ function Main() {
                             className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => setPage("main")}
                         >Старый интерфейс</button>
-                </div>
+                        </div>*/}
             </header>
 
             <main className={[classes.container, classes.main].join(" ")}>
