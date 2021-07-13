@@ -1104,32 +1104,35 @@ function Main() {
                 {/*<div className={classes.header__buttonList}>*/}
                 <div className={classes.headerCenter}>
                         <button
+                         className={[classes.btn, classes.header__button].join(' ')}
                            onClick={() => { setPage("batch_params") }}
                         >Новая партия</button>
-                        <button                           
+                        <button   
+                         className={[classes.btn, classes.header__button].join(' ')}                        
                             onClick={() => {
                                 setModalDisassemble(true);
                                 setForceFocus("inputDisassemble");
                             }}
                         >Разобрать куб по его QR</button>
                         <button
+                         className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => { setModalCube([createIncompleteCube]); setForceFocus("inputQrCube") }}
                         >Сформировать неполный куб</button>
 
                         <button
-                            
+                             className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => {
                                 setModalDelete2Pallet(true);
                             }}
                         >Удалить паллет(ы) для перезагрузки обмотчика</button>
 
                         <button
-                            
+                             className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }}
                         >Заменить пачку на упаковке</button>
 
                         <button
-                            
+                            className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => setPage("create")}
                         >Новый куб</button>
                     </div>
@@ -1146,8 +1149,8 @@ function Main() {
                         ref={inputQrRef}
                     />
                     <button
-                           
-                            onClick={() => setPage("main")}
+                        className={[classes.btn, classes.header__button].join(' ')}
+                        onClick={() => setPage("main")}
                         >Старый интерфейс</button>
                 </div>
 
