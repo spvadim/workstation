@@ -164,8 +164,8 @@ const useStyles = createUseStyles({
          "&:last-child": {
             marginRight: 0,
         },
-        boxSizing: 'border-box',
-    },*/
+        boxSizing: 'border-box',*/
+    },
 
     header__qr: {
         width: 177,
