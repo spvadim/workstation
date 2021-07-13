@@ -13,7 +13,6 @@ import { Button, NotificationPanel, Switch } from "src/components";
 import {Notification} from '../../components/Notification';
 import InputTextQr from '../../components/InputText/InputTextQr';
 import {Notification_new} from '../../components/Notification_new';
-import { HeaderInfo } from './HeaderInfo';
 
 const useStyles = createUseStyles({
 	container: {
@@ -22,7 +21,8 @@ const useStyles = createUseStyles({
         padding: "0 36px",
         height: "100%",
     },
-     btn: {
+
+    btn: {
         padding: "14px 18px",
         display: "flex",
         alignItems: "center",
@@ -99,42 +99,44 @@ const useStyles = createUseStyles({
         backgroundColor: "#d4d4d4",
         borderRadius: 7,
     },
-    header: {
-        '& .button': {
-            marginRight: 12,
-        },
-        display: 'flex',
-        paddingLeft: 48,
-        paddingRight: 48,
-        paddingTop: 31,
-        paddingBottom: 70,
 
-        //position: 'relative',
+    header: {
+        position: 'relative',
     },
-    headerInfo: {
-        display: 'flex',
-        flexGrow: 1,
-        flexBasis: 0,
-        justifyContent: 'space-between',
-    },
-    headerCenter: {
-        display: 'flex',
-        justifyContent: 'center',
-        flexGrow: 1,
-        flexBasis: 0,
-    },
-    headerRight: ({ mode }) => ({
-        ...mode === 'auto' && { visibility: 'hidden' },
-        display: 'flex',
-        flexGrow: 1,
-        flexBasis: 0,
-    }),
 
     header__container: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: "space-between",
     },
+
+    header__info: {
+        display: 'flex',
+        alignItems: "start",
+        flexWrap: 'wrap',
+        flex: 3,
+    },
+
+    header__infoItem: {
+        marginRight: 35,
+        marginTop: 10,
+        listStyle: 'none',
+        "&:last-child": {
+            marginRight: 0,
+        },
+    },
+
+    header__infoItemName: {
+        fontWeight: 400,
+    },
+
+    header__infoItemDesc: {
+        fontSize: 18,
+        "& strong": {
+            fontSize: 24,
+        },
+    },
+
     header__buttonList: {
         display: 'flex',
         alignItems: "center",
@@ -142,29 +144,16 @@ const useStyles = createUseStyles({
         marginTop: -12,
         marginLeft: 12,
     },
-    /* marginRight: 12,
-        },
-        display: 'flex',
-        paddingLeft: 48,
-        paddingRight: 48,
-        paddingTop: 31,
-        paddingBottom: 70,
-    */
 
-       header__button: {
+    header__button: {
         marginRight: 12,
-        display: 'flex',
-        paddingLeft: 48,
-        paddingRight: 48,
-        paddingTop: 31,
-        paddingBottom: 70,
-      /*  marginTop: 12,
-          minHeight: 115,
-          flex: 1,
-         "&:last-child": {
+        marginTop: 12,
+        minHeight: 115,
+        flex: 1,
+        "&:last-child": {
             marginRight: 0,
         },
-        boxSizing: 'border-box',*/
+        boxSizing: 'border-box',
     },
 
     header__qr: {
@@ -187,11 +176,14 @@ const useStyles = createUseStyles({
     },
 
     main: {
-        backgroundColor: ({ redBackground }) => redBackground && "#CC3333",
-        display: 'flex',
-        flexDirection: 'column',
         height: "100%",
-      },
+        flex: 1,
+        display: "flex",
+        alignItems: "stretch",
+        justifyContent: 'space-between',
+        paddingTop: 20,
+        paddingBottom: 20,
+    },
 
     buildCol: {
         display: "flex",
@@ -224,6 +216,10 @@ const useStyles = createUseStyles({
     },
 
     variants__list: {
+        // display: "grid",
+        // gridTemplateColumns: "repeat(5, 1fr)",
+        // gap: "30px 30px",
+        // listStyle: "none",
         display: 'flex',
         flex: 2,
         position: 'relative',
@@ -387,7 +383,6 @@ const tableProps = (extended) => ({
 })
 
 function Main() {
-    const [batchSettings, setBatchSettings] = useState({});
     const history = useHistory();
     const [redBackground, setRedBackground] = useState(false);
     const [mode, setMode] = useState('auto');
@@ -455,19 +450,6 @@ function Main() {
         inputAddPackQrRef: inputAddPackQrRef,
         inputAddPackBarcodeRef: inputAddPackBarcodeRef,
     }
-    useEffect(() => {
-        axios.get(address + "/api/v1_0/current_batch")
-            .then(res => {
-                setBatchSettings({
-                    batchNumber: res.data.number.batch_number,
-                    batchDate: res.data.number.batch_date.split("T")[0].split("-").reverse(), 
-                    multipacks: res.data.params.multipacks,
-                    packs: res.data.params.packs,
-                    multipacksAfterPintset: res.data.params.multipacks_after_pintset,
-                })
-            })
-            
-        }, [setBatchSettings])
 
     const isShortPacks = !(settings && settings.params && settings.params.multipacks_after_pintset === 1)
     const limitPintset = isShortPacks ? 2 : 1
@@ -698,8 +680,8 @@ function Main() {
 
         return () => {clearInterval(interval)};
     }, [forceFocus])
-    
-     if (page === "batch_params") {
+
+    if (page === "batch_params") {
         history.push('/batch_params')
     } else if (page === "create") {
         history.push('/create')
@@ -1038,7 +1020,7 @@ function Main() {
                         .then(() => {
                             setNotificationDesyncErrorText("Рассинхрон");
                             setModalDesync(false);
-                            
+                            // setRedBackground(false);
                         })
                 }}>
                     <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
@@ -1106,40 +1088,56 @@ function Main() {
                 </div>
 
                 <div className={[classes.container, classes.header__container].join(' ')}>
-                <div className={classes.headerInfo}>
-                    <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
-                    <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
-                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
-                    <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
-                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
-                </div>
-                {/*<div className={classes.header__buttonList}>*/}
-                <div className={classes.headerCenter}>
+                    <ul className={classes.header__info}>
+                        <li className={classes.header__infoItem}>
+                            <h3 className={classes.header__infoItemName}>Партия №:</h3>
+                            <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
+                        </li>
+                        <li className={classes.header__infoItem}>
+                            <h3 className={classes.header__infoItemName}>Куб:</h3>
+                            <p className={classes.header__infoItemDesc}>
+                                <strong>{settings && settings.params.multipacks}</strong>&#32;мультипака
+                            </p>
+                        </li>
+                            <li className={classes.header__infoItem}>
+                            <h3 className={classes.header__infoItemName}>Мультипак:</h3>
+                            <p className={classes.header__infoItemDesc}><strong>{settings && settings.params.packs}</strong>&#32;пачeк</p>
+                        </li>
+                        <li className={classes.header__infoItem}>
+                            <h3 className={classes.header__infoItemName}>Пинцет:</h3>
+                            <p className={classes.header__infoItemDesc}>
+                                <strong>{settings && settings.params.multipacks_after_pintset}</strong>&#32;мультипак
+                            </p>
+                        </li>
+                    </ul>
+                    <div className={classes.header__buttonList}>
                         <button
-                         className={[classes.btn, classes.header__button].join(' ')}
-                           onClick={() => { setPage("batch_params") }}
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => { setPage("batch_params") }}
                         >Новая партия</button>
-                        <button   
-                         className={[classes.btn, classes.header__button].join(' ')}                        
+
+                        <button
+                            className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => {
                                 setModalDisassemble(true);
                                 setForceFocus("inputDisassemble");
                             }}
                         >Разобрать куб по его QR</button>
+
                         <button
-                         className={[classes.btn, classes.header__button].join(' ')}
+                            className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => { setModalCube([createIncompleteCube]); setForceFocus("inputQrCube") }}
                         >Сформировать неполный куб</button>
 
                         <button
-                             className={[classes.btn, classes.header__button].join(' ')}
+                            className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => {
                                 setModalDelete2Pallet(true);
                             }}
                         >Удалить паллет(ы) для перезагрузки обмотчика</button>
 
                         <button
-                             className={[classes.btn, classes.header__button].join(' ')}
+                            className={[classes.btn, classes.header__button].join(' ')}
                             onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }}
                         >Заменить пачку на упаковке</button>
 
@@ -1161,42 +1159,10 @@ function Main() {
                         ref={inputQrRef}
                     />
                     <button
-                        className={[classes.btn, classes.header__button].join(' ')}
-                        onClick={() => setPage("main")}
+                            className={[classes.btn, classes.header__button].join(' ')}
+                            onClick={() => setPage("main")}
                         >Старый интерфейс</button>
                 </div>
-
-               {/*} <div className={classes.headerCenter}>
-                    <Button onClick={() => {setPage("batch_params")}} >Новая партия</Button>
-
-                    <Button onClick={() => {
-                        setModalDisassemble(true);
-                        setForceFocus("inputDisassemble");
-                    }}>Разобрать куб по его QR</Button>
-
-                    <Button onClick={() => {setModalCube([createIncompleteCube]); setForceFocus("inputQrCube")}} >Сформировать неполный куб</Button>
-                
-                    <Button onClick={() => {
-                        setModalDelete2Pallet(true);
-                        
-                    }}>Удалить паллет(ы) для перезагрузки обмотчика</Button>
-
-                    <Button onClick={() => {setModalChangePack(true); setForceFocus("inputChangePackOld")}} >Заменить пачку на упаковке</Button>
-                    <Button onClick={() => setPage("create")}>Новый куб</Button>
-                </div>
-                <InputTextQr
-                        id="inputQr"
-                        placeholder="QR..."
-                        className={[classes.btn, classes.btn_border, classes.header__qr].join(' ')}
-                        setNotification={setNotificationText}
-                        setNotificationError={setNotificationErrorText}
-                        mode={mode}
-                        forceFocus={!modalCube && !modalPackingTableError}
-                        hidden={!extended}
-                        ref={inputQrRef}
-                    />
-                     <Button onClick={() => setPage("/")}>Старый интерфейс</Button>
-                </div>*/}
             </header>
 
             <main className={[classes.container, classes.main].join(" ")}>

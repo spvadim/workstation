@@ -192,15 +192,8 @@ function Main() {
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
     const [modalDesync, setModalDesync] = useState(false);
 
-    // const [valueQrModalPackingTable, setValueQrModalPackingTable] = useState("");
-    // const [valueQrToDisassemble, setValueQrToDisassemble] = useState("");
-    // const [valueQrCube, setValueQrCube] = useState('');
-    // const [valueQrToChangePack, setValueQrToChangePack] = useState('');
-    // const [valueQrToChangeNewPack, setValueQrToChangeNewPack] = useState('');
-
     const [events, setEvents] = useState([]);
 
-    // const [packingTableRecords, setPackingTableRecords] = useState("");
     const [notificationText, setNotificationText] = useState("");
     const [notificationText2, setNotificationText2] = useState("");
     const [returnNotificationText, setReturnNotificationText] = useState("");
@@ -281,23 +274,7 @@ function Main() {
             .catch(e => setNotificationErrorText(e.response.data.detail))
     }, [setMode]);
 
-    // useEffect(() => {
-    //     const request2 = () => {
-    //         axios.get(address + "/api/v1_0/packing_table_records")
-    //             .then(res => {
-    //                 // setPackingTableRecords(res.data);
-    //                 // if (res.data.multipacks_amount === batchSettings.multipacks && mode === "auto") {
-    //                 //     setNotificationText("Надо отсканировать QR куба")
-    //                 // }
-    //         });
-    //     }
-    //
-    //     request2();
-    //     const interval1 = setInterval(() => request2(), 1000);
-    //     return () => clearInterval(interval1);
-    // }, [batchSettings, mode]);
-
-    useEffect(() => {
+      useEffect(() => {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/get_state");
             request.then(res => {
@@ -387,28 +364,7 @@ function Main() {
                 console.log(e);
             })
     }
-
-    // const flushStateColumn = () => {
-    //     axios.patch(address + "/api/v1_0/flush_state")
-    //         .then(() => {setNotificationColumnErrorText("")}) // setRedBackground(false)})
-    //         .catch(e => setNotificationErrorText(e.response.detail[0].msg))
-    // }
-
-    // const flushPintsetError = () => {
-    //     axios.patch(address + "/api/v1_0/flush_pintset")
-    //         .then(res => {
-    //             if (res.status === 200) {
-    //                 setReturnNotificationText(notificationText);
-    //                 setNotificationText("Ошибка с пинцета успешно сброшена");
-    //                 setNotificationPintsetErrorText("");
-    //                 // setRedBackground(false);
-    //                 setTimeout(() => returnNotification(), 2000);
-    //             }
-    //         })
-    //         .catch(res => setNotificationErrorText(res.response.detail[0].msg))
-    // }
-
-    const createIncompleteCube = () => {
+  const createIncompleteCube = () => {
         axios.put(address + "/api/v1_0/cube_finish_manual/?qr=" + inputQrCubeRef.current.value.replace("/", "%2F"))
             .then(() => {
                 setReturnNotificationText(notificationText);
@@ -539,48 +495,8 @@ function Main() {
                     }}
                     />
 
-                    {/* <TextField
-                        placeholder="QR для замены"
-                        onChange={async e => {
-                            setValueQrToChangePack(e.target.value);
-                        }}
-                        onKeyPress={async e => {
-                                if (e.charCode === 13) {
-                                    let req = axios.get(address + "/api/v1_0/not_shipped_pack/?qr=" + valueQrToChangePack);
-                                    let awaited = await req;
-                                    
-                                    if (awaited.data.id) {
-                                        console.log("123")
-                                    }
-                                }
-                            }
-                        }
-                        value={valueQrToChangePack}
-                        outlined
-                        forceFocus
-                        autoFocus
-                    />
-
-                    <TextField
-                        placeholder="QR новой"
-                        onChange={async e => {
-                            setValueQrToChangeNewPack(e.target.value);
-                        }}
-                        onKeyPress={async e => {
-                                if (e.charCode === 13) {
-                                    axios.patch(address + "/api/v1_0/packs/" +  valueQrToChangePack, {"qr": valueQrToChangeNewPack})
-                                        
-                                    }
-                            }
-                        }
-                        value={valueQrToChangePack}
-                        outlined
-                        forceFocus
-                        autoFocus
-                    /> */}
-                </ModalWindow>
+               </ModalWindow>
             }
-
             {modalAgree && 
                 <ModalWindow
                     title="Подтвердите действие"
@@ -629,34 +545,7 @@ function Main() {
                             }
                         }}
                     />
-
-                    {/* <TextField
-                        placeholder="QR..."
-                        onChange={async e => {
-                            setValueQrToDisassemble(e.target.value);
-                        }}
-                        onKeyPress={async e => {
-                                if (e.charCode === 13) {
-                                    let req = axios.get(address + "/api/v1_0/cubes/?qr=" + valueQrToDisassemble);
-                                    let awaited = await req;
-                                    
-                                    console.log(awaited);
-
-                                    if (awaited.data.id) {
-                                        setModalDisassemble(false);
-                                        setModalAgree(awaited.data.id);
-                                    }
-                                }
-                            }
-                        }
-                        value={valueQrToDisassemble}
-                        outlined
-                        forceFocus
-                        autoFocus
-
-                        
-                    /> */}
-                </ModalWindow>
+               </ModalWindow>
             }
 
             {modalDelete2Pallet && 
@@ -720,37 +609,7 @@ function Main() {
                                     .catch(e => setNotificationErrorText(e.response.data.detail))
                             }
                         }}
-                    />
-
-                    {/* <TextField
-                        placeholder="QR..."
-                        onChange={async e => {
-                            setValueQrModalPackingTable(e.target.value);
-                        }}
-                        onKeyPress={e => {
-                                if (e.charCode === 13) {
-                                    axios.patch(address + "/api/v1_0/flush_packing_table_with_identify?qr=" + valueQrModalPackingTable)
-                                        .then(() => {
-                                            setModalPackingTableError(false);
-                                            setRedBackground(false);
-                                            setValueQrModalPackingTable("");
-                                            setReturnNotificationText(notificationText);
-                                            setNotificationText("Успешно идентифицировано");
-                                            setTimeout(returnNotification, 2000);
-                                        })
-                                        .catch(e => setNotificationErrorText(e.response.data.detail[0].msg))
-                                }
-                            }
-                        }
-                        hidden={false}
-                        value={valueQrModalPackingTable}
-                        outlined
-                        forceFocus
-                        autoFocus
-
-                        
-                    /> */}
-                </ModalWindow>
+                    />                </ModalWindow>
             }
 
             {modalDeletion && (
@@ -790,16 +649,7 @@ function Main() {
                                 id={"inputQrCube"}
                                 ref={inputQrCubeRef}
                             />
-                            {/* <TextField
-                                placeholder="QR..."
-                                onChange={async e => {
-                                    setinputQrCubeRef.current.value(e.target.value);
-                                }}
-                                value={inputQrCubeRef.current.value}
-                                outlined
-                                forceFocus
-                                autoFocus
-                            /> */}
+                           
                         </div>
                         <div style={{ display: "flex", gap: "2rem" }}>
                             <Button onClick={() => {
