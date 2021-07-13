@@ -686,8 +686,8 @@ function Main() {
 
         return () => {clearInterval(interval)};
     }, [forceFocus])
-
-    if (page === "batch_params") {
+    
+     if (page === "batch_params") {
         history.push('/batch_params')
     } else if (page === "create") {
         history.push('/create')
@@ -1101,7 +1101,57 @@ function Main() {
                     <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
                     <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
                 </div>
+                {/*<div className={classes.header__buttonList}>*/}
                 <div className={classes.headerCenter}>
+                        <button
+                           onClick={() => { setPage("batch_params") }}
+                        >Новая партия</button>
+                        <button                           
+                            onClick={() => {
+                                setModalDisassemble(true);
+                                setForceFocus("inputDisassemble");
+                            }}
+                        >Разобрать куб по его QR</button>
+                        <button
+                            onClick={() => { setModalCube([createIncompleteCube]); setForceFocus("inputQrCube") }}
+                        >Сформировать неполный куб</button>
+
+                        <button
+                            
+                            onClick={() => {
+                                setModalDelete2Pallet(true);
+                            }}
+                        >Удалить паллет(ы) для перезагрузки обмотчика</button>
+
+                        <button
+                            
+                            onClick={() => { setModalChangePack(true); setForceFocus("inputChangePackOld") }}
+                        >Заменить пачку на упаковке</button>
+
+                        <button
+                            
+                            onClick={() => setPage("create")}
+                        >Новый куб</button>
+                    </div>
+
+                    <InputTextQr
+                        id="inputQr"
+                        placeholder="QR..."
+                        className={[classes.btn, classes.btn_border, classes.header__qr].join(' ')}
+                        setNotification={setNotificationText}
+                        setNotificationError={setNotificationErrorText}
+                        mode={mode}
+                        forceFocus={!modalCube && !modalPackingTableError}
+                        hidden={!extended}
+                        ref={inputQrRef}
+                    />
+                    <button
+                           
+                            onClick={() => setPage("main")}
+                        >Старый интерфейс</button>
+                </div>
+
+               {/*} <div className={classes.headerCenter}>
                     <Button onClick={() => {setPage("batch_params")}} >Новая партия</Button>
 
                     <Button onClick={() => {
@@ -1131,7 +1181,7 @@ function Main() {
                         ref={inputQrRef}
                     />
                      <Button onClick={() => setPage("/")}>Старый интерфейс</Button>
-                    </div>
+                </div>*/}
             </header>
 
             <main className={[classes.container, classes.main].join(" ")}>

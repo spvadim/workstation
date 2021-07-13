@@ -16,7 +16,7 @@ function BatchSelectComponent() {
       }
     }) 
     setItems(numbers)    
-    const numberslice = numbers.slice(-10)
+    const numberslice = numbers.slice(-2)
       
   }  
   getBatches();
