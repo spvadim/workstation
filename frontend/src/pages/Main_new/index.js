@@ -23,12 +23,7 @@ const useStyles = createUseStyles({
         height: "100%",
     },
      btn: {
-        marginRight: 12,
-        //padding: "14px 18px",
-        paddingLeft: 48,
-        paddingRight: 48,
-        paddingTop: 31,
-        paddingBottom: 70,
+        padding: "14px 18px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -147,17 +142,30 @@ const useStyles = createUseStyles({
         marginTop: -12,
         marginLeft: 12,
     },
+    /* marginRight: 12,
+        },
+        display: 'flex',
+        paddingLeft: 48,
+        paddingRight: 48,
+        paddingTop: 31,
+        paddingBottom: 70,
+    */
 
        header__button: {
         marginRight: 12,
-        marginTop: 12,
-        minHeight: 115,
-        flex: 1,
-        "&:last-child": {
+        display: 'flex',
+        paddingLeft: 48,
+        paddingRight: 48,
+        paddingTop: 31,
+        paddingBottom: 70,
+      /*  marginTop: 12,
+          minHeight: 115,
+          flex: 1,
+         "&:last-child": {
             marginRight: 0,
         },
         boxSizing: 'border-box',
-    },
+    },*/
 
     header__qr: {
         width: 177,
