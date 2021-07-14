@@ -9,7 +9,7 @@ function BatchSelectComponent() {
 
   useEffect(() => {
   async function getBatches() {
-    const response = await fetch("http://141.101.196.127/api/v1_0/batches");
+    const response = await fetch(address + "/api/v1_0/batches");
     console.log(response)
     const body = await response.json();
     console.log(body)
