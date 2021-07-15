@@ -348,8 +348,8 @@ function Create_mobile() {
             <div className={classes.body}>
                 <div className={classes.inputContainer}>
                     <span className={classes.title2}>Номер партии ГП:</span>
-                    {/*<TextField className={classes.textInput} placeholder="0000" onChange={e => setBatchNumber(e.target.value)}></TextField>*/}
-                    <BatchSelectComponent/>
+               <TextField className={classes.textInput} placeholder="0000" onChange={e => setBatchNumber(e.target.value)}></TextField>
+               
                 </div>
 
                 <div className={classes.inputContainer}>
