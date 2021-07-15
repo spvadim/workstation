@@ -12,7 +12,6 @@ import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
-import BatchSelectComponent from '../../components/BatchSelectComponent';
 
 
 const useStyles = createUseStyles({
