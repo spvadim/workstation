@@ -403,6 +403,8 @@ function Main() {
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
     const [modalDesync, setModalDesync] = useState(false);
     const [modalAddPack, setModalAddPack] = useState(false);
+    const [modalDeletion, setModalDeletion] = useState(false);
+    const [modalError, setModalError] = useState(false);
 
     const [forceFocus, setForceFocus] = useState("inputQr");
     const [notificationText, setNotificationText] = useState("");
@@ -651,7 +653,8 @@ function Main() {
                 else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}
                 else {setModalDesync("")}
 
-                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);
+                // if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);
+                if (temp.sync_state !== "error") setRedBackground(false);
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
@@ -1071,13 +1074,42 @@ function Main() {
             </ModalWindow>
             }
 
+            {modalDeletion && (
+                <ModalWindow
+                    title="Удаление объекта"
+                    description="Информация про данную упаковку и составляющие будет удалена из системы. Пачку(и) нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
+                >
+                    <Button onClick={() => {
+                        setModalDeletion(false);
+                        modalDeletion[0](modalDeletion[1])
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Удалить
+                    </Button>
+                    <Button onClick={() => setModalDeletion(false)} theme="secondary">
+                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        Отмена
+                    </Button>
+                </ModalWindow>
+            )}
+            {modalError && (
+                <ModalWindow
+                    title="Ошибка"
+                    description="Вы используете QR вне куба. Пожалуйста перейдите в куб для редактирования."
+                >
+                    <Button onClick={() => setModalError(false)}>Сбросить ошибку</Button>
+                </ModalWindow>
+            )}
+
 
 
 			<header className={classes.header}>
                 <div className={classes.notificationPanel}>
                     { events.map(event => {
-                        return <Notification_new key={event.id} text={event.message}
-                                                 onClose={() => closeProcessEvent(event.id)}
+                        return <Notification_new
+                            key={event.id}
+                            text={event.message}
+                            onClose={() => closeProcessEvent(event.id)}
                         />
                     })
                     }
@@ -1165,7 +1197,10 @@ function Main() {
                         <span className={classes.tableTitle}>Очередь кубов</span>
                         <TableAddress
                             columns={tableProps(extended).columns}
-                            setModal={() => {return}}
+                            setNotification={n => setNotificationText(n)}
+                            notification={notificationText}
+                            setError={() => setModalError(true)}
+                            setModal={setModalDeletion}
                             type="cubes"
                             extended={extended}
                             address="/api/v1_0/cubes_queue"
@@ -1331,12 +1366,30 @@ function Main() {
                         )]
                 }
                 errors={
-                    notificationErrorText && (
+                    [notificationErrorText && (
                         <Notification
                             error
                             description={notificationErrorText}
                         />
-                    )
+                    ),
+                        notificationColumnErrorText && (
+                            <Notification
+                                error
+                                description={notificationColumnErrorText}
+                            />
+                        ),
+                        notificationDesyncErrorText && (
+                            <Notification
+                                error
+                                description={notificationDesyncErrorText}
+                            />
+                        ),
+                        notificationPintsetErrorText && (
+                            <Notification
+                                error
+                                description={notificationPintsetErrorText}
+                            />
+                        )]
                 }
             />
 
