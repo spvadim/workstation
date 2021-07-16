@@ -1125,10 +1125,10 @@ function Main() {
                             <h3 className={classes.header__infoItemName}>Партия №:</h3>
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
                         </li>
-                        <li className={classes.header__infoItem}>
+                       {/* <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Дата</h3>
-                            <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_date.toLocaleDateString()}</strong></p>
-                        </li>
+                            <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_date}</strong></p>
+                         </li>*/}
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Куб:</h3>
                             <p className={classes.header__infoItemDesc}>
