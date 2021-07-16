@@ -1126,6 +1126,10 @@ function Main() {
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
                         </li>
                         <li className={classes.header__infoItem}>
+                            <h3 className={classes.header__infoItemName}>Дата</h3>
+                            <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_date.toLocaleDateString()}</strong></p>
+                        </li>
+                        <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Куб:</h3>
                             <p className={classes.header__infoItemDesc}>
                                 <strong>{settings && settings.params.multipacks}</strong>&#32;мультипака
