@@ -3,7 +3,6 @@ from loguru import logger
 
 from ..models.system_settings.pintset_settings import PintsetSettings
 
-plc = snap7.client.Client()
 
 wdiot_logger = logger.bind(name="wdiot")
 
@@ -11,6 +10,7 @@ wdiot_logger = logger.bind(name="wdiot")
 def off_pintset(settings: PintsetSettings) -> bool:
     wdiot_logger.info("Выключение пинцета")
     try:
+        plc = snap7.client.Client()
         ip = settings.pintset_ip.value
         wdiot_logger.info(f"Ip: {ip}")
         rack = settings.pintset_rack.value
@@ -58,6 +58,7 @@ def off_pintset(settings: PintsetSettings) -> bool:
 def on_pintset(settings: PintsetSettings) -> bool:
     wdiot_logger.info("Включение пинцета")
     try:
+        plc = snap7.client.Client()
         ip = settings.pintset_ip.value
         wdiot_logger.info(f"Ip: {ip}")
         rack = settings.pintset_rack.value
