@@ -1133,8 +1133,8 @@ function Main() {
                     {events.length > 1 ? <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button> : null}
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
                 </div>
-
-                <div className={[classes.container, classes.header__container].join(' ')}>
+                
+                {/*<div className={[classes.container, classes.header__container].join(' ')}>*/}
                 <div className={classes.headerInfo}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
                     <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
@@ -1168,6 +1168,7 @@ function Main() {
                             </p>
                         </li>
                 </ul>*/}
+                 <div className={[classes.container, classes.header__container].join(' ')}>
                     <div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}
