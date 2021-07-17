@@ -17,7 +17,7 @@ import  {HeaderInfo} from './HeaderInfo';
 
 const useStyles = createUseStyles({
 	container: {
-        maxWidth: 1900,
+       // maxWidth: 1900,
         // margin: "0 auto",
         padding: "0 36px",
         height: "100%",
@@ -1117,9 +1117,6 @@ function Main() {
                     <Button onClick={() => setModalError(false)}>Сбросить ошибку</Button>
                 </ModalWindow>
             )}
-
-
-
 			<header className={classes.header}>
                 <div className={classes.notificationPanel}>
                     { events.map(event => {
@@ -1132,9 +1129,8 @@ function Main() {
                     }
                     {events.length > 1 ? <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button> : null}
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
-                </div>
-                
-                {/*<div className={[classes.container, classes.header__container].join(' ')}>*/}
+                </div>                
+                <div className={[classes.container, classes.header__container].join(' ')}>
                 <div className={classes.headerInfo}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
                     <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
@@ -1167,8 +1163,7 @@ function Main() {
                                 <strong>{settings && settings.params.multipacks_after_pintset}</strong>&#32;мультипак
                             </p>
                         </li>
-                </ul>*/}
-                 <div className={[classes.container, classes.header__container].join(' ')}>
+                </ul>*/}                 
                     <div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}
