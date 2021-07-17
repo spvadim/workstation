@@ -1131,7 +1131,7 @@ function Main() {
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
                 </div>                
                 <div className={[classes.container, classes.header__container].join(' ')}>
-                <div className={classes.headerInfo}>
+                <div className={classes.header__info}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
                     <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
                     <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
