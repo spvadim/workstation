@@ -13,7 +13,7 @@ import { Button, NotificationPanel, Switch } from "src/components";
 import {Notification} from '../../components/Notification';
 import InputTextQr from '../../components/InputText/InputTextQr';
 import {Notification_new} from '../../components/Notification_new';
-import  HeaderInfo from './HeaderInfo';
+import  {HeaderInfo} from './HeaderInfo';
 
 const useStyles = createUseStyles({
 	container: {
