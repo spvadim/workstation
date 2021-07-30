@@ -664,8 +664,8 @@ function Main() {
                 else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg)} // setRedBackground(true)}
                 if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("")
                 else {setModalWithdrawal(temp.pintset_withdrawal_error_msg)} // setRedBackground(true)}
-                if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg)} // setRedBackground(true)}
-                else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}
+                if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg); setRedBackground(true)} //
+                else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}    
                 else {setModalDesync("")}
 
                 // if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);
