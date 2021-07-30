@@ -805,7 +805,12 @@ function Main() {
                         <Notification
                             error
                             description={notificationDesyncErrorText}
-                        />
+                        ><Button onClick={() => {
+                            axios.patch(address + "/api/v1_0/flush_sync")
+                                .then(() => {
+                                    setNotificationDesyncErrorText("");
+                                })
+                        }}>Сбросить ошибку</Button>  </Notification>
                     ),
                     notificationPintsetErrorText && (
                         <Notification
