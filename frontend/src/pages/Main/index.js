@@ -810,7 +810,7 @@ function Main() {
                                 .then(() => {
                                     setNotificationDesyncErrorText("");
                                 })
-                        }}>Сбросить ошибку</Button>  </Notification>
+                        }}>Сбросить ошибку</Button></Notification>
                     ),
                     notificationPintsetErrorText && (
                         <Notification
