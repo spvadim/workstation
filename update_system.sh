@@ -18,6 +18,16 @@ echo "Delete all not needed docker objects"
 sudo docker system prune --force
 read -p "Than restarting docker containers. Press Enter to continue"
 echo "Restarting"
-sudo docker-compose down && sudo COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up -d
+sudo docker-compose down
+
+# rename all logs to start new one
+tmp_env=$(date +%FT%H-%M-%S)
+mv deep_logs.log deep_logs.$tmp_env.log
+mv email_logs.log email_logs.$tmp_env.log
+mv erd_logs.log erd_logs.$tmp_env.log
+mv tg_logs.log tg_logs.$tmp_env.log
+mv wdiot_logs.log wdiot_logs.$tmp_env.log
+
+sudo COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up -d
 echo "Running migrations"
 sudo docker-compose run --entrypoint /migrate.sh --rm docker-fastapi
