@@ -338,6 +338,20 @@ const useStyles = createUseStyles({
         alignItems: 'center',
     },
 
+    bigViewBtn: {
+        position: 'absolute',
+        top: 10,
+        left: '40%',
+        paddingLeft: 40,
+        paddingRight: 40,
+        borderRadius: 0,
+        backgroundColor: 'rgba(255,255,255,0)',
+
+        "&:hover": {
+            backgroundColor: "rgba(150,150,150,.3)",
+        },
+    },
+
     footer: {
         position: 'absolute',
         width: '100%',
@@ -391,6 +405,7 @@ function Main() {
     const [settings, setSettings] = useState(false);
     const [page, setPage] = useState('');
     const [batchSettings, setBatchSettings] = useState({});
+    const [multipacksAmount, setMultipacksAmount] = useState(0);
     const [modalAgree, setModalAgree] = useState(false);
     const [modalDisassemble, setModalDisassemble] = useState(false);
     const [modalCube, setModalCube] = useState(false);
@@ -406,6 +421,9 @@ function Main() {
     const [modalAddPack, setModalAddPack] = useState(false);
     const [modalDeletion, setModalDeletion] = useState(false);
     const [modalError, setModalError] = useState(false);
+
+    const [btnPintsetFinish, setBtnPintsetFinish] = useState(false);
+    const [btnCubeFinishAuto, setBtnCubeFinishAuto] = useState(false);
 
     const [forceFocus, setForceFocus] = useState("inputQr");
     const [notificationText, setNotificationText] = useState("");
@@ -545,14 +563,29 @@ function Main() {
             .then(res => {
                 setBatchSettings({
                     batchNumber: res.data.number.batch_number,
-                    batchDate: res.data.number.batch_date.split("T")[0].split("-").reverse(), 
+                    batchDate: res.data.number.batch_date.split("T")[0].split("-").reverse(),
                     multipacks: res.data.params.multipacks,
                     packs: res.data.params.packs,
                     multipacksAfterPintset: res.data.params.multipacks_after_pintset,
                 })
             })
-            
+
         }, [setBatchSettings])
+
+    useEffect(() => {
+        const request = () => {
+            let request = axios.get(address + "/api/v1_0/packing_table_records")
+            request.then(res => {
+                setMultipacksAmount(res.data.multipacks_amount);
+            })
+        };
+
+        request();
+        let timer = setInterval(() => {
+            request();
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [setMultipacksAmount])
 
     useEffect(() => {
         const request = () => {
@@ -574,25 +607,27 @@ function Main() {
         async function getPacks() {
             let response = await axios.get(address + "/api/v1_0/packs_queue")
             setPacks(sortPacks(response.data));
+            setBtnPintsetFinish(settings && (response.data.length >= (settings.params.packs * settings.params.multipacks_after_pintset)))
         }
 
         getPacks();
 
         const interval = setInterval(getPacks, 1000);
         return () => clearInterval(interval);
-    }, [setPacks]);
+    }, [setPacks, setBtnPintsetFinish, settings]);
 
     useEffect(() => {
         async function getPallets() {
             let response = await axios.get(address + "/api/v1_0/multipacks_queue")
             setPallets(await sortPallets(response.data));
+            setBtnCubeFinishAuto(settings && multipacksAmount === settings.params.multipacks && response.data.length >= settings.params.multipacks);
         }
 
         getPallets();
 
         const interval = setInterval(getPallets, 1000);
         return () => clearInterval(interval);
-    }, [setPallets, settings]);
+    }, [setPallets, settings, multipacksAmount, setBtnCubeFinishAuto]);
 
     useEffect(() => {
         async function getSettings() {
@@ -665,7 +700,7 @@ function Main() {
                 if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("")
                 else {setModalWithdrawal(temp.pintset_withdrawal_error_msg)} // setRedBackground(true)}
                 if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg); setRedBackground(true)} //
-                else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}    
+                else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}
                 else {setModalDesync("")}
 
                 // if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);
@@ -1129,7 +1164,7 @@ function Main() {
                     }
                     {events.length > 1 ? <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button> : null}
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
-                </div>                
+                </div>
                 <div className={[classes.container, classes.header__container].join(' ')}>
                 <div className={classes.header__info}>
                     <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
@@ -1163,7 +1198,7 @@ function Main() {
                                 <strong>{settings && settings.params.multipacks_after_pintset}</strong>&#32;мультипак
                             </p>
                         </li>
-                </ul>*/}                 
+                </ul>*/}
                     <div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}
@@ -1282,6 +1317,22 @@ function Main() {
                             onAdd={() => { addPack("под пинцетом") }}
                             bigView
                         />}
+
+                        {/* Кнопки */}
+                        {bigViewMode === bigViewModes.pintset && btnPintsetFinish && <button
+                            className={[classes.btn, classes.bigViewBtn].join(' ')}
+                            onClick={() => {
+                                axios.put(address + '/api/v1_0/pintset_finish')
+                                    .catch(e => {console.log(e)})
+                            }}
+                        >Собрать паллеты -></button>}
+                        {bigViewMode === bigViewModes.onPackingTable && btnCubeFinishAuto && <button
+                            className={[classes.btn, classes.bigViewBtn].join(' ')}
+                            onClick={() => {
+                                axios.put(address + '/api/v1_0/cube_finish_auto')
+                                    .catch(e => {console.log(e)})
+                            }}
+                        >Собрать куб</button>}
                     </div>
 
                     <ul className={classes.variants__list}>
@@ -1416,8 +1467,8 @@ function Main() {
                                         setNotificationDesyncErrorText("");
                                     })
                             }}>Сбросить ошибку</Button></Notification>
-                        ),   
-                      
+                        ),
+
 
                         notificationPintsetErrorText && (
                             <Notification
