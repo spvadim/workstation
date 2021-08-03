@@ -89,6 +89,13 @@ class CheckCubeQr(EmbeddedModel):
     value_type: str = "bool"
 
 
+class DeleteNonEmptyPacks(EmbeddedModel):
+    title: str = "Удаление не пустых пачек при превышении допустимого количества пачек во время подъема пинцета"
+    desc: str = "Выберите, удалять ли не пустые пачки"
+    value: bool = False
+    value_type: str = "bool"
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = "Общие настройки"
     advanced: bool = False
@@ -108,3 +115,4 @@ class GeneralSettings(EmbeddedModel):
     video_time_delta: VideoTimeDelta = VideoTimeDelta()
     camera_list: CameraList = CameraList()
     check_cube_qr: CheckCubeQr = CheckCubeQr()
+    delete_non_empty_packs: DeleteNonEmptyPacks = DeleteNonEmptyPacks()
