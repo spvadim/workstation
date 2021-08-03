@@ -241,6 +241,9 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     to_process = False
     packs_on_assembly_amount = await count_packs_on_assembly()
     packs_on_assembly_irl = await get_last_pintset_amount()
+
+    current_settings = await get_system_settings()
+
     if packs_on_assembly_irl != packs_on_assembly_amount:
         sync_error_msg += f"Рассинхрон физической ({packs_on_assembly_irl}) и логической ({packs_on_assembly_amount}) очереди пачек на сборке."
 
@@ -273,10 +276,15 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         ]
 
         if delta > 0:
-            packs_under_pintset, packs_to_delete = (
-                packs_under_pintset[:-delta],
-                packs_to_delete + packs_under_pintset[-delta:],
+            delete_non_empty_packs = (
+                current_settings.general_settings.delete_non_empty_packs.value
             )
+            if delete_non_empty_packs:
+
+                packs_under_pintset, packs_to_delete = (
+                    packs_under_pintset[:-delta],
+                    packs_to_delete + packs_under_pintset[-delta:],
+                )
 
         for pack in packs_to_delete:
 
@@ -295,7 +303,6 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         pack.to_process = to_process
         pack.status = PackStatus.ON_ASSEMBLY
 
-    current_settings = await get_system_settings()
     multiplier = current_settings.desync_settings.max_packs_on_assembly_multiplier.value
     max_packs_on_assembly = multiplier * multipacks_after_pintset
     if packs_on_assembly_amount + multipacks_after_pintset > max_packs_on_assembly:
