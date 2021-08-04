@@ -485,7 +485,8 @@ function Main() {
         }
 
         let countOnAssemble = 0;
-        let maxCountOnAssemble = 12;
+        let maxCountOnAssemble = settings ? settings.params.packs * settings.params.multipacks_after_pintset : 12;
+        // let maxCountOnAssemble = 12;
         array.forEach(item => {
             switch (item.status) {
                 case "под пинцетом":
@@ -1319,7 +1320,7 @@ function Main() {
                         />}
 
                         {/* Кнопки */}
-                        {bigViewMode === bigViewModes.pintset && btnPintsetFinish && <button
+                        {bigViewMode === bigViewModes.pallet && btnPintsetFinish && <button
                             className={[classes.btn, classes.bigViewBtn].join(' ')}
                             onClick={() => {
                                 axios.put(address + '/api/v1_0/pintset_finish')

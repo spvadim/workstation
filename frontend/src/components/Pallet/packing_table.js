@@ -31,7 +31,7 @@ function chunk(items, size) {
 
     items.forEach((item, i) => {
         group.push(item)
-        if ((i + 1) % 4 === 0) {
+        if ((i + 1) % size === 0) {
             result.push(group)
             group = []
         }
@@ -171,7 +171,7 @@ const PacksOnAssemble = React.memo(({extended, isShortPacks, packs, bigView = fa
     const width = bigView ? 1300 : 120
     const height = bigView ? 435 : 79
 
-    const packs2 = addEmptyItems(packs.slice(), 12)
+    const packs2 = addEmptyItems(packs.slice(), isShortPacks ? 12 : 6)
 
     const [selected, setSelected] = useState(false)
     const [control, setControl] = useState(null)
