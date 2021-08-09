@@ -4,10 +4,13 @@ from time import sleep
 from loguru import logger
 
 from ..db.db_utils import (
+    delete_packs_under_pintset,
     flush_packing_table,
+    flush_pintset,
     flush_state,
     get_current_state,
     packing_table_error,
+    pintset_error,
     pintset_withdrawal_error,
     set_column_red,
     set_column_yellow,
@@ -31,6 +34,8 @@ from .erd import (
     snmp_set_red_on,
     snmp_set_yellow_off,
     snmp_set_yellow_on,
+    snmp_third_erd_first_oid_off,
+    snmp_third_erd_first_oid_on,
 )
 from .pintset import off_pintset, on_pintset
 
@@ -148,6 +153,29 @@ def drop_pack_after_pintset(error_msg: str, pintset_settings: PintsetSettings):
         )
         wdiot_logger.info("Разморозил пинцет")
         on_pintset(pintset_settings)
+
+
+async def drop_pack_after_pintset_erd(
+    error_msg: str, pintset_settings: PintsetSettings
+):
+    wdiot_logger.info("Заморозил пинцет")
+    await snmp_third_erd_first_oid_on()
+
+    wdiot_logger.info("Взвел ошибку на пинцете")
+    await pintset_error(error_msg)
+
+    wdiot_logger.info("Удалил пачки под пинцетом")
+    await delete_packs_under_pintset()
+
+    delay = pintset_settings.pintset_curtain_opening_duration.value
+    await asyncio.sleep(delay)
+
+    state = await get_current_state()
+    if state.pintset_error_msg == error_msg:
+        wdiot_logger.info("Убираю ошибку на пинцете")
+        await flush_pintset()
+        wdiot_logger.info("Разморозил пинцет")
+        await snmp_third_erd_first_oid_off()
 
 
 async def turn_default_error(message: str):
