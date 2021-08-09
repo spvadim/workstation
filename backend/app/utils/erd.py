@@ -100,6 +100,52 @@ async def second_erd_snmp_get(key):
         return val.prettyPrint()
 
 
+async def third_erd_set_cmd(key, value, engine=SnmpEngine(), context=ContextData()):
+    current_settings = await get_system_settings()
+    erd_settings = current_settings.third_erd_settings
+    community_string = erd_settings.erd_community_string.value
+    port_snmp = erd_settings.erd_snmp_port.value
+    ip_address_host = erd_settings.erd_ip.value
+    return await setCmd(
+        engine,
+        CommunityData(community_string),
+        UdpTransportTarget((ip_address_host, port_snmp)),
+        context,
+        ObjectType(ObjectIdentity(key), value),
+    )
+
+
+# изменение состояния
+async def third_erd_snmp_set(key, value):
+    errorIndication, errorStatus, errorIndex, varBinds = await third_erd_set_cmd(
+        key, value
+    )
+    for name, val in varBinds:
+        return val.prettyPrint()
+
+
+async def third_erd_get_cmd(key, engine=SnmpEngine(), context=ContextData()):
+    current_settings = await get_system_settings()
+    erd_settings = current_settings.third_erd_settings
+    community_string = erd_settings.erd_community_string.value
+    port_snmp = erd_settings.erd_snmp_port.value
+    ip_address_host = erd_settings.erd_ip.value
+    return await getCmd(
+        engine,
+        CommunityData(community_string),
+        UdpTransportTarget((ip_address_host, port_snmp)),
+        context,
+        ObjectType(ObjectIdentity(key)),
+    )
+
+
+# получение состояния
+async def third_erd_snmp_get(key):
+    errorIndication, errorStatus, errorIndex, varBinds = await third_erd_get_cmd(key)
+    for name, val in varBinds:
+        return val.prettyPrint()
+
+
 async def snmp_set_yellow_on():
     erd_logger.info("Включение желтого цвета на колонне")
 
@@ -198,3 +244,21 @@ async def snmp_finish_ejector():
     second_oid = current_settings.second_erd_settings.erd_second_oid.value
     if second_oid:
         await second_erd_snmp_set(second_oid, off)
+
+
+async def snmp_third_erd_first_oid_on():
+    erd_logger.info("on signal on first oid")
+
+    current_settings = await get_system_settings()
+    first_oid = current_settings.third_erd_settings.erd_first_oid.value
+    if first_oid:
+        await third_erd_snmp_set(first_oid, on)
+
+
+async def snmp_third_erd_first_oid_off():
+    erd_logger.info("off signal on first oid")
+
+    current_settings = await get_system_settings()
+    first_oid = current_settings.third_erd_settings.erd_first_oid.value
+    if first_oid:
+        await third_erd_snmp_set(first_oid, off)

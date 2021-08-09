@@ -96,6 +96,13 @@ class DeleteNonEmptyPacks(EmbeddedModel):
     value_type: str = "bool"
 
 
+class UseSnap7(EmbeddedModel):
+    title: str = "Использование SNAP7"
+    desc: str = "Выберите, использовать ли snap7"
+    value: bool = True
+    value_type: str = "bool"
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = "Общие настройки"
     advanced: bool = False
@@ -116,3 +123,4 @@ class GeneralSettings(EmbeddedModel):
     camera_list: CameraList = CameraList()
     check_cube_qr: CheckCubeQr = CheckCubeQr()
     delete_non_empty_packs: DeleteNonEmptyPacks = DeleteNonEmptyPacks()
+    use_snap7: UseSnap7 = UseSnap7()

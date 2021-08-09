@@ -427,6 +427,14 @@ async def get_packs_under_pintset() -> List[Pack]:
     return packs_under_pintset
 
 
+async def delete_packs_under_pintset() -> List[Pack]:
+    packs_under_pintset = await get_packs_under_pintset()
+    for pack in packs_under_pintset:
+        await engine.delete(pack)
+
+    return packs_under_pintset
+
+
 async def count_packs_under_pintset() -> int:
     packs_under_pintset_amount = await engine.count(
         Pack, Pack.status == PackStatus.UNDER_PINTSET, Pack.in_queue == True

@@ -59,6 +59,7 @@ from ..models.pintset_record import PintsetRecord, PintsetRecordInput, PintsetRe
 from ..utils.background_tasks import (
     drop_pack,
     drop_pack_after_pintset,
+    drop_pack_after_pintset_erd,
     send_error_with_buzzer,
     send_warning_and_back_to_normal,
     turn_default_error,
@@ -200,9 +201,16 @@ async def new_pack_after_pintset(
     current_settings = await get_system_settings()
 
     if error_msg and current_settings.general_settings.pintset_stop.value:
-        background_tasks.add_task(
-            drop_pack_after_pintset, error_msg, current_settings.pintset_settings
-        )
+        if current_settings.general_settings.use_snap7.value:
+            background_tasks.add_task(
+                drop_pack_after_pintset, error_msg, current_settings.pintset_settings
+            )
+        else:
+            background_tasks.add_task(
+                drop_pack_after_pintset_erd,
+                error_msg,
+                current_settings.pintset_settings,
+            )
         return JSONResponse(status_code=400, content={"detail": error_msg})
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
