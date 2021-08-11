@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 from time import sleep
 
 from loguru import logger
@@ -223,7 +224,7 @@ async def flush_packing_table_error():
     return results[0]
 
 
-async def turn_sync_error(message: str):
+async def turn_sync_error(method_name: str, message: str):
     current_settings = await get_system_settings()
     tasks = []
     email_message = f"<br> {message}."
@@ -234,12 +235,23 @@ async def turn_sync_error(message: str):
         if current_settings.general_settings.sync_raise_damper.value:
             tasks.append(snmp_raise_damper())
 
-    tasks.append(send_email("Рассинхрон", email_message))
+    tasks.append(send_email(f"Рассинхрон в {method_name}", email_message))
     tasks.append(add_events("desync", message))
 
     results = await asyncio.gather(*tasks)
     wdiot_logger.error(message)
     return results[0]
+
+
+async def add_sync_error_to_bg_tasks(background_tasks, message: str):
+    method_name = inspect.stack()[1].function
+    background_tasks.add_task(turn_sync_error, method_name, message)
+
+
+async def add_send_email_to_bg_tasks(background_tasks, title: str, email_body: str):
+    method_name = inspect.stack()[1].function
+    title += f" в {method_name}"
+    background_tasks.add_task(send_email, title, email_body)
 
 
 async def turn_sync_fixing():
