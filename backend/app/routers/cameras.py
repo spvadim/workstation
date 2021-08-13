@@ -392,9 +392,11 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     current_time = await get_naive_datetime()
     to_process = False
     email_body = ""
+    current_settings = await get_system_settings()
 
     if delta < 0:
         packs_under_pintset = await get_packs_under_pintset()
+        subject = "Перевел пачки в сборку"
 
         while len(packs_under_pintset) >= multipacks_after_pintset and delta < 0:
 
@@ -410,9 +412,25 @@ async def pintset_finish(background_tasks: BackgroundTasks):
             delta = len(packs_on_assembly) - needed_packs
 
         if delta < 0:
-            error_msg = "Недостаточно пачек для формирования паллет"
-            await add_sync_error_to_bg_tasks(background_tasks, error_msg)
-            return JSONResponse(status_code=400, content={"detail": error_msg})
+            if (
+                delta >= -multipacks_after_pintset
+                and current_settings.general_settings.generate_packs_in_pintset_finish.value
+            ):
+                subject += " и сгенерировал пачки"
+                packs_under_pintset, gen_email_body = await generate_packs(
+                    abs(delta),
+                    batch.number,
+                    await get_naive_datetime(),
+                    wdiot_logger,
+                    to_process=True,
+                    result=packs_on_assembly,
+                )
+                email_body += gen_email_body
+
+            else:
+                error_msg = "Недостаточно пачек для формирования паллет"
+                await add_sync_error_to_bg_tasks(background_tasks, error_msg)
+                return JSONResponse(status_code=400, content={"detail": error_msg})
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
@@ -425,9 +443,7 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     await engine.save_all(packs_on_assembly)
 
     if email_body:
-        await add_send_email_to_bg_tasks(
-            background_tasks, "Перевел пачки в сборку", email_body
-        )
+        await add_send_email_to_bg_tasks(background_tasks, subject, email_body)
 
     new_multipacks = []
     for pack_ids in all_pack_ids:
@@ -437,8 +453,6 @@ async def pintset_finish(background_tasks: BackgroundTasks):
         multipack.to_process = to_process
         new_multipacks.append(multipack)
     await engine.save_all(new_multipacks)
-
-    current_settings = await get_system_settings()
 
     multiplier = (
         current_settings.desync_settings.max_multipacks_exited_pintset_multiplier.value
