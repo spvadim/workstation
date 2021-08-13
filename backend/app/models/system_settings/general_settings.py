@@ -103,6 +103,13 @@ class UseSnap7(EmbeddedModel):
     value_type: str = "bool"
 
 
+class GeneratePacksInPintsetFinish(EmbeddedModel):
+    title: str = "Генерировать пачки в pintset_finish"
+    desc: str = "Выберите, генерировать ли пачки в pintset finish"
+    value: bool = True
+    value_type: str = "bool"
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = "Общие настройки"
     advanced: bool = False
@@ -124,3 +131,6 @@ class GeneralSettings(EmbeddedModel):
     check_cube_qr: CheckCubeQr = CheckCubeQr()
     delete_non_empty_packs: DeleteNonEmptyPacks = DeleteNonEmptyPacks()
     use_snap7: UseSnap7 = UseSnap7()
+    generate_packs_in_pintset_finish: GeneratePacksInPintsetFinish = (
+        GeneratePacksInPintsetFinish()
+    )
