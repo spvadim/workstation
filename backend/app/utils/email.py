@@ -12,7 +12,7 @@ async def send_email(subject: str, body: str) -> bool:
     place_name = settings.location_settings.place_name.value
     mail_settings = settings.mail_settings
 
-    if not mail_settings.send_email:
+    if not mail_settings.send_email.value:
         return False
 
     conf = ConnectionConfig(
