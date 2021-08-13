@@ -9,6 +9,7 @@ email_logger = logger.bind(name="email")
 
 async def send_email(subject: str, body: str) -> bool:
     settings = await get_system_settings()
+    place_name = settings.location_settings.place_name.value
     mail_settings = settings.mail_settings
 
     if not mail_settings.send_email:
@@ -26,7 +27,7 @@ async def send_email(subject: str, body: str) -> bool:
     )
 
     message = MessageSchema(
-        subject=subject,
+        subject=f"{place_name} {subject}",
         recipients=[mail_settings.mail_to.value],
         body=body,
         subtype="html",
