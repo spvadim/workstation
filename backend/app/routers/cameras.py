@@ -246,7 +246,9 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     if mode.work_mode == "manual":
         raise HTTPException(400, detail="В данный момент используется ручной режим")
 
+    email_body = ""
     sync_error_msg = ""
+    overpacking = False
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
     packs_under_pintset = await get_packs_under_pintset()
@@ -276,7 +278,6 @@ async def pintset_receive(background_tasks: BackgroundTasks):
 
     if delta > 0:
         to_process = True
-        email_body = ""
         wdiot_logger.error("Расхождение, нужно проверить пачки")
 
         packs_to_delete = []
@@ -301,6 +302,9 @@ async def pintset_receive(background_tasks: BackgroundTasks):
                     packs_to_delete + packs_under_pintset[-delta:],
                 )
 
+            else:
+                overpacking = True
+
         for pack in packs_to_delete:
 
             await engine.delete(pack)
@@ -312,11 +316,22 @@ async def pintset_receive(background_tasks: BackgroundTasks):
             )
             wdiot_logger.info(msg)
             email_body += f"<br> {msg}"
-        await add_send_email_to_bg_tasks(background_tasks, "Удалены пачки", email_body)
+
+    if overpacking:
+        msg = f'Значение "Удалять не пустые пачки" ложное, поэтому перевел в сборку более {multipacks_after_pintset} пачек'
+        wdiot_logger.info(msg)
+        email_body += f"<br> {msg}"
 
     for pack in packs_under_pintset:
         pack.to_process = to_process
         pack.status = PackStatus.ON_ASSEMBLY
+        if overpacking:
+            msg = f"Перевел пачку с QR={pack.qr}, id={pack.id} в сборку"
+            wdiot_logger.info(msg)
+            email_body += f"<br> {msg}"
+
+    if email_body:
+        await add_send_email_to_bg_tasks(background_tasks, "Лишние пачки", email_body)
 
     multiplier = current_settings.desync_settings.max_packs_on_assembly_multiplier.value
     max_packs_on_assembly = multiplier * multipacks_after_pintset
