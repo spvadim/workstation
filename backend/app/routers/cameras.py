@@ -188,12 +188,16 @@ async def new_pack_after_pintset(
     error_msg = None
     if not pack.qr and not pack.barcode:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с которой не смогли считать ни одного кода!"
+        pack.qr = f'empty {current_datetime.strftime("%d.%m.%Y %H:%M")}'
+        pack.barcode = "0000000000000"
 
     elif not pack.qr:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с ШК={pack.barcode}, но QR не считался"
+        pack.qr = f'empty {current_datetime.strftime("%d.%m.%Y %H:%M")}'
 
     elif not pack.barcode:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался"
+        pack.barcode = "0000000000000"
 
     # elif not await check_qr_unique(Pack, pack.qr):
     #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
@@ -219,7 +223,8 @@ async def new_pack_after_pintset(
     pack.batch_number = batch.number
     pack.created_at = current_datetime
     ftp_url = None
-    if "empty" in pack.qr:
+    if pack.qr.startswith("empty"):
+        pack.to_process = True
         ftp_url = await form_url(pack.qr)
     await engine.save(PackInReport(**pack.dict(), ftp_url=ftp_url))
     await engine.save(pack)
@@ -241,7 +246,9 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     if mode.work_mode == "manual":
         raise HTTPException(400, detail="В данный момент используется ручной режим")
 
+    email_body = ""
     sync_error_msg = ""
+    overpacking = False
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
     packs_under_pintset = await get_packs_under_pintset()
@@ -271,13 +278,12 @@ async def pintset_receive(background_tasks: BackgroundTasks):
 
     if delta > 0:
         to_process = True
-        email_body = ""
         wdiot_logger.error("Расхождение, нужно проверить пачки")
 
         packs_to_delete = []
 
         for pack in packs_under_pintset:
-            if "empty" in pack.qr and delta > 0:
+            if pack.qr.startswith("empty") and delta > 0:
                 packs_to_delete.append(pack)
                 delta -= 1
 
@@ -296,6 +302,9 @@ async def pintset_receive(background_tasks: BackgroundTasks):
                     packs_to_delete + packs_under_pintset[-delta:],
                 )
 
+            else:
+                overpacking = True
+
         for pack in packs_to_delete:
 
             await engine.delete(pack)
@@ -307,11 +316,22 @@ async def pintset_receive(background_tasks: BackgroundTasks):
             )
             wdiot_logger.info(msg)
             email_body += f"<br> {msg}"
-        await add_send_email_to_bg_tasks(background_tasks, "Удалены пачки", email_body)
+
+    if overpacking:
+        msg = f'Значение "Удалять не пустые пачки" ложное, поэтому перевел в сборку более {multipacks_after_pintset} пачек'
+        wdiot_logger.info(msg)
+        email_body += f"<br> {msg}"
 
     for pack in packs_under_pintset:
         pack.to_process = to_process
         pack.status = PackStatus.ON_ASSEMBLY
+        if overpacking:
+            msg = f"Перевел пачку с QR={pack.qr}, id={pack.id} в сборку"
+            wdiot_logger.info(msg)
+            email_body += f"<br> {msg}"
+
+    if email_body:
+        await add_send_email_to_bg_tasks(background_tasks, "Лишние пачки", email_body)
 
     multiplier = current_settings.desync_settings.max_packs_on_assembly_multiplier.value
     max_packs_on_assembly = multiplier * multipacks_after_pintset
