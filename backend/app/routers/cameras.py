@@ -219,7 +219,8 @@ async def new_pack_after_pintset(
     pack.batch_number = batch.number
     pack.created_at = current_datetime
     ftp_url = None
-    if "empty" in pack.qr:
+    if pack.qr.startswith("empty"):
+        pack.to_process = True
         ftp_url = await form_url(pack.qr)
     await engine.save(PackInReport(**pack.dict(), ftp_url=ftp_url))
     await engine.save(pack)
@@ -277,7 +278,7 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         packs_to_delete = []
 
         for pack in packs_under_pintset:
-            if "empty" in pack.qr and delta > 0:
+            if pack.qr.startswith("empty") and delta > 0:
                 packs_to_delete.append(pack)
                 delta -= 1
 
