@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from 'axios';
 import address from "../../address.js";
 import { createUseStyles } from "react-jss";
@@ -11,6 +11,8 @@ import { Button, NotificationPanel, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 import imgHint from "src/assets/images/hint.png";
+
+import Settings from "./settings.tsx";
 
 const useStyles = createUseStyles({
     tableContainer: {
@@ -108,12 +110,14 @@ function Admin() {
     const [newPacks, setNewPacks] = useState(false);
     const [newMultipacks, setNewMultipacks] = useState(false);
     const [newPalletAfterPintset, setNewPalletAfterPintset] = useState(false); 
-    const [settings, setSettings] = useState({});
+    const [settings, setSettings] = useState<Settings>({});
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [editSettings, setEditSettings] = useState({});
     const [choosedSetting] = useState("");
 
+    console.log(Settings);
+    
     useEffect(() => {
         axios.get(address + "/api/v1_0/settings")
              .then(res => {
@@ -139,7 +143,8 @@ function Admin() {
         return Object.keys(settings).map((sKey) => {
             if (["id"].indexOf(sKey) !== -1) return null
 
-            let setting = settings[sKey]; 
+            let setting = settings[sKey];
+            console.log(settings);
             return (
                 <div key={setting.id}>
                     <span className={classes.title}>{setting.title}:</span>

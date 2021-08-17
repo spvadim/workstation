@@ -1,4 +1,3 @@
-import React from "react";
 import { Route } from "react-router-dom";
 import { createUseStyles } from 'react-jss';
 import { Footer } from 'src/components'
@@ -8,7 +7,7 @@ import Main_new from './pages/Main_new/index.js';
 import Edit from './pages/Edit/index.js';
 import Create from './pages/Create/index.js';
 import Create_mobile from './pages/Create/mobile.js';
-import Admin from './pages/Admin/index.js';
+import Admin from './pages/Admin/index.tsx';
 import Events from './pages/Events/index.js';
 import QrScanner from './pages/QrScanner/index.js';
 import imgBackground from 'src/assets/images/background.svg';
