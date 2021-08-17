@@ -188,12 +188,16 @@ async def new_pack_after_pintset(
     error_msg = None
     if not pack.qr and not pack.barcode:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с которой не смогли считать ни одного кода!"
+        pack.qr = f'empty {current_datetime.strftime("%d.%m.%Y %H:%M")}'
+        pack.barcode = "0000000000000"
 
     elif not pack.qr:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с ШК={pack.barcode}, но QR не считался"
+        pack.qr = f'empty {current_datetime.strftime("%d.%m.%Y %H:%M")}'
 
     elif not pack.barcode:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался"
+        pack.barcode = "0000000000000"
 
     # elif not await check_qr_unique(Pack, pack.qr):
     #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
