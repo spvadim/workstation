@@ -1,113 +1,111 @@
 import { float } from "@zxing/library/esm/customTypings";
 
-interface Setting<T> {
+export interface Setting {
     desc: string,
     title: string,
-    value: T,
+    value: string | number | boolean | number[] | float,
     value_type: "string" | "integer" | "bool" | "list" | "float"
 }
 
-interface Settings {
+export interface Settings {
     id: string,
     general_settings: {
         title: string,
         advanced: boolean,
-        pintset_stop: Setting<boolean>,
-        sync_request: Setting<boolean>,
-        sync_raise_damper: Setting<boolean>,
-        send_applikator_tg_message: Setting<boolean>,
-        report_max_days: Setting<number>,
-        report_max_cubes: Setting<number>,
-        applikator_curtain_opening_delay: Setting<number>,
-        applikator_curtain_opening_delay_bad_height: Setting<number>,
-        applikator_curtain_opening_delay_bad_label: Setting<number>,
-        applikator_curtain_opening_delay_bad_packing: Setting<number>,
-        camera_counter_curtain_opening_delay: Setting<number>,
-        dropping_mechanism_opening_delay: Setting<number>,
-        ftp_url: Setting<string>,
-        video_time_delta: Setting<number>,
-        camera_list: Setting<number[]>,
-        check_cube_qr: Setting<boolean>,
-        delete_non_empty_packs: Setting<boolean>
+        pintset_stop: Setting,
+        sync_request: Setting,
+        sync_raise_damper: Setting,
+        send_applikator_tg_message: Setting,
+        report_max_days: Setting,
+        report_max_cubes: Setting,
+        applikator_curtain_opening_delay: Setting,
+        applikator_curtain_opening_delay_bad_height: Setting,
+        applikator_curtain_opening_delay_bad_label: Setting,
+        applikator_curtain_opening_delay_bad_packing: Setting,
+        camera_counter_curtain_opening_delay: Setting,
+        dropping_mechanism_opening_delay: Setting,
+        ftp_url: Setting,
+        video_time_delta: Setting,
+        camera_list: Setting,
+        check_cube_qr: Setting,
+        delete_non_empty_packs: Setting
     },
     location_settings: {
         title: string,
         advanced: boolean,
-        place_name: Setting<string>,
-        time_zone: Setting<number>
+        place_name: Setting,
+        time_zone: Setting
     },
     erd_settings: {
         title: string,
         advanced: boolean,
-        erd_ip: Setting<string>,
-        erd_snmp_port: Setting<number>,
-        erd_community_string: Setting<string>,
-        erd_red_oid: Setting<string>,
-        erd_yellow_oid: Setting<string>,
-        erd_green_oid: Setting<string>,
-        erd_buzzer_oid: Setting<string>,
-        erd_fifth_oid: Setting<string>
+        erd_ip: Setting,
+        erd_snmp_port: Setting,
+        erd_community_string: Setting,
+        erd_red_oid: Setting,
+        erd_yellow_oid: Setting,
+        erd_green_oid: Setting,
+        erd_buzzer_oid: Setting,
+        erd_fifth_oid: Setting
     },
     second_erd_settings: {
         title: string,
         advanced: boolean,
-        erd_ip: Setting<string>,
-        erd_snmp_port: Setting<number>,
-        erd_community_string: Setting<string>,
-        erd_first_oid: Setting<string>,
-        erd_second_oid: Setting<string>,
-        erd_third_oid: Setting<string>,
-        erd_fourth_oid: Setting<string>,
-        erd_fifth_oid: Setting<string>,
-        delay_before_damper: Setting<float>,
-        delay_before_ejector: Setting<float>,
-        delay_after_ejector: Setting<float>
+        erd_ip: Setting,
+        erd_snmp_port: Setting,
+        erd_community_string: Setting,
+        erd_first_oid: Setting,
+        erd_second_oid: Setting,
+        erd_third_oid: Setting,
+        erd_fourth_oid: Setting,
+        erd_fifth_oid: Setting,
+        delay_before_damper: Setting,
+        delay_before_ejector: Setting,
+        delay_after_ejector: Setting
     },
     pintset_settings: {
         title: string,
         advanced: boolean,
-        pintset_ip: Setting<string>,
-        pintset_rack: Setting<number>,
-        pintset_slot: Setting<number>,
-        pintset_db_name: Setting<number>,
-        pintset_starting_byte: Setting<number>,
-        pintset_reading_length: Setting<number>,
-        pintset_byte_number: Setting<number>,
-        pintset_bit_number: Setting<number>,
-        pintset_turning_off_value: Setting<boolean>,
-        pintset_turning_on_value: Setting<boolean>,
-        pintset_curtain_opening_duration: Setting<number>
+        pintset_ip: Setting,
+        pintset_rack: Setting,
+        pintset_slot: Setting,
+        pintset_db_name: Setting,
+        pintset_starting_byte: Setting,
+        pintset_reading_length: Setting,
+        pintset_byte_number: Setting,
+        pintset_bit_number: Setting,
+        pintset_turning_off_value: Setting,
+        pintset_turning_on_value: Setting,
+        pintset_curtain_opening_duration: Setting
     },
     telegram_settings: {
         title: string,
         advanced: boolean,
-        tg_token: Setting<string>,
-        tg_chat: Setting<string>
+        tg_token: Setting,
+        tg_chat: Setting
     },
     mail_settings: {
         title: string,
         advanced: boolean,
-        send_email: Setting<boolean>,
-        use_credentials: Setting<boolean>,
-        mail_username: Setting<string>,
-        mail_password: Setting<string>,
-        mail_server: Setting<string>,
-        mail_port: Setting<number>,
-        mail_ssl: Setting<boolean>,
-        mail_tls: Setting<boolean>,
-        mail_from: Setting<string>,
-        mail_to: Setting<string>
+        send_email: Setting,
+        use_credentials: Setting,
+        mail_username: Setting,
+        mail_password: Setting,
+        mail_server: Setting,
+        mail_port: Setting,
+        mail_ssl: Setting,
+        mail_tls: Setting,
+        mail_from: Setting,
+        mail_to: Setting
     },
     desync_settings: {
         title: string,
         advanced: boolean,
-        max_packs_multiplier: Setting<number>,
-        max_packs_on_assembly_multiplier: Setting<number>,
-        max_multipacks_exited_pintset_multiplier: Setting<number>,
-        max_wrapping_multipacks: Setting<number>,
-        max_multipacks_entered_pitchfork_multiplier: Setting<number>,
-        max_multipacks_on_packing_table_multiplier: Setting<number>
+        max_packs_multiplier: Setting,
+        max_packs_on_assembly_multiplier: Setting,
+        max_multipacks_exited_pintset_multiplier: Setting,
+        max_wrapping_multipacks: Setting,
+        max_multipacks_entered_pitchfork_multiplier: Setting,
+        max_multipacks_on_packing_table_multiplier: Setting
     }
 }
-
-export default Settings;

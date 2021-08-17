@@ -12,7 +12,7 @@ import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 import imgHint from "src/assets/images/hint.png";
 
-import Settings from "./settings.tsx";
+import {Setting, Settings} from "./settings";
 
 const useStyles = createUseStyles({
     tableContainer: {
@@ -101,6 +101,44 @@ const rowDelete = (id) => {
     axios.delete(address + "/api/v1_0/batches_params/" + id)
 }
 
+const SettingsBlock = (settings: Settings) => {
+    let groups = Object.keys(settings).map((groupName) => {
+        let group = settings[groupName];
+        if (typeof group === "object"){
+            return <SettingsGroup {...group}/>
+        }
+    })
+
+    return (
+        <div key={settings.id}>
+            {groups}
+        </div>
+    )
+}
+
+const SettingsGroup = (group: any) => {
+    let options = Object.keys(group).map((optionName) => {
+        let option: Setting = group[optionName];
+        if (typeof option === "object"){
+            return <SettingsOption {...option}/>
+        }
+    })
+
+    return (
+        <div>
+            {options}
+        </div>
+    )
+}
+
+const SettingsOption = (option: Setting) => {
+    return (
+        <div>
+            {JSON.stringify(option)}
+        </div>
+    )
+}
+
 function Admin() {
     const classes = useStyles();
 
@@ -110,14 +148,12 @@ function Admin() {
     const [newPacks, setNewPacks] = useState(false);
     const [newMultipacks, setNewMultipacks] = useState(false);
     const [newPalletAfterPintset, setNewPalletAfterPintset] = useState(false); 
-    const [settings, setSettings] = useState<Settings>({});
+    const [settings, setSettings] = useState<Settings>();
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
     const [editSettings, setEditSettings] = useState({});
     const [choosedSetting] = useState("");
 
-    console.log(Settings);
-    
     useEffect(() => {
         axios.get(address + "/api/v1_0/settings")
              .then(res => {
@@ -140,11 +176,12 @@ function Admin() {
     }, []);
 
     const generateSettings = () => {
-        return Object.keys(settings).map((sKey) => {
-            if (["id"].indexOf(sKey) !== -1) return null
+        if (settings === undefined) return;
+        return <SettingsBlock {...settings}/>
+        
+            /*Object.keys(settings).map((sKey) => {
 
             let setting = settings[sKey];
-            console.log(settings);
             return (
                 <div key={setting.id}>
                     <span className={classes.title}>{setting.title}:</span>
@@ -189,8 +226,9 @@ function Admin() {
                         
                     }   
                 </div>
-            )
-        })
+                )
+            })
+        */
     }
 
 
