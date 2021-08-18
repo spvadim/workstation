@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import address from "../../address.js";
 import { createUseStyles } from "react-jss";
@@ -47,23 +47,6 @@ const useStyles = createUseStyles({
         alignItems: "center",
         border: "1px solid #A4A4A4",
         borderRadius: 7,
-    },
-    input: {
-        padding: "6px 5px",
-        borderRadius: 7,
-        width: "50%",
-        border: "1px solid #A4A4A4",
-        outline: "none",
-    },
-    title: {
-        fontSize: 18,
-        fontWeight: 600,
-    },
-    settingInner: {
-        paddingLeft: 15,
-        display: "flex",
-        flexDirection: "column",
-        gap: 5,
     },
     container: {
         display: "flex",
@@ -136,9 +119,44 @@ const SettingsGroup = (group: any) => {
 
 const SettingsOption = (option: Setting) => {
     return (
-        <div>
-            {JSON.stringify(option)}
+        <div className="row">
+            <span className="cell1" title={option.desc}>{option.title}:
+                <ToolTip text={option.desc} style={{marginLeft: 5}} />
+            </span>
+            {option.value_type === "bool" ? 
+                <SettingsOptionInputBool/>
+                : <SettingsOptionInputString/>}
         </div>
+    )
+}
+
+const SettingsOptionInputBool = (editSettings: Settings
+    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
+    return (
+        <select className="input"
+                onChange={(e) => {
+                    let temp = {};
+                    Object.assign(temp, editSettings);
+                    temp[groupName][optionName].value = e.target.value === "true"
+                    setEditSettings(temp);
+                }}>
+            <option selected={editSettings[groupName][optionName].value}>true</option>
+            <option selected={!editSettings[groupName][optionName].value}>false</option>
+        </select>
+    )
+}
+
+const SettingsOptionInputString = (editSettings: Settings
+    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
+    return (
+        <input className="input"
+        value={editSettings[sKey][key].value}
+        onChange={(e) => {
+            let temp = {};
+            Object.assign(temp, editSettings);
+            temp[sKey][key].value = temp[sKey][key].value_type === "integer" ? +e.target.value : e.target.value;
+            setEditSettings(temp);
+        }}/>
     )
 }
 
@@ -152,9 +170,9 @@ function Admin() {
     const [newMultipacks, setNewMultipacks] = useState(false);
     const [newPalletAfterPintset, setNewPalletAfterPintset] = useState(false); 
     const [settings, setSettings] = useState<Settings>();
+    const [editSettings, setEditSettings] = useState<Settings>();
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
-    const [editSettings, setEditSettings] = useState({});
     const [choosedSetting] = useState("");
 
     useEffect(() => {
@@ -181,59 +199,7 @@ function Admin() {
     const generateSettings = () => {
         if (settings === undefined) return;
         return <SettingsBlock {...settings}/>
-        
-            /*Object.keys(settings).map((sKey) => {
-
-            let setting = settings[sKey];
-            return (
-                <div key={setting.id}>
-                    <span className={classes.title}>{setting.title}:</span>
-                    {
-                        <div className={classes.settingInner}>
-                            {
-                                Object.keys(setting).map((key) => {
-                                    return (
-                                        ["title", "advanced"].indexOf(key) !== -1 ?
-                                            null :
-                                            (
-                                                <div className={classes.row}>
-                                                    
-                                                    <span className={classes.cell1} title={setting[key].desc}>{setting[key].title}:
-                                                        <ToolTip text={setting[key].desc} style={{marginLeft: 5}} />
-                                                    </span>
-                                                    {typeof (editSettings[sKey][key].value) === "boolean" ? 
-                                                        <select className={classes.input}
-                                                                onChange={(e) => {
-                                                                    let temp = {};
-                                                                    Object.assign(temp, editSettings);
-                                                                    temp[sKey][key].value = e.target.value === "true"
-                                                                    setEditSettings(temp);
-                                                                }}>
-                                                            <option selected={editSettings[sKey][key].value}>true</option>
-                                                            <option selected={!editSettings[sKey][key].value}>false</option>
-                                                        </select> :
-                                                        <input className={classes.input}
-                                                        value={editSettings[sKey][key].value}
-                                                        onChange={(e) => {
-                                                            let temp = {};
-                                                            Object.assign(temp, editSettings);
-                                                            temp[sKey][key].value = temp[sKey][key].value_type === "integer" ? +e.target.value : e.target.value;
-                                                            setEditSettings(temp);
-                                                        }} />} 
-                                                </div>
-                                            )
-                                    )
-                                })
-                            }
-                        </div>
-                        
-                    }   
-                </div>
-                )
-            })
-        */
     }
-
 
     return (
         <div style={{padding: 20}}>
@@ -305,7 +271,7 @@ function Admin() {
 
             <div className={classes.container}>
                 <div className={classes.settingsContainer}>
-                    {Object.keys(editSettings).length !== 0 && generateSettings()}
+                    {(editSettings !== undefined) && Object.keys(editSettings).length !== 0 && generateSettings()}
                     <div style={{display: "flex", alignItems: "center"}}>
                         <Button style={{width: "max-content", height: "max-content"}} onClick={() => {
                             axios.patch(address + "/api/v1_0/settings", editSettings)

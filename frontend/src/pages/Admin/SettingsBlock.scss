@@ -6,79 +6,79 @@ $imgHint: "../../assets/images/hint.png";
 }
 
 .container2 {
-    height: "100%";
-    position: "relative";
+    height: 100%;
+    position: relative;
 }
 
 .settings-container {
-    display: "flex";
-    flex-direction: "column";
-    gap: 5;
-    width: "50%";
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 50%;
 }
 
 .row {
-    display: "flex";
-    align-items: "center";
-    gap: 5;        
-    width: "100%";
-    position: "relative";
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    position: relative;
 }
 
 .cell1 {
-    min-width: "50%";
-    width: "50%";
-    padding: "5px 5px";
-    display: "flex";
-    justify-content: "space-between";
-    align-items: "center";
-    border: "1px solid #A4A4A4";
-    border-radius: 7;
+    min-width: 50%;
+    width: 50%;
+    padding: 5px 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #A4A4A4;
+    border-radius: 7px;
 }
 
 .input {
-    padding: "6px 5px";
-    border-radius: 7;
-    width: "50%";
-    border: "1px solid #A4A4A4";
-    outline: "none";
+    padding: 6px 5px;
+    border-radius: 7px;
+    width: 50%;
+    border: 1px solid #A4A4A4;
+    outline: none;
 }
 
 .title {
-    font-size: 18;
+    font-size: 18px;
     font-weight: 600;
 }
 
 .setting-inner {
-    padding-left: 15;
-    display: "flex";
-    flex-direction: "column";
-    gap: 5;
+    padding-left: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .container {
-    display: "flex";
-    justify-content: "space-between";
+    display: flex;
+    justify-content: space-between;
 }
 
 .hint-cell {
-    border-left-style: 'none !important';
-    height: 24;
-    width: 48;
+    border-left-style: none !important;
+    height: 24px;
+    width: 48px;
     background-image: url($imgHint);
-    background-repeat: 'no-repeat';
-    background-size: 21;
-    background-position: 'center';
-    cursor: 'pointer';
+    background-repeat: no-repeat;
+    background-size: 21px;
+    background-position: center;
+    cursor: pointer;
 }
 
 .full-description {
-    position: "fixed";
-    right: 50;
-    bottom: 50;
-    max-width: 300;
-    background-color: "white";
-    border-radius: 7;
-    padding: "10px";
+    position: fixed;
+    right: 50px;
+    bottom: 50px;
+    max-width: 300px;
+    background-color: white;
+    border-radius: 7px;
+    padding: 10px;
     padding-top: 0;
 }
