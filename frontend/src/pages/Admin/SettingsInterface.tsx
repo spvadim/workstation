@@ -1,9 +1,9 @@
-import { float } from "@zxing/library/esm/customTypings";
+import { float, int } from "@zxing/library/esm/customTypings";
 
 export interface Setting {
     desc: string,
     title: string,
-    value: string | number | boolean | number[] | float,
+    value: string | int | boolean | int[] | float,
     value_type: "string" | "integer" | "bool" | "list" | "float"
 }
 

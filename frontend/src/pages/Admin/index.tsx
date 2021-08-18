@@ -1,47 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import address from "../../address.js";
-import { createUseStyles } from "react-jss";
 
-import ToolTip from "../../components/ToolTip";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import Table from "../../components/Table/index.js";
 import { Notification } from "../../components/Notification/index.js";
 import { Button, NotificationPanel, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
-import imgHint from "src/assets/images/hint.png";
 
-import SettingsBlock from "./SettingsBlock";
 import "./SettingsBlock.scss";
+import SettingsBlock from "./SettingsBlock";
 import {Settings} from "./SettingsInterface";
-
-const useStyles = createUseStyles({
-    container2: {
-        height: "100%",
-        position: "relative",
-    },
-    cell1: {
-        minWidth: "50%",
-        width: "50%",
-        padding: "5px 5px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        border: "1px solid #A4A4A4",
-        borderRadius: 7,
-    },
-    hintCell: {
-        borderLeftStyle: 'none !important',
-        height: 24,
-        width: 48,
-        backgroundImage: `url(${imgHint})`,
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: 21,
-        backgroundPosition: 'center',
-        cursor: 'pointer',
-    }
-})
 
 const bathesParamsTableProps = [
     {name: "number", title: "№", width: 48},
@@ -55,8 +25,6 @@ const rowDelete = (id: string) => {
 }
 
 function Admin() {
-    const classes = useStyles();
-
     const [batchesParams, setBatchesParams] = useState([]);
 
     const [modalAddBatchParams, setModalAddBatchParams] = useState(false);
@@ -149,7 +117,7 @@ function Admin() {
                     }
                     
                 }}>
-                    <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                    <img src={imgOk} style={{ width: 25 }} />
                     Добавить
                 </Button>
                 <Button onClick={() => {
@@ -158,7 +126,7 @@ function Admin() {
                     setNewMultipacks("");
                     setModalAddBatchParams(false);
                 }} theme="secondary">
-                    <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                    <img src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
                     Отмена
                 </Button>
             </ModalWindow>}

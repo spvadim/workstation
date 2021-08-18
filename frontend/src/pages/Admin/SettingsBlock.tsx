@@ -1,5 +1,6 @@
 import { Setting, Settings } from "./SettingsInterface";
 import "./SettingsBlock.scss";
+import ToolTip from "src/components/ToolTip";
 
 const SettingsBlock = (settings: Settings, editSettings: Settings
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
