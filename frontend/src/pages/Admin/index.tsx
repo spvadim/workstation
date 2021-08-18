@@ -12,9 +12,9 @@ import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 import imgHint from "src/assets/images/hint.png";
 
+import SettingsBlock from "./SettingsBlock";
 import "./SettingsBlock.scss";
-
-import {Setting, Settings} from "./settings";
+import {Settings} from "./SettingsInterface";
 
 const useStyles = createUseStyles({
     container2: {
@@ -54,81 +54,6 @@ const rowDelete = (id: string) => {
     axios.delete(address + "/api/v1_0/batches_params/" + id)
 }
 
-const SettingsBlock = (settings: Settings) => {
-    let groups = Object.keys(settings).map((groupName) => {
-        let group = settings[groupName];
-        if (typeof group === "object")
-            return <SettingsGroup {...group}/>
-    })
-
-    return (
-        <div key={settings.id}>
-            {groups}
-        </div>
-    )
-}
-
-const SettingsGroup = (group: any) => {
-    let options = Object.keys(group).map((optionName) => {
-        let option: Setting = group[optionName];
-        if (typeof option === "object")
-            return <SettingsOption {...option}/>
-    })
-
-    return (
-        <div>
-            <span className="title">{group.title}:</span>
-            <div className="setting-inner">
-                {options}
-            </div>
-        </div>
-    )
-}
-
-const SettingsOption = (option: Setting) => {
-    return (
-        <div className="row">
-            <span className="cell1" title={option.desc}>{option.title}:
-                <ToolTip text={option.desc} style={{marginLeft: 5}} />
-            </span>
-            {option.value_type === "bool" ? 
-                <SettingsOptionInputBool/>
-    : <SettingsOptionInputString/>}
-        </div>
-    )
-}
-
-const SettingsOptionInputBool = (editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
-    return (
-        <select className="input"
-                onChange={(e) => {
-                    let temp = {};
-                    Object.assign(temp, editSettings);
-                    //temp[groupName][optionName].value = e.target.value === "true"
-                    setEditSettings(temp);
-                }}>
-            {//<option selected={editSettings[groupName][optionName].value}>true</option>
-            //<option selected={!editSettings[groupName][optionName].value}>false</option>
-    }
-        </select>
-    )
-}
-
-const SettingsOptionInputString = (editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
-    return (
-        <input className="input"
-        //value={editSettings[sKey][key].value}
-        onChange={(e) => {
-            let temp = {};
-            Object.assign(temp, editSettings);
-            //temp[sKey][key].value = temp[sKey][key].value_type === "integer" ? +e.target.value : e.target.value;
-            setEditSettings(temp);
-        }}/>
-    )
-}
-
 function Admin() {
     const classes = useStyles();
 
@@ -166,8 +91,8 @@ function Admin() {
     }, []);
 
     const generateSettings = () => {
-        if (settings === undefined) return;
-        return <SettingsBlock {...settings}/>
+        if (settings === undefined || editSettings === undefined) return;
+        return SettingsBlock(settings, editSettings, setEditSettings);
     }
 
     return (
