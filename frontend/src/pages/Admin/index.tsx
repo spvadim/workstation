@@ -9,9 +9,9 @@ import { Button, NotificationPanel, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
-import "./SettingsBlock.scss";
-import SettingsBlock from "./SettingsBlock";
-import {Settings} from "./SettingsInterface";
+import "./Settings/SettingsBlock.scss";
+import SettingsBlock from "./Settings/SettingsBlock";
+import {Settings} from "./Settings/SettingsInterface";
 
 const bathesParamsTableProps = [
     {name: "number", title: "№", width: 48},
@@ -58,8 +58,8 @@ function Admin() {
         return () => clearInterval(interval);
     }, []);
 
-    const generateSettings = () => {
-        if (settings === undefined || editSettings === undefined) return;
+    const generateSettings = (): JSX.Element => {
+        if (settings === undefined || editSettings === undefined) return <div/>;
         return SettingsBlock(settings, editSettings, setEditSettings);
     }
 

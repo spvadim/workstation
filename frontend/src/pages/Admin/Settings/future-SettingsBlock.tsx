@@ -1,42 +1,29 @@
-import { Setting, Settings } from "./SettingsInterface";
+import { Setting, SettingsGroup, Settings } from "./future-SettingsInterface";
 import "./SettingsBlock.scss";
 import ToolTip from "src/components/ToolTip";
 
 const SettingsBlock = (settings: Settings, editSettings: Settings
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
-    let groups = Object.keys(settings).map((groupName) => {
-        let group = settings[groupName];
-        if (typeof group === "object")
-            return SettingsGroup(group, groupName, editSettings, setEditSettings);
-    })
-
     return (
         <div key={settings.id}>
-            {groups}
+            {settings.groups.map((group) => SettingsGroup(group, editSettings, setEditSettings))}
         </div>
     )
 }
 
-const SettingsGroup = (group: any, groupName: string, editSettings: Settings
+const SettingsGroup = (group: SettingsGroup, editSettings: Settings
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
-    let options = Object.keys(group).map((optionName) => {
-        let option: Setting = group[optionName];
-        if (typeof option === "object")
-            return SettingsOption(option, optionName, groupName, editSettings, setEditSettings);
-    })
-
     return (
         <div>
             <span className="title">{group.title}:</span>
             <div className="setting-inner">
-                {options}
+                {group.settings.map((option) => SettingsOption(option, group.name, editSettings, setEditSettings))}
             </div>
         </div>
     )
 }
 
-const SettingsOption = ({ ...option }: Setting, optionName: string,
-    groupName: string, editSettings: Settings
+const SettingsOption = (option: Setting, groupName: string, editSettings: Settings
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
     return (
         <div className="row">
@@ -44,8 +31,8 @@ const SettingsOption = ({ ...option }: Setting, optionName: string,
                 <ToolTip text={option.desc} style={{marginLeft: 5}} />
             </span>
             {option.value_type === "bool" ?
-                SettingsOptionInputBool(optionName, groupName, editSettings, setEditSettings)
-            : SettingsOptionInputString(optionName, groupName, editSettings, setEditSettings)}
+                SettingsOptionInputBool(option.name, groupName, editSettings, setEditSettings)
+            : SettingsOptionInputString(option.name, groupName, editSettings, setEditSettings)}
         </div>
     )
 }
@@ -55,8 +42,8 @@ const SettingsOptionInputBool = (optionName:string, groupName:string, editSettin
     return (
         <select className="input"
                 onChange={(e) => {
-                    let temp = {};
-                    Object.assign(temp, editSettings);
+                    let temp = Object.assign({}, editSettings);
+                    //TODO сделать присвоение с использованием элементов масива
                     temp[groupName][optionName].value = e.target.value === "true"
                     setEditSettings(temp);
                 }}>
@@ -72,8 +59,8 @@ const SettingsOptionInputString = (optionName:string, groupName:string, editSett
         <input className="input"
         value={editSettings[groupName][optionName].value}
         onChange={(e) => {
-            let temp = {};
-            Object.assign(temp, editSettings);
+            let temp = Object.assign({}, editSettings);
+            //TODO сделать присвоение с использованием элементов масива
             temp[groupName][optionName].value = temp[groupName][optionName].value_type === "integer" ? +e.target.value : e.target.value;
             setEditSettings(temp);
         }}/>
