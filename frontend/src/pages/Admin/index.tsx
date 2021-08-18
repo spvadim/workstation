@@ -12,6 +12,8 @@ import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 import imgHint from "src/assets/images/hint.png";
 
+import "./SettingsBlock.scss";
+
 import {Setting, Settings} from "./settings";
 
 const useStyles = createUseStyles({
@@ -97,16 +99,15 @@ const bathesParamsTableProps = [
     
 ]
 
-const rowDelete = (id) => {
+const rowDelete = (id: string) => {
     axios.delete(address + "/api/v1_0/batches_params/" + id)
 }
 
 const SettingsBlock = (settings: Settings) => {
     let groups = Object.keys(settings).map((groupName) => {
         let group = settings[groupName];
-        if (typeof group === "object"){
+        if (typeof group === "object")
             return <SettingsGroup {...group}/>
-        }
     })
 
     return (
@@ -119,14 +120,16 @@ const SettingsBlock = (settings: Settings) => {
 const SettingsGroup = (group: any) => {
     let options = Object.keys(group).map((optionName) => {
         let option: Setting = group[optionName];
-        if (typeof option === "object"){
+        if (typeof option === "object")
             return <SettingsOption {...option}/>
-        }
     })
 
     return (
         <div>
-            {options}
+            <span className="title">{group.title}:</span>
+            <div className="setting-inner">
+                {options}
+            </div>
         </div>
     )
 }
