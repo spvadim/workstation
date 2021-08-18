@@ -17,25 +17,8 @@ import "./SettingsBlock.scss";
 import {Setting, Settings} from "./settings";
 
 const useStyles = createUseStyles({
-    tableContainer: {
-        width: 634,
-        height: 600,
-    },
     container2: {
         height: "100%",
-        position: "relative",
-    },
-    settingsContainer: {
-        display: "flex",
-        flexDirection: "column",
-        gap: 5,
-        width: "50%",
-    },
-    row: {
-        display: "flex",
-        alignItems: "center",
-        gap: 5,        
-        width: "100%",
         position: "relative",
     },
     cell1: {
@@ -48,10 +31,6 @@ const useStyles = createUseStyles({
         border: "1px solid #A4A4A4",
         borderRadius: 7,
     },
-    container: {
-        display: "flex",
-        justifyContent: "space-between",
-    },
     hintCell: {
         borderLeftStyle: 'none !important',
         height: 24,
@@ -61,17 +40,7 @@ const useStyles = createUseStyles({
         backgroundSize: 21,
         backgroundPosition: 'center',
         cursor: 'pointer',
-    },
-    fullDescription: {
-        position: "fixed",
-        right: 50,
-        bottom: 50,
-        maxWidth: 300,
-        backgroundColor: "white",
-        borderRadius: 7,
-        padding: "10px",
-        paddingTop: 0,
-    },
+    }
 })
 
 const bathesParamsTableProps = [
@@ -79,7 +48,6 @@ const bathesParamsTableProps = [
     {name: "packs", title: "Пачек в паллете"},
     {name: "multipacks", title: "Паллет в кубе"},
     {name: "multipacks_after_pintset", title: "Паллет после пинцета"},
-    
 ]
 
 const rowDelete = (id: string) => {
@@ -125,7 +93,7 @@ const SettingsOption = (option: Setting) => {
             </span>
             {option.value_type === "bool" ? 
                 <SettingsOptionInputBool/>
-                : <SettingsOptionInputString/>}
+    : <SettingsOptionInputString/>}
         </div>
     )
 }
@@ -137,11 +105,12 @@ const SettingsOptionInputBool = (editSettings: Settings
                 onChange={(e) => {
                     let temp = {};
                     Object.assign(temp, editSettings);
-                    temp[groupName][optionName].value = e.target.value === "true"
+                    //temp[groupName][optionName].value = e.target.value === "true"
                     setEditSettings(temp);
                 }}>
-            <option selected={editSettings[groupName][optionName].value}>true</option>
-            <option selected={!editSettings[groupName][optionName].value}>false</option>
+            {//<option selected={editSettings[groupName][optionName].value}>true</option>
+            //<option selected={!editSettings[groupName][optionName].value}>false</option>
+    }
         </select>
     )
 }
@@ -150,11 +119,11 @@ const SettingsOptionInputString = (editSettings: Settings
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
     return (
         <input className="input"
-        value={editSettings[sKey][key].value}
+        //value={editSettings[sKey][key].value}
         onChange={(e) => {
             let temp = {};
             Object.assign(temp, editSettings);
-            temp[sKey][key].value = temp[sKey][key].value_type === "integer" ? +e.target.value : e.target.value;
+            //temp[sKey][key].value = temp[sKey][key].value_type === "integer" ? +e.target.value : e.target.value;
             setEditSettings(temp);
         }}/>
     )
@@ -269,8 +238,8 @@ function Admin() {
                 </Button>
             </ModalWindow>}
 
-            <div className={classes.container}>
-                <div className={classes.settingsContainer}>
+            <div className="container">
+                <div className="settings-container">
                     {(editSettings !== undefined) && Object.keys(editSettings).length !== 0 && generateSettings()}
                     <div style={{display: "flex", alignItems: "center"}}>
                         <Button style={{width: "max-content", height: "max-content"}} onClick={() => {
@@ -304,7 +273,7 @@ function Admin() {
                     </div>
                 </div>
 
-                <div className={classes.tableContainer}>
+                <div className="table-container">
                     <Button onClick={() => setModalAddBatchParams(true)}>Создать новые параметры партии</Button>
                     <Table columns={bathesParamsTableProps}
                             rows={batchesParams.map((param, index) => {
@@ -327,7 +296,7 @@ function Admin() {
             </div>
 
             {choosedSetting && 
-                <div className={classes.fullDescription}>
+                <div className="full-description">
                     <p style={{fontWeight: 500}}>{choosedSetting.title}</p>
                     <span>{choosedSetting.desc}</span>
                 </div>
