@@ -1,6 +1,6 @@
 import React from "react";
 
-function DeleteButton({ callback }) {
+const DeleteButton = (callback?: React.MouseEventHandler<HTMLImageElement>): JSX.Element => {
     return (
         <div className="icon-container">
             <img className="icon"
