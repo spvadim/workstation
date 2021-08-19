@@ -323,7 +323,7 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         email_body += f"<br> {msg}"
 
     for pack in packs_under_pintset:
-        pack.to_process = to_process
+        pack.to_process = to_process or pack.to_process
         pack.status = PackStatus.ON_ASSEMBLY
         if overpacking:
             msg = f"Перевел пачку с QR={pack.qr}, id={pack.id} в сборку"

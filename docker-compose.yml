@@ -24,6 +24,8 @@ services:
       restart: always
 
     nginx:
+      stdin_open: true
+      tty: true
       depends_on: 
         - docker-fastapi
       container_name: proxy-app
