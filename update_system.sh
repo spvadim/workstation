@@ -22,11 +22,11 @@ sudo docker-compose down
 
 # rename all logs to start new one
 tmp_env=$(date +%FT%H-%M-%S)
-mv logs/deep_logs.log logs/deep_logs.$tmp_env.log
-mv logs/email_logs.log logs/email_logs.$tmp_env.log
-mv logs/erd_logs.log logs/erd_logs.$tmp_env.log
-mv logs/tg_logs.log logs/tg_logs.$tmp_env.log
-mv logs/wdiot_logs.log logs/wdiot_logs.$tmp_env.log
+sudo mv logs/deep_logs.log logs/deep_logs.$tmp_env.log
+sudo mv logs/email_logs.log logs/email_logs.$tmp_env.log
+sudo mv logs/erd_logs.log logs/erd_logs.$tmp_env.log
+sudo mv logs/tg_logs.log logs/tg_logs.$tmp_env.log
+sudo mv logs/wdiot_logs.log logs/wdiot_logs.$tmp_env.log
 
 sudo COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up -d
 echo "Running migrations"
