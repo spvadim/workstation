@@ -1,4 +1,4 @@
-$imgHint: "../../../assets/images/hint.png";
+$imgHint: "../../../assets/images/hint.svg";
 
 .table-container {
     width: 634;
@@ -54,26 +54,4 @@ $imgHint: "../../../assets/images/hint.png";
 .container {
     display: flex;
     justify-content: space-between;
-}
-
-.hint-cell {
-    border-left-style: none !important;
-    height: 24px;
-    width: 48px;
-    background-image: url($imgHint);
-    background-repeat: no-repeat;
-    background-size: 21px;
-    background-position: center;
-    cursor: pointer;
-}
-
-.full-description {
-    position: fixed;
-    right: 50px;
-    bottom: 50px;
-    max-width: 300px;
-    background-color: white;
-    border-radius: 7px;
-    padding: 10px;
-    padding-top: 0;
 }

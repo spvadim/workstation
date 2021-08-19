@@ -35,7 +35,6 @@ function Admin() {
     const [editSettings, setEditSettings] = useState<Settings>();
     const [notificationText, setNotificationText] = useState("");
     const [notificationErrorText, setNotificationErrorText] = useState("");
-    const [choosedSetting] = useState("");
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/settings")
@@ -182,19 +181,8 @@ function Admin() {
                                 axios.patch(address + "/api/v1_0/batches_params/" + row.id, {visible: !row.visible})
                             }}
                             onDelete={(row) => rowDelete(row.id)} />
-                            
-                    
                 </div>
-                
             </div>
-
-            {choosedSetting && 
-                <div className="full-description">
-                    <p style={{fontWeight: 500}}>{choosedSetting.title}</p>
-                    <span>{choosedSetting.desc}</span>
-                </div>
-            }
-            
         </div>
     );
 }
