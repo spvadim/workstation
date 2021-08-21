@@ -1,5 +1,5 @@
 import { Setting, Settings } from "./SettingsInterface";
-import "./SettingsBlock.scss";
+//import "./SettingsBlock.scss";
 import ToolTip from "src/components/ToolTip";
 
 const SettingsBlock = (settings: Settings, editSettings: Settings

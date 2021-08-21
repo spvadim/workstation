@@ -8,7 +8,7 @@ import { Button, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
-import "./Settings/SettingsBlock.scss";
+//import "./Settings/SettingsBlock.scss";
 import SettingsComponent from "./Settings/Settings";
 
 const bathesParamsTableProps = [
