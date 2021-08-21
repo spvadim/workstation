@@ -12,9 +12,8 @@ const SettingsComponent = () => {
              .then(res => {
                 setSettings(res.data);
                 setEditSettings(res.data);
-                if (res.data.location_settings) {
+                if (res.data.location_settings)
                     document.title = "Настройки: " + res.data.location_settings.place_name.value
-                }
              });
     }, []);
 
@@ -34,31 +33,13 @@ const SettingsComponent = () => {
             <div style={{display: "flex", alignItems: "center"}}>
                 <Button style={{width: "max-content", height: "max-content"}} onClick={() => {
                     axios.patch(address + "/api/v1_0/settings", editSettings)
-                        .then(() => {
-                            setNotificationText("Успешно");
-                            setTimeout(() => setNotificationText(""), 2000)
-                        })
-                        .catch(e => {
-                            setNotificationErrorText(e.response.data.detail[0].msg);
-                            setTimeout(() => setNotificationText(""), 2000)
-                        })
+                        .then(() => setNotificationText("Успешно"))
+                        .catch(e => setNotificationErrorText(e.response.data.detail[0].msg))
+                        .finally(() => setTimeout(() => setNotificationText(""), 2000))
                 }} > Сохранить </Button>
                 <NotificationPanel
-                    errors={
-                        notificationErrorText && (
-                            <Notification
-                                error
-                                description={notificationErrorText}
-                            />
-                        )
-                    }  
-                    notifications={
-                        notificationText && (
-                            <Notification
-                                description={notificationText}
-                            />
-                        )
-                    }
+                    errors={notificationErrorText && <Notification error description={notificationErrorText}/>}
+                    notifications={notificationText && <Notification description={notificationText}/>}
                 />
             </div>
         </div>
