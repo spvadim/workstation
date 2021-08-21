@@ -13,6 +13,9 @@ import QrScanner from './pages/QrScanner/index.js';
 import imgBackground from 'src/assets/images/background.svg';
 import { color } from 'src/theme';
 
+import ReactNotification from 'react-notifications-component'
+import 'react-notifications-component/dist/theme.css'
+import 'animate.css/animate.min.css';
 
 const useStyles = createUseStyles({
 	App: {
@@ -38,6 +41,7 @@ function App() {
 
 	return (
 		<div className={classes.App}>
+			<ReactNotification />
 			<div className={classes.App_inner}>
 				<Route exact path="/main_new" component={Main_new} />
 				<Route exact path="/" component={Main} />

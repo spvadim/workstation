@@ -1,9 +1,11 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import address from "src/address";
-import { Button, NotificationPanel } from "src/components";
+import { Button } from "src/components";
 import SettingsBlock from "./SettingsBlock";
 import { Settings } from "./SettingsInterface";
+
+import NotificationProvider from "src/components/NotificationProvider";
 
 const SettingsComponent = () => {
     
@@ -19,8 +21,6 @@ const SettingsComponent = () => {
 
     const [settings, setSettings] = useState<Settings>();
     const [editSettings, setEditSettings] = useState<Settings>();
-    const [notificationText, setNotificationText] = useState("");
-    const [notificationErrorText, setNotificationErrorText] = useState("");
 
     const generateSettings = (): JSX.Element => {
         if (settings === undefined || editSettings === undefined) return <div/>;
@@ -33,14 +33,9 @@ const SettingsComponent = () => {
             <div style={{display: "flex", alignItems: "center"}}>
                 <Button style={{width: "max-content", height: "max-content"}} onClick={() => {
                     axios.patch(address + "/api/v1_0/settings", editSettings)
-                        .then(() => setNotificationText("Успешно"))
-                        .catch(e => setNotificationErrorText(e.response.data.detail[0].msg))
-                        .finally(() => setTimeout(() => setNotificationText(""), 2000))
+                        .then(() => NotificationProvider.createNotification("Успешно", "Настройки сохранены", "success"))
+                        .catch(e => NotificationProvider.createNotification("Ошибка", e.response.data.detail[0].msg, "danger"))
                 }} > Сохранить </Button>
-                <NotificationPanel
-                    errors={notificationErrorText && <Notification error description={notificationErrorText}/>}
-                    notifications={notificationText && <Notification description={notificationText}/>}
-                />
             </div>
         </div>
     )
