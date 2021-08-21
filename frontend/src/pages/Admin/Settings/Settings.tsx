@@ -8,35 +8,34 @@ import { Settings } from "./SettingsInterface";
 import NotificationProvider from "src/components/NotificationProvider";
 
 const SettingsComponent = () => {
-    
-    useEffect(() => {
+    const [settings, setSettings] = useState<Settings>();
+    const [editSettings, setEditSettings] = useState<Settings>();
+
+    const loadSettings = () => {
         axios.get(address + "/api/v1_0/settings")
-             .then(res => {
+            .then(res => {
                 setSettings(res.data);
                 setEditSettings(res.data);
                 if (res.data.location_settings)
                     document.title = "Настройки: " + res.data.location_settings.place_name.value
-             });
-    }, []);
+        });
+    }
 
-    const [settings, setSettings] = useState<Settings>();
-    const [editSettings, setEditSettings] = useState<Settings>();
+    const saveSettings = () => axios.patch(address + "/api/v1_0/settings", editSettings)
+        .then(() => NotificationProvider.createNotification("Успешно", "Настройки сохранены", "success"))
+        .catch(e => NotificationProvider.createNotification("Ошибка", e.message, "danger", 10000))
 
-    const generateSettings = (): JSX.Element => {
+    useEffect(loadSettings, []);
+
+    const SettingsList = (): JSX.Element => {
         if (settings === undefined || editSettings === undefined) return <div/>;
         return SettingsBlock(settings, editSettings, setEditSettings);
     }
 
     return (
         <div className="settings-container">
-            {(editSettings !== undefined) && Object.keys(editSettings).length !== 0 && generateSettings()}
-            <div style={{display: "flex", alignItems: "center"}}>
-                <Button style={{width: "max-content", height: "max-content"}} onClick={() => {
-                    axios.patch(address + "/api/v1_0/settings", editSettings)
-                        .then(() => NotificationProvider.createNotification("Успешно", "Настройки сохранены", "success"))
-                        .catch(e => NotificationProvider.createNotification("Ошибка", e.response.data.detail[0].msg, "danger"))
-                }} > Сохранить </Button>
-            </div>
+            <SettingsList/>
+            <Button className="centered" onClick={saveSettings}>Сохранить</Button>
         </div>
     )
 }

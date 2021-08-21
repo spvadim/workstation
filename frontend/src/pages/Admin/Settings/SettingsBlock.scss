@@ -1,5 +1,9 @@
 $imgHint: "../../../assets/images/hint.svg";
 
+.centered {
+    margin: 0 auto;
+}
+
 .settings-container {
     display: flex;
     flex-direction: column;
