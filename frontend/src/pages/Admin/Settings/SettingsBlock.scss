@@ -1,10 +1,5 @@
 $imgHint: "../../../assets/images/hint.svg";
 
-.table-container {
-    width: 634;
-    height: 600;
-}
-
 .settings-container {
     display: flex;
     flex-direction: column;
@@ -49,9 +44,4 @@ $imgHint: "../../../assets/images/hint.svg";
     display: flex;
     flex-direction: column;
     gap: 5px;
-}
-
-.container {
-    display: flex;
-    justify-content: space-between;
 }

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import address from "../../address.js";
 
+import "./index.scss";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import Table from "../../components/Table/index.js";
 import { Button, TextField } from "src/components";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
-import "./Settings/SettingsBlock.scss";
 import SettingsComponent from "./Settings/Settings";
 
 const bathesParamsTableProps = [
