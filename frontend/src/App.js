@@ -1,6 +1,6 @@
 import { Route } from "react-router-dom";
 import { createUseStyles } from 'react-jss';
-import { Footer } from 'src/components'
+import Footer from 'src/components/Footer/index';
 import BatchParams from './pages/BatchParams/index.js';
 import Main from './pages/Main/index.js';
 import Main_new from './pages/Main_new/index.js';
