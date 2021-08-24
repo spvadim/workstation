@@ -98,17 +98,43 @@ const listEditor = (optionName:string, groupName:string, editSettings: Settings
 
     const listFull = (extended: boolean, toggle: () => void, elements: number[]): JSX.Element => {
         const [source, setSource] = useState(elements);
+        const [newItem, setNewItem] = useState<number|"">("");
         if (!extended) return <></>;
+
+        const add = () => {
+            if (newItem === "") return;
+            let tmp = source.slice();
+            tmp.push(newItem);
+            setSource(tmp.sort());
+            setNewItem("");
+        }
+
+        const change = (e: any) => {
+            let key = e.nativeEvent.data;
+            if ("0" <= key && key <= "9" )
+                setNewItem(e.target.value);
+        }
+
+        const save = () => {
+            setElements(source);
+            toggle();
+        }
+
+        const cancel = () => {
+            setSource(editSettings[groupName][optionName].value);
+            toggle();
+        }
 
         return (
             <div className="list-container-extended">
                 <div className="list-container-inner">
                     {source.map(x => listElement(x, source, setSource))}
                 </div>
-                <div className="flex-between-center">
-                    <input className="input" type="text" />
-                    <button>Добавить</button>
-                    <button onClick={toggle}>Закрыть</button>
+                <div className="input-container">
+                    <input className="input-small" type="text" value={newItem} onChange={change}/>
+                    <button onClick={add}>Добавить</button>
+                    <button className="save-button" onClick={save}>Сохранить</button>
+                    <button onClick={cancel}>Отмена</button>
                 </div>
             </div>
         )
@@ -119,12 +145,11 @@ const listEditor = (optionName:string, groupName:string, editSettings: Settings
         const del = () => {
             let tmp = source.slice();
             tmp.splice(tmp.indexOf(n),1)
-            console.log(tmp)
             setSource(tmp);
         }
 
         return (
-            <div className="flex-between-center">
+            <div className="flex-between-center list-element">
                 <div>{n}</div>
                 <div onClick={del}>❌</div>
             </div>

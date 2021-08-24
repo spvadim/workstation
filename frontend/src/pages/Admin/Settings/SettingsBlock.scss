@@ -39,6 +39,11 @@ $imgHint: "../../../assets/images/hint.svg";
     background-color: white;
 }
 
+.input-small {
+    @extend .input;
+    width: 25%;
+}
+
 .title {
     font-size: 18px;
     font-weight: 600;
@@ -79,6 +84,8 @@ $imgHint: "../../../assets/images/hint.svg";
     border: 1px solid #A4A4A4;
     padding: 10px;
     margin-bottom: 10px;
+    height: 86px;
+    overflow-y: scroll;
 }
 
 button {
@@ -92,4 +99,16 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.save-button {
+    background-color: dodgerblue;
+    color: white;
 }
