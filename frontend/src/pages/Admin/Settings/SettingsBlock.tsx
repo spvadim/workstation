@@ -82,12 +82,12 @@ const SettingsOptionInputString = (optionName:string, groupName:string, editSett
 }
 
 const SettingsOptionInputList = (optionName:string, groupName:string, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) =>
-        memo(listEditor(optionName, groupName, editSettings, setEditSettings))
+    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element =>
+        listEditor(optionName, groupName, editSettings, setEditSettings)
 
 const listEditor = (optionName:string, groupName:string, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
-    //const elements: number[] = editSettings[groupName][optionName].value;
+    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+    const elements: number[] = editSettings[groupName][optionName].value;
     const setElements = (newValue: number[]) => {
         let tmp = Object.assign({}, editSettings);
         tmp[groupName][optionName].value = newValue;
@@ -96,14 +96,14 @@ const listEditor = (optionName:string, groupName:string, editSettings: Settings
     const [extended, setExtended] = useState(false)
     const toggle = () => setExtended(!extended);
 
-    const listFull = (extended: boolean, toggle: () => void) => {
+    const listFull = (extended: boolean, toggle: () => void, elements: number[]): JSX.Element => {
+        const [source, setSource] = useState(elements);
         if (!extended) return <></>;
 
-        //const [source, setSource] = useState(elements);
         return (
             <div className="list-container-extended">
                 <div className="list-container-inner">
-                    
+                    {source.map(x => listElement(x, source, setSource))}
                 </div>
                 <div className="flex-between-center">
                     <input className="input" type="text" />
@@ -115,11 +115,12 @@ const listEditor = (optionName:string, groupName:string, editSettings: Settings
     }
 
     const listElement = (n: number, source: number[]
-        , setSource: React.Dispatch<React.SetStateAction<number[]>>) => {
+        , setSource: React.Dispatch<React.SetStateAction<number[]>>): JSX.Element => {
         const del = () => {
-            source.splice(source.indexOf(n),1)
-            setSource(source);
-            toggle();
+            let tmp = source.slice();
+            tmp.splice(tmp.indexOf(n),1)
+            console.log(tmp)
+            setSource(tmp);
         }
 
         return (
@@ -132,7 +133,7 @@ const listEditor = (optionName:string, groupName:string, editSettings: Settings
 
     return (
         <div className="list-container-preview">
-            {listFull(extended, toggle)}
+            {listFull(extended, toggle, elements)}
             <div className="list-container-preview-text" onClick={toggle} >
                 <div>[{elements.join(", ")}]</div><div>✏️</div>
             </div>
