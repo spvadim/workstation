@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import address from "src/address";
 import { Button } from "src/components";
 import SettingsBlock from "./SettingsBlock";
@@ -7,7 +7,7 @@ import { Settings } from "./SettingsInterface";
 
 import NotificationProvider from "src/components/NotificationProvider";
 
-const SettingsComponent = () => {
+const SettingsComponent = memo(() => {
     const [settings, setSettings] = useState<Settings>();
     const [editSettings, setEditSettings] = useState<Settings>();
 
@@ -38,6 +38,6 @@ const SettingsComponent = () => {
             <Button className="centered" onClick={saveSettings}>Сохранить</Button>
         </div>
     )
-}
+})
 
 export default SettingsComponent;

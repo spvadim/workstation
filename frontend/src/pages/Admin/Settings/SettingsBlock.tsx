@@ -1,6 +1,7 @@
 import { Setting, Settings } from "./SettingsInterface";
 import "./SettingsBlock.scss";
 import ToolTip from "src/components/ToolTip";
+import React, { memo, useState } from "react";
 
 const SettingsBlock = (settings: Settings, editSettings: Settings
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
@@ -38,14 +39,16 @@ const SettingsGroup = (group: any, groupName: string, editSettings: Settings
 const SettingsOption = (option: Setting, optionName: string,
     groupName: string, editSettings: Settings
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+    let editField = SettingsOptionInputString;
+    if (option.value_type === "bool") editField = SettingsOptionInputBool;
+    if (option.value_type === "list") editField = SettingsOptionInputList;
+
     return (
         <div className="row">
             <span className="cell1" title={option.desc}>{option.title}:
                 <ToolTip text={option.desc} style={{marginLeft: 5}} />
             </span>
-            {option.value_type === "bool" ?
-                SettingsOptionInputBool(optionName, groupName, editSettings, setEditSettings)
-            : SettingsOptionInputString(optionName, groupName, editSettings, setEditSettings)}
+            {editField(optionName, groupName, editSettings, setEditSettings)}
         </div>
     )
 }
@@ -75,6 +78,65 @@ const SettingsOptionInputString = (optionName:string, groupName:string, editSett
             temp[groupName][optionName].value = temp[groupName][optionName].value_type === "integer" ? +e.target.value : e.target.value;
             setEditSettings(temp);
         }}/>
+    )
+}
+
+const SettingsOptionInputList = (optionName:string, groupName:string, editSettings: Settings
+    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) =>
+        memo(listEditor(optionName, groupName, editSettings, setEditSettings))
+
+const listEditor = (optionName:string, groupName:string, editSettings: Settings
+    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
+    //const elements: number[] = editSettings[groupName][optionName].value;
+    const setElements = (newValue: number[]) => {
+        let tmp = Object.assign({}, editSettings);
+        tmp[groupName][optionName].value = newValue;
+        setEditSettings(tmp);
+    }
+    const [extended, setExtended] = useState(false)
+    const toggle = () => setExtended(!extended);
+
+    const listFull = (extended: boolean, toggle: () => void) => {
+        if (!extended) return <></>;
+
+        //const [source, setSource] = useState(elements);
+        return (
+            <div className="list-container-extended">
+                <div className="list-container-inner">
+                    
+                </div>
+                <div className="flex-between-center">
+                    <input className="input" type="text" />
+                    <button>Добавить</button>
+                    <button onClick={toggle}>Закрыть</button>
+                </div>
+            </div>
+        )
+    }
+
+    const listElement = (n: number, source: number[]
+        , setSource: React.Dispatch<React.SetStateAction<number[]>>) => {
+        const del = () => {
+            source.splice(source.indexOf(n),1)
+            setSource(source);
+            toggle();
+        }
+
+        return (
+            <div className="flex-between-center">
+                <div>{n}</div>
+                <div onClick={del}>❌</div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="list-container-preview">
+            {listFull(extended, toggle)}
+            <div className="list-container-preview-text" onClick={toggle} >
+                <div>[{elements.join(", ")}]</div><div>✏️</div>
+            </div>
+        </div>
     )
 }
 

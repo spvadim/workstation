@@ -36,6 +36,7 @@ $imgHint: "../../../assets/images/hint.svg";
     width: 50%;
     border: 1px solid #A4A4A4;
     outline: none;
+    background-color: white;
 }
 
 .title {
@@ -48,4 +49,47 @@ $imgHint: "../../../assets/images/hint.svg";
     display: flex;
     flex-direction: column;
     gap: 5px;
+}
+
+.list-container-preview {
+    @extend .input;
+    width: 100%;
+    position: relative;
+}
+
+.list-container-preview-text {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.list-container-extended {
+    @extend .input;
+    width: 100%;
+    z-index: 1;
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    box-sizing: border-box;
+}
+
+.list-container-inner {
+    border-radius: 7px;
+    border: 1px solid #A4A4A4;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 6px 5px;
+    border-radius: 7px;
+    border: 1px solid #A4A4A4;
+    cursor: pointer;
+}
+
+.flex-between-center {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
