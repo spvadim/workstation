@@ -26,10 +26,18 @@ COPY --from=build /app/build /usr/share/nginx/html
 # remove default nginx configuration file
 RUN rm /etc/nginx/conf.d/default.conf
 # replace with custom one
-COPY nginx/nginx.conf /etc/nginx/conf.d
+COPY nginx/nginx.conf /etc/nginx/conf.d/
 # --------- /only for those using react router ----------
-# expose port 80 to the outer world
+
+# move keypair and snippets for https correct working
+COPY nginx/snippets/ /etc/nginx/snippets/
+COPY nginx/ssl/dhparam.pem /etc/nginx/dhparam.pem
+COPY nginx/ssl/nginx-selfsigned.key /etc/ssl/private/nginx-selfsigned.key
+COPY nginx/ssl/nginx-selfsigned.crt /etc/ssl/certs/nginx-selfsigned.crt
+
+# expose ports 80 (http), 443 (https) to the outer world
 EXPOSE 80
+EXPOSE 443
 
 # start nginx 
 CMD ["nginx", "-g", "daemon off;"]
