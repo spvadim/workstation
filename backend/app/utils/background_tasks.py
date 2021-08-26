@@ -1,13 +1,17 @@
 import asyncio
+import inspect
 from time import sleep
 
 from loguru import logger
 
 from ..db.db_utils import (
+    delete_packs_under_pintset,
     flush_packing_table,
+    flush_pintset,
     flush_state,
     get_current_state,
     packing_table_error,
+    pintset_error,
     pintset_withdrawal_error,
     set_column_red,
     set_column_yellow,
@@ -31,6 +35,8 @@ from .erd import (
     snmp_set_red_on,
     snmp_set_yellow_off,
     snmp_set_yellow_on,
+    snmp_third_erd_first_oid_off,
+    snmp_third_erd_first_oid_on,
 )
 from .pintset import off_pintset, on_pintset
 
@@ -150,6 +156,29 @@ def drop_pack_after_pintset(error_msg: str, pintset_settings: PintsetSettings):
         on_pintset(pintset_settings)
 
 
+async def drop_pack_after_pintset_erd(
+    error_msg: str, pintset_settings: PintsetSettings
+):
+    wdiot_logger.info("Заморозил пинцет")
+    await snmp_third_erd_first_oid_on()
+
+    wdiot_logger.info("Взвел ошибку на пинцете")
+    await pintset_error(error_msg)
+
+    wdiot_logger.info("Удалил пачки под пинцетом")
+    await delete_packs_under_pintset()
+
+    delay = pintset_settings.pintset_curtain_opening_duration.value
+    await asyncio.sleep(delay)
+
+    state = await get_current_state()
+    if state.pintset_error_msg == error_msg:
+        wdiot_logger.info("Убираю ошибку на пинцете")
+        await flush_pintset()
+        wdiot_logger.info("Разморозил пинцет")
+        await snmp_third_erd_first_oid_off()
+
+
 async def turn_default_error(message: str):
     tasks = []
     tasks.append(set_column_red(message))
@@ -195,7 +224,7 @@ async def flush_packing_table_error():
     return results[0]
 
 
-async def turn_sync_error(message: str):
+async def turn_sync_error(method_name: str, message: str):
     current_settings = await get_system_settings()
     tasks = []
     email_message = f"<br> {message}."
@@ -206,12 +235,23 @@ async def turn_sync_error(message: str):
         if current_settings.general_settings.sync_raise_damper.value:
             tasks.append(snmp_raise_damper())
 
-    tasks.append(send_email("Рассинхрон", email_message))
+    tasks.append(send_email(f"Рассинхрон в {method_name}", email_message))
     tasks.append(add_events("desync", message))
 
     results = await asyncio.gather(*tasks)
     wdiot_logger.error(message)
     return results[0]
+
+
+async def add_sync_error_to_bg_tasks(background_tasks, message: str):
+    method_name = inspect.stack()[1].function
+    background_tasks.add_task(turn_sync_error, method_name, message)
+
+
+async def add_send_email_to_bg_tasks(background_tasks, title: str, email_body: str):
+    method_name = inspect.stack()[1].function
+    title += f" в {method_name}"
+    background_tasks.add_task(send_email, title, email_body)
 
 
 async def turn_sync_fixing():

@@ -124,9 +124,7 @@ function Admin() {
                 }
              });
     }, []);
-
-
-
+    
     useEffect(() => {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/batches_params");

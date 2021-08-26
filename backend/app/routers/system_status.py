@@ -123,7 +123,7 @@ async def set_normal_state():
 @deep_logger_router.patch("/set_sync_error", response_model=SystemState)
 @version(1, 0)
 async def set_sync_error(error_msg: str):
-    return await turn_sync_error(error_msg)
+    return await turn_sync_error(method_name="set_sync_error", message=error_msg)
 
 
 @deep_logger_router.patch("/set_sync_fixing", response_model=SystemState)

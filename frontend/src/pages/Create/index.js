@@ -12,7 +12,6 @@ import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
-import BatchSelectComponent from '../../components/BatchSelectComponent';
 
 
 const useStyles = createUseStyles({
@@ -403,15 +402,14 @@ function Create() {
                 <Text type="title">Создание</Text>
                 <div className={classes.headerInputs}>
                     <span className={classes.inputLabel}>Номер партии ГП: </span>
-                   {/* <TextField
+                 <TextField
                         placeholder="0000"
                         name="batch_number"
                         type="text"
                         value={batchNumber}
                         onChange={e => setBatchNumber(e.target.value)}
-                   />*/}
-                    <BatchSelectComponent/>
-
+                   />
+                    
                     <span className={classes.inputLabel}>QR куба: </span>
                     <TextField
                         placeholder="0000"

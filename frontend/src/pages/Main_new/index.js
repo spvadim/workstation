@@ -13,10 +13,11 @@ import { Button, NotificationPanel, Switch } from "src/components";
 import {Notification} from '../../components/Notification';
 import InputTextQr from '../../components/InputText/InputTextQr';
 import {Notification_new} from '../../components/Notification_new';
+import  {HeaderInfo} from './HeaderInfo';
 
 const useStyles = createUseStyles({
 	container: {
-        maxWidth: 1900,
+       // maxWidth: 1900,
         // margin: "0 auto",
         padding: "0 36px",
         height: "100%",
@@ -337,6 +338,20 @@ const useStyles = createUseStyles({
         alignItems: 'center',
     },
 
+    bigViewBtn: {
+        position: 'absolute',
+        top: 10,
+        left: '40%',
+        paddingLeft: 40,
+        paddingRight: 40,
+        borderRadius: 0,
+        backgroundColor: 'rgba(255,255,255,0)',
+
+        "&:hover": {
+            backgroundColor: "rgba(150,150,150,.3)",
+        },
+    },
+
     footer: {
         position: 'absolute',
         width: '100%',
@@ -389,7 +404,8 @@ function Main() {
     const [extended, setExtended] = useState(false);
     const [settings, setSettings] = useState(false);
     const [page, setPage] = useState('');
-
+    const [batchSettings, setBatchSettings] = useState({});
+    const [multipacksAmount, setMultipacksAmount] = useState(0);
     const [modalAgree, setModalAgree] = useState(false);
     const [modalDisassemble, setModalDisassemble] = useState(false);
     const [modalCube, setModalCube] = useState(false);
@@ -403,6 +419,11 @@ function Main() {
     const [modalWithdrawal, setModalWithdrawal] = useState(false);
     const [modalDesync, setModalDesync] = useState(false);
     const [modalAddPack, setModalAddPack] = useState(false);
+    const [modalDeletion, setModalDeletion] = useState(false);
+    const [modalError, setModalError] = useState(false);
+
+    const [btnPintsetFinish, setBtnPintsetFinish] = useState(false);
+    const [btnCubeFinishAuto, setBtnCubeFinishAuto] = useState(false);
 
     const [forceFocus, setForceFocus] = useState("inputQr");
     const [notificationText, setNotificationText] = useState("");
@@ -464,7 +485,8 @@ function Main() {
         }
 
         let countOnAssemble = 0;
-        let maxCountOnAssemble = 12;
+        let maxCountOnAssemble = settings ? settings.params.packs * settings.params.multipacks_after_pintset : 12;
+        // let maxCountOnAssemble = 12;
         array.forEach(item => {
             switch (item.status) {
                 case "под пинцетом":
@@ -538,6 +560,35 @@ function Main() {
     }
 
     useEffect(() => {
+        axios.get(address + "/api/v1_0/current_batch")
+            .then(res => {
+                setBatchSettings({
+                    batchNumber: res.data.number.batch_number,
+                    batchDate: res.data.number.batch_date.split("T")[0].split("-").reverse(),
+                    multipacks: res.data.params.multipacks,
+                    packs: res.data.params.packs,
+                    multipacksAfterPintset: res.data.params.multipacks_after_pintset,
+                })
+            })
+
+        }, [setBatchSettings])
+
+    useEffect(() => {
+        const request = () => {
+            let request = axios.get(address + "/api/v1_0/packing_table_records")
+            request.then(res => {
+                setMultipacksAmount(res.data.multipacks_amount);
+            })
+        };
+
+        request();
+        let timer = setInterval(() => {
+            request();
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [setMultipacksAmount])
+
+    useEffect(() => {
         const request = () => {
             let request = axios.get(address + "/api/v1_0/events?processed=false&event_type=error")
             request.then(res => {
@@ -557,25 +608,27 @@ function Main() {
         async function getPacks() {
             let response = await axios.get(address + "/api/v1_0/packs_queue")
             setPacks(sortPacks(response.data));
+            setBtnPintsetFinish(settings && (response.data.length >= (settings.params.packs * settings.params.multipacks_after_pintset)))
         }
 
         getPacks();
 
         const interval = setInterval(getPacks, 1000);
         return () => clearInterval(interval);
-    }, [setPacks]);
+    }, [setPacks, setBtnPintsetFinish, settings]);
 
     useEffect(() => {
         async function getPallets() {
             let response = await axios.get(address + "/api/v1_0/multipacks_queue")
             setPallets(await sortPallets(response.data));
+            setBtnCubeFinishAuto(settings && multipacksAmount === settings.params.multipacks && response.data.length >= settings.params.multipacks);
         }
 
         getPallets();
 
         const interval = setInterval(getPallets, 1000);
         return () => clearInterval(interval);
-    }, [setPallets, settings]);
+    }, [setPallets, settings, multipacksAmount, setBtnCubeFinishAuto]);
 
     useEffect(() => {
         async function getSettings() {
@@ -647,11 +700,12 @@ function Main() {
                 else {setForceFocus("inputPackingTable"); setModalPackingTableError(temp.packing_table_error_msg)} // setRedBackground(true)}
                 if (temp.pintset_withdrawal_state === "normal") setModalWithdrawal("")
                 else {setModalWithdrawal(temp.pintset_withdrawal_error_msg)} // setRedBackground(true)}
-                if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg)} // setRedBackground(true)}
+                if (temp.sync_state === "error") {setModalDesync(temp.sync_error_msg); setRedBackground(true)} //
                 else if (temp.sync_state === "fixing") {setNotificationDesyncErrorText("Рассинхрон")}
                 else {setModalDesync("")}
 
-                if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);
+                // if (temp.state === "normal" && temp.pintset_state === "normal" && temp.packing_table_state === "normal" && temp.pintset_withdrawal_state === "normal" && temp.sync_state !== "error") setRedBackground(false);
+                if (temp.sync_state !== "error") setRedBackground(false);
             })
             request.catch(e => setNotificationErrorText(e.response.data.detail))
         };
@@ -1073,26 +1127,62 @@ function Main() {
             </ModalWindow>
             }
 
-
-
+            {modalDeletion && (
+                <ModalWindow
+                    title="Удаление объекта"
+                    description="Информация про данную упаковку и составляющие будет удалена из системы. Пачку(и) нужно будет подкинуть перед камерой-счетчиком. Подтверждаете?"
+                >
+                    <Button onClick={() => {
+                        setModalDeletion(false);
+                        modalDeletion[0](modalDeletion[1])
+                    }}>
+                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        Удалить
+                    </Button>
+                    <Button onClick={() => setModalDeletion(false)} theme="secondary">
+                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        Отмена
+                    </Button>
+                </ModalWindow>
+            )}
+            {modalError && (
+                <ModalWindow
+                    title="Ошибка"
+                    description="Вы используете QR вне куба. Пожалуйста перейдите в куб для редактирования."
+                >
+                    <Button onClick={() => setModalError(false)}>Сбросить ошибку</Button>
+                </ModalWindow>
+            )}
 			<header className={classes.header}>
                 <div className={classes.notificationPanel}>
                     { events.map(event => {
-                        return <Notification_new key={event.id} text={event.message}
-                                                 onClose={() => closeProcessEvent(event.id)}
+                        return <Notification_new
+                            key={event.id}
+                            text={event.message}
+                            onClose={() => closeProcessEvent(event.id)}
                         />
                     })
                     }
                     {events.length > 1 ? <Button onClick={() => events.map(event => closeProcessEvent(event.id))}>Сбросить все ошибки</Button> : null}
                     <Button onClick={() => setPage("events")} >Перейти на страницу с ошибками</Button>
                 </div>
-
                 <div className={[classes.container, classes.header__container].join(' ')}>
-                    <ul className={classes.header__info}>
+                <div className={classes.header__info}>
+                    <HeaderInfo title="Партия №:" amount={batchSettings.batchNumber} />
+                    <HeaderInfo title="Дата" amount={batchSettings.batchDate ? batchSettings.batchDate.join(".") : null} />
+                    <HeaderInfo title="Куб:" amount={batchSettings.multipacks} suffix="паллеты" />
+                    <HeaderInfo title="Паллета:" amount={batchSettings.packs} suffix="пачки" />
+                    <HeaderInfo title="Пинцет:" amount={batchSettings.multipacksAfterPintset} suffix="паллеты" />
+                </div>
+               {/*   <ul className={classes.header__info}>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Партия №:</h3>
                             <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_number}</strong></p>
                         </li>
+                        <li className={classes.header__infoItem}>
+                            <h3 className={classes.header__infoItemName}>Дата</h3>
+                            <p className={classes.header__infoItemDesc}><strong>{settings && settings.number.batch_date}</strong></p>
+                         </li>
                         <li className={classes.header__infoItem}>
                             <h3 className={classes.header__infoItemName}>Куб:</h3>
                             <p className={classes.header__infoItemDesc}>
@@ -1109,7 +1199,7 @@ function Main() {
                                 <strong>{settings && settings.params.multipacks_after_pintset}</strong>&#32;мультипак
                             </p>
                         </li>
-                    </ul>
+                </ul>*/}
                     <div className={classes.header__buttonList}>
                         <button
                             className={[classes.btn, classes.header__button].join(' ')}
@@ -1171,7 +1261,10 @@ function Main() {
                         <span className={classes.tableTitle}>Очередь кубов</span>
                         <TableAddress
                             columns={tableProps(extended).columns}
-                            setModal={() => {return}}
+                            setNotification={n => setNotificationText(n)}
+                            notification={notificationText}
+                            setError={() => setModalError(true)}
+                            setModal={setModalDeletion}
                             type="cubes"
                             extended={extended}
                             address="/api/v1_0/cubes_queue"
@@ -1225,6 +1318,22 @@ function Main() {
                             onAdd={() => { addPack("под пинцетом") }}
                             bigView
                         />}
+
+                        {/* Кнопки */}
+                        {bigViewMode === bigViewModes.pallet && btnPintsetFinish && <button
+                            className={[classes.btn, classes.bigViewBtn].join(' ')}
+                            onClick={() => {
+                                axios.put(address + '/api/v1_0/pintset_finish')
+                                    .catch(e => {console.log(e)})
+                            }}
+                        >Собрать паллеты -></button>}
+                        {bigViewMode === bigViewModes.onPackingTable && btnCubeFinishAuto && <button
+                            className={[classes.btn, classes.bigViewBtn].join(' ')}
+                            onClick={() => {
+                                axios.put(address + '/api/v1_0/cube_finish_auto')
+                                    .catch(e => {console.log(e)})
+                            }}
+                        >Собрать куб</button>}
                     </div>
 
                     <ul className={classes.variants__list}>
@@ -1337,12 +1446,37 @@ function Main() {
                         )]
                 }
                 errors={
-                    notificationErrorText && (
+                    [notificationErrorText && (
                         <Notification
                             error
                             description={notificationErrorText}
                         />
-                    )
+                    ),
+                        notificationColumnErrorText && (
+                            <Notification
+                                error
+                                description={notificationColumnErrorText}
+                            />
+                        ),
+                        notificationDesyncErrorText && (
+                            <Notification
+                                error
+                                description={notificationDesyncErrorText}
+                            ><Button onClick={() => {
+                                axios.patch(address + "/api/v1_0/flush_sync")
+                                    .then(() => {
+                                        setNotificationDesyncErrorText("");
+                                    })
+                            }}>Сбросить ошибку</Button></Notification>
+                        ),
+
+
+                        notificationPintsetErrorText && (
+                            <Notification
+                                error
+                                description={notificationPintsetErrorText}
+                            />
+                        )]
                 }
             />
 

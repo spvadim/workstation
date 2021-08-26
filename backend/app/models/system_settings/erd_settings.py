@@ -53,14 +53,14 @@ class ERDBuzzerOID(EmbeddedModel):
 
 
 class ERDFirstOID(EmbeddedModel):
-    title: str = "ID шторки в ERD контроллере"
+    title: str = "ID первого порта в ERD контроллере"
     desc: str = "Введите ID порта в ерд контроллере"
     value: Optional[str]
     value_type: str = "string"
 
 
 class ERDSecondOID(EmbeddedModel):
-    title: str = "ID сбрасывателя в ERD контроллере"
+    title: str = "ID второго в ERD контроллере"
     desc: str = "Введите ID порта в ерд контроллере"
     value: Optional[str]
     value_type: str = "string"
@@ -135,3 +135,16 @@ class SecondERDSettings(EmbeddedModel):
     delay_before_damper: DelayBeforeDamper = DelayBeforeDamper()
     delay_before_ejector: DelayBeforeEjector = DelayBeforeEjector()
     delay_after_ejector: DelayAfterEjector = DelayAfterEjector()
+
+
+class ThirdERDSettings(EmbeddedModel):
+    title: str = "Настройки третьего ERD контроллера"
+    advanced: bool = True
+    erd_ip: ERDIp = ERDIp()
+    erd_snmp_port: ERDSNMPPort = ERDSNMPPort()
+    erd_community_string: ERDCommunityString = ERDCommunityString()
+    erd_first_oid: ERDFirstOID = ERDFirstOID()
+    erd_second_oid: ERDSecondOID = ERDSecondOID()
+    erd_third_oid: ERDThirdOID = ERDThirdOID()
+    erd_fourth_oid: ERDFourthOID = ERDFourthOID()
+    erd_fifth_oid: ERDFifthOID = ERDFifthOID()

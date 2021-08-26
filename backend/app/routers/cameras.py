@@ -57,16 +57,17 @@ from ..models.packing_table import (
 )
 from ..models.pintset_record import PintsetRecord, PintsetRecordInput, PintsetRecords
 from ..utils.background_tasks import (
+    add_send_email_to_bg_tasks,
+    add_sync_error_to_bg_tasks,
     drop_pack,
     drop_pack_after_pintset,
+    drop_pack_after_pintset_erd,
     send_error_with_buzzer,
     send_warning_and_back_to_normal,
     turn_default_error,
     turn_packing_table_error,
     turn_pintset_withdrawal_error,
-    turn_sync_error,
 )
-from ..utils.email import send_email
 from ..utils.io import send_telegram_message
 from ..utils.naive_current_datetime import get_naive_datetime
 from ..utils.pintset import off_pintset
@@ -187,12 +188,16 @@ async def new_pack_after_pintset(
     error_msg = None
     if not pack.qr and not pack.barcode:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с которой не смогли считать ни одного кода!"
+        pack.qr = f'empty {current_datetime.strftime("%d.%m.%Y %H:%M")}'
+        pack.barcode = "0000000000000"
 
     elif not pack.qr:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с ШК={pack.barcode}, но QR не считался"
+        pack.qr = f'empty {current_datetime.strftime("%d.%m.%Y %H:%M")}'
 
     elif not pack.barcode:
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался"
+        pack.barcode = "0000000000000"
 
     # elif not await check_qr_unique(Pack, pack.qr):
     #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
@@ -200,9 +205,16 @@ async def new_pack_after_pintset(
     current_settings = await get_system_settings()
 
     if error_msg and current_settings.general_settings.pintset_stop.value:
-        background_tasks.add_task(
-            drop_pack_after_pintset, error_msg, current_settings.pintset_settings
-        )
+        if current_settings.general_settings.use_snap7.value:
+            background_tasks.add_task(
+                drop_pack_after_pintset, error_msg, current_settings.pintset_settings
+            )
+        else:
+            background_tasks.add_task(
+                drop_pack_after_pintset_erd,
+                error_msg,
+                current_settings.pintset_settings,
+            )
         return JSONResponse(status_code=400, content={"detail": error_msg})
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
@@ -211,7 +223,8 @@ async def new_pack_after_pintset(
     pack.batch_number = batch.number
     pack.created_at = current_datetime
     ftp_url = None
-    if "empty" in pack.qr:
+    if pack.qr.startswith("empty"):
+        pack.to_process = True
         ftp_url = await form_url(pack.qr)
     await engine.save(PackInReport(**pack.dict(), ftp_url=ftp_url))
     await engine.save(pack)
@@ -220,8 +233,8 @@ async def new_pack_after_pintset(
 
     max_packs = multiplier * batch.params.multipacks_after_pintset
     if await count_packs_queue() > max_packs:
-        background_tasks.add_task(
-            turn_sync_error, f"В очереди больше {max_packs} пачек"
+        await add_sync_error_to_bg_tasks(
+            background_tasks, f"В очереди больше {max_packs} пачек"
         )
     return pack
 
@@ -233,7 +246,9 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     if mode.work_mode == "manual":
         raise HTTPException(400, detail="В данный момент используется ручной режим")
 
+    email_body = ""
     sync_error_msg = ""
+    overpacking = False
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
     packs_under_pintset = await get_packs_under_pintset()
@@ -241,6 +256,9 @@ async def pintset_receive(background_tasks: BackgroundTasks):
     to_process = False
     packs_on_assembly_amount = await count_packs_on_assembly()
     packs_on_assembly_irl = await get_last_pintset_amount()
+
+    current_settings = await get_system_settings()
+
     if packs_on_assembly_irl != packs_on_assembly_amount:
         sync_error_msg += f"Рассинхрон физической ({packs_on_assembly_irl}) и логической ({packs_on_assembly_amount}) очереди пачек на сборке."
 
@@ -254,17 +272,18 @@ async def pintset_receive(background_tasks: BackgroundTasks):
             wdiot_logger,
             result=packs_under_pintset,
         )
-        background_tasks.add_task(send_email, "Сгенерированы пачки", email_body)
+        await add_send_email_to_bg_tasks(
+            background_tasks, "Сгенерированы пачки", email_body
+        )
 
     if delta > 0:
         to_process = True
-        email_body = ""
         wdiot_logger.error("Расхождение, нужно проверить пачки")
 
         packs_to_delete = []
 
         for pack in packs_under_pintset:
-            if "empty" in pack.qr and delta > 0:
+            if pack.qr.startswith("empty") and delta > 0:
                 packs_to_delete.append(pack)
                 delta -= 1
 
@@ -273,10 +292,18 @@ async def pintset_receive(background_tasks: BackgroundTasks):
         ]
 
         if delta > 0:
-            packs_under_pintset, packs_to_delete = (
-                packs_under_pintset[:-delta],
-                packs_to_delete + packs_under_pintset[-delta:],
+            delete_non_empty_packs = (
+                current_settings.general_settings.delete_non_empty_packs.value
             )
+            if delete_non_empty_packs:
+
+                packs_under_pintset, packs_to_delete = (
+                    packs_under_pintset[:-delta],
+                    packs_to_delete + packs_under_pintset[-delta:],
+                )
+
+            else:
+                overpacking = True
 
         for pack in packs_to_delete:
 
@@ -289,20 +316,30 @@ async def pintset_receive(background_tasks: BackgroundTasks):
             )
             wdiot_logger.info(msg)
             email_body += f"<br> {msg}"
-        background_tasks.add_task(send_email, "Удалены пачки", email_body)
+
+    if overpacking:
+        msg = f'Значение "Удалять не пустые пачки" ложное, поэтому перевел в сборку более {multipacks_after_pintset} пачек'
+        wdiot_logger.info(msg)
+        email_body += f"<br> {msg}"
 
     for pack in packs_under_pintset:
-        pack.to_process = to_process
+        pack.to_process = to_process or pack.to_process
         pack.status = PackStatus.ON_ASSEMBLY
+        if overpacking:
+            msg = f"Перевел пачку с QR={pack.qr}, id={pack.id} в сборку"
+            wdiot_logger.info(msg)
+            email_body += f"<br> {msg}"
 
-    current_settings = await get_system_settings()
+    if email_body:
+        await add_send_email_to_bg_tasks(background_tasks, "Лишние пачки", email_body)
+
     multiplier = current_settings.desync_settings.max_packs_on_assembly_multiplier.value
     max_packs_on_assembly = multiplier * multipacks_after_pintset
     if packs_on_assembly_amount + multipacks_after_pintset > max_packs_on_assembly:
         sync_error_msg += f" В сборке более {max_packs_on_assembly} пачек"
 
     if sync_error_msg:
-        background_tasks.add_task(turn_sync_error, sync_error_msg)
+        await add_sync_error_to_bg_tasks(background_tasks, sync_error_msg)
     return await engine.save_all(packs_under_pintset)
 
 
@@ -375,9 +412,11 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     current_time = await get_naive_datetime()
     to_process = False
     email_body = ""
+    current_settings = await get_system_settings()
 
     if delta < 0:
         packs_under_pintset = await get_packs_under_pintset()
+        subject = "Перевел пачки в сборку"
 
         while len(packs_under_pintset) >= multipacks_after_pintset and delta < 0:
 
@@ -393,9 +432,25 @@ async def pintset_finish(background_tasks: BackgroundTasks):
             delta = len(packs_on_assembly) - needed_packs
 
         if delta < 0:
-            error_msg = "Недостаточно пачек для формирования паллет"
-            background_tasks.add_task(turn_sync_error, error_msg)
-            return JSONResponse(status_code=400, content={"detail": error_msg})
+            if (
+                delta >= -multipacks_after_pintset
+                and current_settings.general_settings.generate_packs_in_pintset_finish.value
+            ):
+                subject += " и сгенерировал пачки"
+                packs_under_pintset, gen_email_body = await generate_packs(
+                    abs(delta),
+                    batch.number,
+                    await get_naive_datetime(),
+                    wdiot_logger,
+                    to_process=True,
+                    result=packs_on_assembly,
+                )
+                email_body += gen_email_body
+
+            else:
+                error_msg = "Недостаточно пачек для формирования паллет"
+                await add_sync_error_to_bg_tasks(background_tasks, error_msg)
+                return JSONResponse(status_code=400, content={"detail": error_msg})
 
     all_pack_ids = [[] for i in range(multipacks_after_pintset)]
 
@@ -408,7 +463,7 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     await engine.save_all(packs_on_assembly)
 
     if email_body:
-        background_tasks.add_task(send_email, "Перевел пачки в сборку", email_body)
+        await add_send_email_to_bg_tasks(background_tasks, subject, email_body)
 
     new_multipacks = []
     for pack_ids in all_pack_ids:
@@ -419,8 +474,6 @@ async def pintset_finish(background_tasks: BackgroundTasks):
         new_multipacks.append(multipack)
     await engine.save_all(new_multipacks)
 
-    current_settings = await get_system_settings()
-
     multiplier = (
         current_settings.desync_settings.max_multipacks_exited_pintset_multiplier.value
     )
@@ -428,8 +481,8 @@ async def pintset_finish(background_tasks: BackgroundTasks):
     multipacks_exited_pintset_amount = await count_exited_pintset_multipacks()
 
     if multipacks_exited_pintset_amount > max_multipacks_exited_pintset:
-        background_tasks.add_task(
-            turn_sync_error,
+        await add_sync_error_to_bg_tasks(
+            background_tasks,
             (
                 f"Паллет, вышедших из пинцета, больше чем "
                 f"{max_multipacks_exited_pintset}: "
@@ -450,7 +503,7 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
     wrapping_multipack = await get_first_exited_pintset_multipack()
     if not wrapping_multipack:
         error_msg = "В очереди нет паллеты, вышедшей из-под пинцета!"
-        background_tasks.add_task(turn_sync_error, error_msg)
+        await add_sync_error_to_bg_tasks(background_tasks, error_msg)
         return JSONResponse(status_code=400, content={"detail": error_msg})
 
     wrapping_multipack.status = Status.WRAPPING
@@ -462,7 +515,9 @@ async def multipack_wrapping_auto(background_tasks: BackgroundTasks):
         current_settings.desync_settings.max_wrapping_multipacks.value
     )
     if await count_wrapping_multipacks() > max_wrapping_multipacks:
-        background_tasks.add_task(turn_sync_error, "В обмотке более одной паллеты")
+        await add_sync_error_to_bg_tasks(
+            background_tasks, "В обмотке более одной паллеты"
+        )
     return wrapping_multipack
 
 
@@ -478,7 +533,7 @@ async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
 
     if not entered_pitchfork_multipack:
         error_msg = "В очереди нет паллет в обмотке!"
-        background_tasks.add_task(turn_sync_error, error_msg)
+        await add_sync_error_to_bg_tasks(background_tasks, error_msg)
         return JSONResponse(status_code=400, content={"detail": error_msg})
 
     entered_pitchfork_multipack.status = Status.ENTER_PITCHFORK
@@ -491,8 +546,9 @@ async def multipack_enter_pitchfork_auto(background_tasks: BackgroundTasks):
     )
     multipacks_entered_pitchfork = await count_multipacks_entered_pitchfork()
     if multipacks_entered_pitchfork > multipacks_after_pintset * multiplier:
-        background_tasks.add_task(
-            turn_sync_error,
+
+        await add_sync_error_to_bg_tasks(
+            background_tasks,
             (
                 f"На вилах более "
                 f"{multipacks_after_pintset * 2} паллет:"
@@ -532,7 +588,7 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
             f"В очереди {len(entered_pitchfork_multipacks)}, "
             f"ожидаем {multipacks_after_pintset}"
         )
-        background_tasks.add_task(turn_sync_error, error_msg)
+        await add_sync_error_to_bg_tasks(background_tasks, error_msg)
         return JSONResponse(status_code=400, content={"detail": error_msg})
 
     for i in range(multipacks_after_pintset):
@@ -555,7 +611,7 @@ async def pitchfork_worked(background_tasks: BackgroundTasks):
         )
 
     if sync_error_msg:
-        background_tasks.add_task(turn_sync_error, sync_error_msg)
+        await add_sync_error_to_bg_tasks(background_tasks, sync_error_msg)
     return entered_pitchfork_multipacks
 
 
@@ -686,15 +742,16 @@ async def cube_finish_auto(background_tasks: BackgroundTasks):
     if len(future_multipacks_on_packing_table) < needed_multipacks:
         log_message = f"При сборке куба на упаковочном столе меньше {needed_multipacks} паллет, пытаюсь добрать паллеты с другими статусами"
         wdiot_logger.info(log_message)
-        background_tasks.add_task(
-            send_email, "Недостаточно паллет на упаковочном столе", log_message
+        await add_send_email_to_bg_tasks(
+            background_tasks, "Недостаточно паллет на упаковочном столе", log_message
         )
+
     multipacks_on_packing_table = await get_multipacks_queue()
 
     current_time = await get_naive_datetime()
     if len(multipacks_on_packing_table) < needed_multipacks:
         error_msg = f"{current_time} попытка формирования куба, когда на упаковочном столе меньше {needed_multipacks} мультипаков"
-        background_tasks.add_task(turn_sync_error, error_msg)
+        await add_sync_error_to_bg_tasks(background_tasks, error_msg)
         return JSONResponse(status_code=400, content={"detail": error_msg})
 
     multipack_ids_with_pack_ids = {}

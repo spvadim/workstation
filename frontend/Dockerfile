@@ -13,7 +13,7 @@ WORKDIR /app
 # copy everything to /app directory
 # as opposed to on dev, in prod everything is copied to docker
 COPY package.json package-lock.json /app/
-RUN npm install --silent
+RUN npm install
 COPY ./ /app
 RUN npm run build
 

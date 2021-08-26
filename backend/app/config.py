@@ -58,7 +58,7 @@ default_days_to_delete = DaysToDelete(value=os.getenv("DROP_DATA_INTERVAL_DAYS")
 default_send_applikator_tg_message = SendApplikatorTgMessage(
     value=os.getenv("SEND_TG_MESSAGE_AFTER_APPLIKATOR")
 )
-default_pintset_stop = PintsetStop(value=os.getenv("PINTSET_STOP"))
+default_pintset_stop = PintsetStop(value=True)
 default_report_max_days = ReportMaxDays(value=os.getenv("REPORT_MAX_DAYS"))
 default_report_max_cubes = ReportMaxCubes(value=os.getenv("REPORT_MAX_CUBES"))
 default_applikator_curtain_opening_delay = CurtainOpeningDelay(
@@ -156,8 +156,8 @@ default_second_erd_settings = SecondERDSettings(
     erd_ip=ERDIp(),
     erd_snmp_port=ERDSNMPPort(),
     erd_community_string=ERDCommunityString(),
-    erd_first_oid=ERDFirstOID(),
-    erd_second_oid=ERDSecondOID(),
+    erd_first_oid=ERDFirstOID(title="ID шторки в ERD контроллере"),
+    erd_second_oid=ERDSecondOID(title="ID сбрасывателя в ERD контроллере"),
     erd_third_oid=ERDThirdOID(),
     erd_fourth_oid=ERDFourthOID(),
     erd_fifth_oid=ERDFifthOID(),
