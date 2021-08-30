@@ -152,8 +152,9 @@ def drop_pack_after_pintset(error_msg: str, pintset_settings: PintsetSettings):
                 }
             },
         )
-        wdiot_logger.info("Разморозил пинцет")
-        on_pintset(pintset_settings)
+        if delay > 0:
+            wdiot_logger.info("Разморозил пинцет")
+            on_pintset(pintset_settings)
 
 
 async def drop_pack_after_pintset_erd(
