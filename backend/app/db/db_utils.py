@@ -38,28 +38,44 @@ async def form_url(qr: str) -> str:
     return f"{ftp_url}/{qr}"
 
 
-async def get_by_id_or_404(model, id: ObjectId) -> Model:
+async def get_by_id(model, id: ObjectId) -> Model:
     instance = await engine.find_one(model, model.id == id)
+    return instance
+
+
+async def get_by_id_or_404(model, id: ObjectId) -> Model:
+    instance = await get_by_id(model, id)
     if instance is None:
         raise HTTPException(404, detail=f"{model} с id={id} не найден")
     return instance
 
 
-async def delete_multipack(id: ObjectId) -> Multipack:
-    multipack = await get_by_id_or_404(Multipack, id=id)
+async def delete_multipack(multipack: Multipack) -> Multipack:
     for pack_id in multipack.pack_ids:
-        pack = await get_by_id_or_404(Pack, id=pack_id)
-        await engine.delete(pack)
+        pack = await get_by_id(Pack, id=pack_id)
+        if pack:
+            await engine.delete(pack)
     await engine.delete(multipack)
     return multipack
 
 
-async def delete_cube(id: ObjectId) -> Cube:
-    cube = await get_by_id_or_404(Cube, id=id)
+async def delete_multipack_by_id(id: ObjectId) -> Multipack:
+    multipack = await get_by_id_or_404(Multipack, id=id)
+    return await delete_multipack(multipack)
+
+
+async def delete_cube(cube: Cube) -> Cube:
     for multipack_id in cube.multipack_ids_with_pack_ids.keys():
-        await delete_multipack(ObjectId(multipack_id))
+        multipack = await get_by_id(Multipack, ObjectId(multipack_id))
+        if multipack:
+            await delete_multipack(multipack)
     await engine.delete(cube)
     return cube
+
+
+async def delete_cube_by_id(id: ObjectId) -> Cube:
+    cube = await get_by_id_or_404(Cube, id=id)
+    return await delete_cube(cube)
 
 
 async def get_by_qr_or_404(model, qr: str) -> Model:

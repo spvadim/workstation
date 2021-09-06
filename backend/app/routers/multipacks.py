@@ -6,7 +6,7 @@ from odmantic import ObjectId
 
 from ..db.db_utils import (
     check_qr_unique,
-    delete_multipack,
+    delete_multipack_by_id,
     get_batch_by_number_or_return_last,
     get_by_id_or_404,
     get_by_qr_or_404,
@@ -75,8 +75,8 @@ async def get_multipack_by_qr(qr: str = Query(None)):
 
 @deep_logger_router.delete("/multipacks/{id}", response_model=Multipack)
 @version(1, 0)
-async def delete_pack_by_id(id: ObjectId):
-    return await delete_multipack(id)
+async def remove_multipack_by_id(id: ObjectId):
+    return await delete_multipack_by_id(id)
 
 
 @deep_logger_router.delete(
@@ -97,14 +97,14 @@ async def remove_multipacks_to_refresh_wrapper():
         raise HTTPException(status_code=400, detail=error_msg)
 
     for multipack in multipacks_to_delete:
-        await delete_multipack(multipack.id)
+        await delete_multipack_by_id(multipack.id)
 
     return multipacks_to_delete
 
 
 @deep_logger_router.patch("/multipacks/{id}", response_model=Multipack)
 @version(1, 0)
-async def update_pack_by_id(id: ObjectId, patch: MultipackPatchSchema):
+async def update_multipack_by_id(id: ObjectId, patch: MultipackPatchSchema):
     multipack = await get_by_id_or_404(Multipack, id)
 
     if patch.qr:
