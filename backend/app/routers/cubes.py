@@ -7,7 +7,7 @@ from odmantic import ObjectId
 from ..db.db_utils import (
     check_cube_qr,
     check_qr_unique,
-    delete_cube,
+    delete_cube_by_id,
     get_batch_by_number_or_return_last,
     get_by_id_or_404,
     get_by_qr_or_404,
@@ -319,13 +319,13 @@ async def get_cube_by_included_qr(qr: str = Query(None)):
 
 @deep_logger_router.delete("/cubes/{id}", response_model=Cube)
 @version(1, 0)
-async def delete_pack_by_id(id: ObjectId):
-    return await delete_cube(id)
+async def remove_cube_by_id(id: ObjectId):
+    return await delete_cube_by_id(id)
 
 
 @deep_logger_router.patch("/cubes/{id}", response_model=Cube)
 @version(1, 0)
-async def update_pack_by_id(id: ObjectId, patch: CubePatchSchema):
+async def update_cube_by_id(id: ObjectId, patch: CubePatchSchema):
     cube = await get_by_id_or_404(Cube, id)
 
     if patch.qr:

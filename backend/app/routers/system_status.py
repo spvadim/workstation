@@ -9,7 +9,7 @@ from ..db.db_utils import (
     change_coded_setting,
     check_cube_qr,
     check_qr_unique,
-    delete_cube,
+    delete_cube_by_id,
     delete_packs_queue,
     flush_packing_table,
     flush_pintset,
@@ -214,7 +214,7 @@ async def set_packing_table_normal_with_remove(background_tasks: BackgroundTasks
     state = await get_current_state()
     wrong_cube_id = state.wrong_cube_id
 
-    await delete_cube(wrong_cube_id)
+    await delete_cube_by_id(wrong_cube_id)
 
     background_tasks.add_task(flush_to_normal)
     return await flush_packing_table()
