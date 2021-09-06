@@ -63,6 +63,12 @@ class CubeIdentificationAuto(BaseModel):
 class CubePatchSchema(BaseModel):
     qr: Optional[str]
     barcode: Optional[str]
+    multipack_ids_with_pack_ids: Optional[Dict[str, List[ObjectId]]]
+    batch_number: Optional[ProductionBatchNumber]
+    created_at: Optional[datetime]
+    added_qr_at: Optional[datetime]
+    packs_in_multipacks: Optional[int]
+    multipacks_in_cubes: Optional[int]
     to_process: Optional[bool]
     comments: Optional[List[str]]
 
