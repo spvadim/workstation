@@ -57,7 +57,7 @@ const SettingsOptionInputBool = (optionName:string, groupName:string, editSettin
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
     return (
         <select className="input"
-                onChange={(e) => {
+                onBlur={(e) => {
                     let temp = Object.assign({}, editSettings);
                     temp[groupName][optionName].value = e.target.value === "true"
                     setEditSettings(temp);
@@ -70,12 +70,15 @@ const SettingsOptionInputBool = (optionName:string, groupName:string, editSettin
 
 const SettingsOptionInputString = (optionName:string, groupName:string, editSettings: Settings
     , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
+    const [value, setValue] = useState<string>(editSettings[groupName][optionName].value);
+
     return (
         <input className="input"
-        value={editSettings[groupName][optionName].value}
-        onChange={(e) => {
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onBlur={() => {
             let temp = Object.assign({}, editSettings);
-            temp[groupName][optionName].value = temp[groupName][optionName].value_type === "integer" ? +e.target.value : e.target.value;
+            temp[groupName][optionName].value = temp[groupName][optionName].value_type === "integer" ? +value : value;
             setEditSettings(temp);
         }}/>
     )
