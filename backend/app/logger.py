@@ -119,6 +119,14 @@ def init_logging():
                 "enqueue": True,
             },
             {
+                "sink": "logs/light_logs.log",
+                "level": logging.DEBUG,
+                "format": format_record,
+                "filter": make_filter("light"),
+                # "rotation": rotator.should_rotate,
+                "enqueue": True,
+            },
+            {
                 "sink": "logs/wdiot_logs.log",
                 "level": logging.DEBUG,
                 "format": format_record,
