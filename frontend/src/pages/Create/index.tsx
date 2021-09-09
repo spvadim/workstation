@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { createUseStyles } from 'react-jss';
 import axios from "axios";
 import { Redirect } from "react-router-dom";
 
@@ -8,128 +7,10 @@ import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import { Notification } from "../../components/Notification/index.js";
 import { Text, InputRadio, Button, TextField, NotificationPanel } from 'src/components';
-import { color } from 'src/theme';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
-
-
-const useStyles = createUseStyles({
-    Edit: {
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-    },
-    header: {
-        paddingLeft: 49,
-        paddingRight: 49,
-        marginTop: 24,
-        marginBottom: 24,
-        display: 'flex',
-        justifyContent: 'space-between',
-    },
-    headerInputs: {
-        '& > *:nth-child(odd)': {
-            marginLeft: 50,
-        },
-        '& > *:nth-child(even)': {
-            marginLeft: 10,
-        },
-        display: 'flex',
-        alignItems: 'center',
-    },
-    tableContainer: {
-        '& > div': {
-            marginLeft: 12,
-            flexBasis: 0,
-            flexGrow: 1,
-            height: 662,
-        },
-        flexGrow: 1,
-        display: 'flex',
-        paddingTop: 65,
-        paddingRight: 22,
-        paddingLeft: 36,
-        position: 'relative',
-    },
-    footer: {
-        display: 'flex',
-        justifyContent: 'flex-end',
-        paddingBottom: 22,
-        paddingLeft: 27,
-        paddingRight: 27,
-    },
-    switchContainer: {
-        userSelect: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        fontSize: 18,
-    },
-    switchTitle: {
-        fontSize: 24,
-        fontWeight: 700,
-    },
-    tableDescription: {
-        height: 135,
-    },
-    buttonContainer: {
-        '& > .button > span': {
-            flexGrow: 1,
-        },
-        display: 'grid',
-        gridAutoFlow: 'column',
-        gridAutoColumns: '1fr',
-        columnGap: 10,
-    },
-    buttonSubmit: {
-        borderColor: color.yellow,
-    },
-    tableContent: {
-        height: 600,
-    },
-    switchTable: {
-        '& .switch_thumb': {
-            backgroundColor: color.yellow,
-        },
-        position: 'absolute',
-        left: 1000,
-        zIndex: 1,
-    },
-    textEditor: {
-        borderStyle: 'none',
-        outline: 'none',
-    },
-    tableTitleContainer: {
-        paddingLeft: 12,
-        display: 'grid',
-        gridAutoFlow: 'column',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        columnGap: 10,
-        height: 50,
-    },
-    form: {
-        '& .input-radio': {
-            flexDirection: 'row-reverse',
-        },
-        marginTop: 100,
-        display: 'grid',
-        gridAutoRows: 54,
-        rowGap: '12px',
-
-    },
-    radioLabel: {
-        flexGrow: 1,
-        marginLeft: 12,
-    },
-    radioMultipack: {
-        '& .input-radio_mark': {
-            marginRight: 12,
-        },
-        flexDirection: 'row-reverse',
-        justifyContent: 'flex-end',
-    },
-});
+import "./style.scss"
 
 const CtxCurrentMultipack = React.createContext({
     currentMultipack: null,
@@ -139,7 +20,6 @@ const CtxCurrentMultipack = React.createContext({
 
 const RadioCurrentMultipack = ({ index }) => {
     const { currentMultipack, setCurrentMultipack } = React.useContext(CtxCurrentMultipack);
-    const classes = useStyles();
     return (
         <>
             <InputRadio name="multipacksChoose"
@@ -147,7 +27,7 @@ const RadioCurrentMultipack = ({ index }) => {
                 key={index}
                 checked={index === currentMultipack}
                 onChange={() => setCurrentMultipack(index)}
-                className={classes.radioMultipack}>
+                className="radio-multipack">
                 {index + 1}
             </InputRadio>
         </>
@@ -178,7 +58,6 @@ const tableProps = {
 };
 
 function Create() {
-    const classes = useStyles();
     const [page, setPage] = useState('');
     const [batchNumber, setBatchNumber] = useState('');
     const [params, setParams] = useState([]);
@@ -197,51 +76,6 @@ function Create() {
             .then(res => setParams(res.data))
             .catch(e => console.log(e.response))
     }, [])
-
-
-    // const deleteRow = (row, from) => {
-    //     console.log(row, from)
-    //     if (from === "addTable") {
-    //         let temp = addTableData.filter((obj) => obj.qr !== row.qr);
-    //         setAddTableData(temp);
-    //     } else if (from === "removeTable") {
-    //         let temp = removeTableData.filter((obj) => obj.qr !== row.qr);
-    //         setRemoveTableData(temp);
-    //     } else if (from === "containTable") {
-    //         let finded = containTableData.find(obj => obj.qr === row.qr)
-    //         let findedInRemoveTable = removeTableData.find(obj => obj.qr === row.qr)
-    //         if (finded && !findedInRemoveTable) {
-    //             let temp = removeTableData.slice();
-    //             temp.push(row)
-    //             setRemoveTableData(temp);
-    //         }
-    //     }
-    // }
-
-    // const addPack = (qr) => {
-    //     let temp = addTableData.slice();
-    //     temp.push({ barcode: barcode, qr: qr})
-    //     setAddTableData(temp);
-    // }
-
-    // const submitChanges = () => {
-    //     if (containTableData.length === 0) {
-    //         axios.delete(address + "/api/v1_0/" + type + "/" + description.id)
-    //             .then(() => setPage("/"))
-
-    //     } else if (containTableData !== "/loader") {
-    //         let packs = containTableData.map((obj) => obj.id);
-    //         let temp = { pack_ids: packs };
-    //         axios.patch(address + "/api/v1_0/" + type + "/" + description.id, temp)
-    //             .then(() => {
-    //                 setModalSubmit(false);
-    //                 setPage("/");
-    //             })
-
-    //     } else {
-    //         setPage("/")
-    //     }
-    // }
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/settings")
@@ -360,7 +194,7 @@ function Create() {
     if (page === "/") return <Redirect to="/" />
 
     return (
-        <div className={classes.Edit}>
+        <div className="edit">
             {modalCancel && (
                 <ModalWindow
                     title="Отменить изменения"
@@ -370,11 +204,11 @@ function Create() {
                         modalCancel[0](modalCancel[1]);
                         setModalCancel(false);
                     }}>
-                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
                         Отменить
                     </Button>
                     <Button onClick={() => setModalCancel(false)} theme="secondary">
-                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
                         Вернуться к изменениям
                     </Button>
                 </ModalWindow>
@@ -388,20 +222,20 @@ function Create() {
                         modalSubmit[0](modalSubmit[1]);
                         setModalSubmit(false);
                     }}>
-                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
                         Принять изменения
                     </Button>
                     <Button onClick={() => setModalSubmit(false)} theme="secondary">
-                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
                         Отменить
                     </Button>
                 </ModalWindow>
             )}
 
-            <div className={classes.header}>
+            <div className="header">
                 <Text type="title">Создание</Text>
-                <div className={classes.headerInputs}>
-                    <span className={classes.inputLabel}>Номер партии ГП: </span>
+                <div className="header-inputs">
+                    <span className="input-label">Номер партии ГП: </span>
                  <TextField
                         placeholder="0000"
                         name="batch_number"
@@ -410,7 +244,7 @@ function Create() {
                         onChange={e => setBatchNumber(e.target.value)}
                    />
                     
-                    <span className={classes.inputLabel}>QR куба: </span>
+                    <span className="input-label">QR куба: </span>
                     <TextField
                         placeholder="0000"
                         name="cube_qr"
@@ -419,7 +253,7 @@ function Create() {
                         onChange={e => setCubeQr(e.target.value)}
                     />
 
-                    <span className={classes.inputLabel}>Штрихкод каждой пачки в кубе: </span>
+                    <span className="input-label">Штрихкод каждой пачки в кубе: </span>
                     <TextField
                         placeholder="0000"
                         name="barcode"
@@ -431,22 +265,22 @@ function Create() {
                 </div>
             </div>
 
-            <div className={classes.tableContainer}>
-                <div className={classes.form}>
+            <div className="table-container">
+                <div className="form">
                     {params.map((obj, index) => (
                         <InputRadio name="param_batch"
                             htmlFor={obj.id}
                             key={index}
                             onClick={() => setSettings(obj)}>
-                            <span className={classes.radioLabel}>
+                            <span className="radio-label">
                                 Куб: {obj.multipacks} паллет, паллета: {obj.packs} пачек,
                                     <br />
                                     пинцет: {obj.multipacks_after_pintset} паллета
                             </span>
                         </InputRadio>
                     ))}
-                    <div className={classes.buttonContainer}>
-                        <Button onClick={() => setModalSubmit([submitChanges])} className={classes.buttonSubmit}>
+                    <div className="button-container">
+                        <Button onClick={() => setModalSubmit([submitChanges])} className="button-submit">
                             <img src={imgOk} /><span>Принять изменения</span>
                         </Button>
                         <Button onClick={() => setModalCancel([closeChanges])} theme="secondary">
@@ -456,14 +290,14 @@ function Create() {
                 </div>
 
                 <div>
-                    <div className={classes.tableTitleContainer}>
-                        <Text className={classes.tableTitle} type="title2">Паллеты</Text>
+                    <div className="table-title-container">
+                        <Text className="table-title" type="title2">Паллеты</Text>
                         <Button onClick={() => addEmptyMultipack()}><span>Добавить</span></Button>
                     </div>
                     <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>
                         <TableData
                             rows={multipacksTableData}
-                            className={classes.tableContent}
+                            className="table-content"
                             onDelete={obj => {
                                 deleteMultipack(multipacksTableData.indexOf(obj))
                             }}
@@ -474,8 +308,8 @@ function Create() {
                 </div>
 
                 <div>
-                    <div className={classes.tableTitleContainer}>
-                        <Text className={classes.tableTitle} type="title2">Пачки</Text>
+                    <div className="table-title-container">
+                        <Text className="table-title" type="title2">Пачки</Text>
                         <TextField
                             placeholder="0000"
                             name="pack_qr"
@@ -490,7 +324,7 @@ function Create() {
                         rows={multipacksTableData[currentMultipack] ?
                             multipacksTableData[currentMultipack].map((obj, index) => ({ number: index + 1, qr: obj.qr })) :
                             []}
-                        className={classes.tableContent}
+                        className="table-content"
                         onDelete={obj => deletePack(obj.number - 1, currentMultipack)}
                         hideTracksWhenNotNeeded
                         {...tableProps.packsTable}
@@ -513,19 +347,6 @@ function Create() {
                     )
                 }
             />
-
-            {/* <div className={classes.footer}>
-                <div>
-                    <div className={classes.switchTitle} style={{ textAlign: 'right' }}>
-                        Вид интерфейса:
-                    </div>
-                    <div className={classes.switchContainer}>
-                        Сжатый
-                    <Switch onClick={console.error} />
-                        Расширенный
-                    </div>
-                </div>
-            </div> */}
         </div>
     );
 }

@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createUseStyles } from 'react-jss';
 import axios from "axios";
-// import { Redirect } from "react-router-dom";
 
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
@@ -10,104 +8,6 @@ import { InputRadio, Button, TextField } from 'src/components';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
-
-const useStyles = createUseStyles({
-    header: {
-        // display: "flex",
-        marginBottom: 10,
-    },
-
-    title1: {
-        fontSize: "2rem",
-        fontWeight: 700,
-        
-    },
-
-    title2: {
-        fontSize: "1.5rem",
-        fontWeight: 700,
-        float: "left",
-    },
-
-    body: {
-    
-    },
-
-    inputContainer: {
-        display: "flex",
-        flexDirection: "column",
-        marginBottom: 10,
-    },
-
-    textInput: {
-        fontSize: "2rem",
-    },
-
-    inputRadio: {
-        fontSize: "1.5rem",
-    },
-
-    button: {
-        fontWeight: 600
-    },
-
-    buttonContainer: {
-        display: "flex",
-        
-    },
-
-    tableContainer: {
-        '& > div': {
-            marginLeft: 12,
-            flexBasis: 0,
-            flexGrow: 1,
-            height: 662,
-        },
-        flexGrow: 1,
-        display: 'flex',
-        paddingTop: 65,
-        paddingRight: 22,
-        paddingLeft: 36,
-        position: 'relative',
-    },
-
-    tableDescription: {
-        height: 135,
-    },
-
-    tableContent: {
-        height: 300,
-    },
-
-    radioLabel: {
-        flexGrow: 1,
-        marginLeft: 12,
-    },
-    radioMultipack: {
-        '& .input-radio_mark': {
-            marginRight: 12,
-        },
-        flexDirection: 'row-reverse',
-        justifyContent: 'flex-end',
-    },
-
-    notification: {
-        border: "1px solid red",
-        borderRadius: "7px",
-        padding: "0.7rem",
-        fontSize: "1.3rem",
-        fontWeight: 500,
-        position: "fixed",
-        right: 15,
-        maxWidth: "50%",
-        wordWrap: "break-word",
-        backgroundColor: "#fea1a1",
-    },
-
-});
-
-
-
 const CtxCurrentMultipack = React.createContext({
     currentMultipack: null,
     setCurrentMultipack: () => console.warn,
@@ -115,7 +15,6 @@ const CtxCurrentMultipack = React.createContext({
 
 const RadioCurrentMultipack = ({ index }) => {
     const { currentMultipack, setCurrentMultipack } = React.useContext(CtxCurrentMultipack);
-    const classes = useStyles();
     return (
         <>
             <InputRadio name="multipacksChoose"
@@ -123,7 +22,7 @@ const RadioCurrentMultipack = ({ index }) => {
                 key={index}
                 checked={index === currentMultipack}
                 onChange={() => setCurrentMultipack(index)}
-                className={classes.radioMultipack}>
+                className="radio-multipack">
                 {index + 1}
             </InputRadio>
         </>
@@ -154,7 +53,6 @@ const tableProps = {
 };
 
 function Create_mobile() {
-    const classes = useStyles();
     const [page, setPage] = useState('');
     const [batchNumber, setBatchNumber] = useState('');
     const [params, setParams] = useState([]);
@@ -308,11 +206,11 @@ function Create_mobile() {
                         modalCancel[0](modalCancel[1]);
                         setModalCancel(false);
                     }}>
-                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
                         Отменить
                     </Button>
                     <Button onClick={() => setModalCancel(false)} theme="secondary">
-                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
                         Вернуться к изменениям
                     </Button>
                 </ModalWindow>
@@ -326,52 +224,52 @@ function Create_mobile() {
                         modalSubmit[0](modalSubmit[1]);
                         setModalSubmit(false);
                     }}>
-                        <img className={classes.modalButtonIcon} src={imgOk} style={{ width: 25 }} />
+                        <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
                         Принять изменения
                     </Button>
                     <Button onClick={() => setModalSubmit(false)} theme="secondary">
-                        <img className={classes.modalButtonIcon} src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                        <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
                         Отменить
                     </Button>
                 </ModalWindow>
             )}
 
-            <div className={classes.header}>
-                <span className={classes.title1} style={{borderBottom: "3px solid #086bb2"}}>Создание</span>
+            <div className="header">
+                <span className="title1" style={{borderBottom: "3px solid #086bb2"}}>Создание</span>
                 {notificationErrorText &&
-                    <div className={classes.notification}>
+                    <div className="notification">
                         <span>{notificationErrorText}</span>
                     </div> 
                 }
             </div>
 
-            <div className={classes.body}>
-                <div className={classes.inputContainer}>
-                    <span className={classes.title2}>Номер партии ГП:</span>
-               <TextField className={classes.textInput} placeholder="0000" onChange={e => setBatchNumber(e.target.value)}></TextField>
+            <div className="body">
+                <div className="input-container">
+                    <span className="title2">Номер партии ГП:</span>
+               <TextField className="text-input" placeholder="0000" onChange={e => setBatchNumber(e.target.value)}></TextField>
                
                 </div>
 
-                <div className={classes.inputContainer}>
-                    <span className={classes.title2}>QR куба:</span>
-                    <TextField className={classes.textInput} placeholder="0000" onChange={e => setCubeQr(e.target.value)}></TextField>
+                <div className="input-container">
+                    <span className="title2">QR куба:</span>
+                    <TextField className="text-input" placeholder="0000" onChange={e => setCubeQr(e.target.value)}></TextField>
                 </div>
 
-                <div className={classes.inputContainer}>
-                    <span className={classes.title2}>Штрихкод каждой пачки в кубе:</span>
-                    <TextField className={classes.textInput} placeholder="0000" onChange={e => setBarcode(e.target.value)}></TextField>
+                <div className="input-container">
+                    <span className="title2">Штрихкод каждой пачки в кубе:</span>
+                    <TextField className="text-input" placeholder="0000" onChange={e => setBarcode(e.target.value)}></TextField>
                 </div>
 
                 <br />
                 <br />
 
-                <div className={classes.inputContainer}>
+                <div className="input-container">
                     {params.map((obj, index) => (
                         <InputRadio name="param_batch"
                             htmlFor={obj.id}
                             key={index}
                             onClick={() => setSettings(obj)}>
-                            <span className={classes.inputRadio}>
+                            <span className="input-radio">
                                 Куб: {obj.multipacks} паллет, паллета: {obj.packs} пачек,
                                     <br />
                                     пинцет: {obj.multipacks_after_pintset} паллета
@@ -382,15 +280,15 @@ function Create_mobile() {
                 </div>
                 
                 <div>
-                    <div className={classes.header} style={{justifyContent: "space-between", alignItems: "center"}}>
-                        <span className={classes.title2}>Паллеты</span>
-                        <Button style={{margin: "0 auto"}} className={classes.button} onClick={() => addEmptyMultipack()}>Добавить</Button>
+                    <div className="header" style={{justifyContent: "space-between", alignItems: "center"}}>
+                        <span className="title2">Паллеты</span>
+                        <Button style={{margin: "0 auto"}} className="button" onClick={() => addEmptyMultipack()}>Добавить</Button>
                     </div>
 
                     <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>
                         <TableData
                             rows={multipacksTableData}
-                            className={classes.tableContent}
+                            className="table-content"
                             onDelete={obj => {
                                 deleteMultipack(multipacksTableData.indexOf(obj))
                             }}
@@ -401,8 +299,8 @@ function Create_mobile() {
                 </div>
 
                 <div>
-                    <div className={classes.header} style={{justifyContent: "space-between", alignItems: "center"}}>
-                        <span className={classes.title2}>Пачки</span>
+                    <div className="header" style={{justifyContent: "space-between", alignItems: "center"}}>
+                        <span className="title2">Пачки</span>
                         <TextField style={{fontSize: "1.5rem"}}
                             placeholder="0000"
                             name="pack_qr"
@@ -417,15 +315,15 @@ function Create_mobile() {
                         rows={multipacksTableData[currentMultipack] ?
                             multipacksTableData[currentMultipack].map((obj, index) => ({ number: index + 1, qr: obj.qr })) :
                             []}
-                        className={classes.tableContent}
+                        className="table-content"
                         onDelete={obj => deletePack(obj.number - 1, currentMultipack)}
                         hideTracksWhenNotNeeded
                         {...tableProps.packsTable}
                     />
                 </div>
 
-                <div className={classes.buttonContainer}>
-                        <Button onClick={() => setModalSubmit([submitChanges])} className={classes.buttonSubmit}>
+                <div className="button-container">
+                        <Button onClick={() => setModalSubmit([submitChanges])} className="button-submit">
                             <img src={imgOk} /><span>Принять изменения</span>
                         </Button>
                         <Button onClick={() => setModalCancel([closeChanges])} theme="secondary">

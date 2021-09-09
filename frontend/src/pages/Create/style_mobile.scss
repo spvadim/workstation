@@ -1,0 +1,85 @@
+.header {
+    margin-bottom: 10px;
+}
+
+.title1 {
+    font-size: 2rem;
+    font-weight: 700px;
+}
+
+.title2 {
+    font-size: 1.5rem;
+    font-weight: 700px;
+    float: left;
+}
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.text-input {
+    font-size: 2rem;
+}
+
+.input-radio {
+    font-size: 1.5rem;
+}
+
+.button {
+    font-weight: 600px;
+}
+
+.button-container {
+    display: flex;
+}
+
+.table-container {
+    & > div {
+        margin-left: 12px;
+        flex-basis: 0;
+        flex-grow: 1;
+        height: 662px;
+    }
+    flex-grow: 1;
+    display: flex;
+    padding-top: 65px;
+    padding-right: 22px;
+    padding-left: 36px;
+    position: relative;
+}
+
+.table-description {
+    height: 135px;
+}
+
+.table-content {
+    height: 300px;
+}
+
+.radio-label {
+    flex-grow: 1;
+    margin-left: 12px;
+}
+
+.radio-multipack {
+    & .input-radio_mark {
+        margin-right: 12px;
+    }
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.notification {
+    border: 1px solid red;
+    border-radius: 7px;
+    padding: 0.7rem;
+    font-size: 1.3rem;
+    font-weight: 500px;
+    position: fixed;
+    right: 15px;
+    max-width: 50%;
+    word-wrap: break-word;
+    background-color: #fea1a1;
+}

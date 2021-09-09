@@ -5,8 +5,8 @@ import BatchParams from './pages/BatchParams/index.js';
 import Main from './pages/Main/index.js';
 import Main_new from './pages/Main_new/index.js';
 import Edit from './pages/Edit/index.js';
-import Create from './pages/Create/index.js';
-import Create_mobile from './pages/Create/mobile.js';
+import Create from './pages/Create/index.tsx';
+import Create_mobile from './pages/Create/mobile.tsx';
 import Admin from './pages/Admin/index.tsx';
 import Events from './pages/Events/index.js';
 import QrScanner from './pages/QrScanner/index.js';
@@ -28,8 +28,6 @@ const useStyles = createUseStyles({
 		position: "relative",
 	},
 	App_inner: {
-		// position: "absolute",
-		// overflowY: "scroll",
 		height: "100%",
 		width: "100%",
 		zIndex: 1,
