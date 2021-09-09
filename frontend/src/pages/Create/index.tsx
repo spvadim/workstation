@@ -11,26 +11,24 @@ import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
 import "./style.scss"
+import "./style_mobile.scss"
 
 const CtxCurrentMultipack = React.createContext({
     currentMultipack: null,
     setCurrentMultipack: () => console.warn,
 });
 
-
 const RadioCurrentMultipack = ({ index }) => {
     const { currentMultipack, setCurrentMultipack } = React.useContext(CtxCurrentMultipack);
     return (
-        <>
-            <InputRadio name="multipacksChoose"
-                htmlFor={index}
-                key={index}
-                checked={index === currentMultipack}
-                onChange={() => setCurrentMultipack(index)}
-                className="radio-multipack">
-                {index + 1}
-            </InputRadio>
-        </>
+        <InputRadio name="multipacksChoose"
+            htmlFor={index}
+            key={index}
+            checked={index === currentMultipack}
+            onChange={() => setCurrentMultipack(index)}
+            className="radio-multipack">
+            {index + 1}
+        </InputRadio>
     )
 }
 
@@ -193,162 +191,313 @@ function Create() {
 
     if (page === "/") return <Redirect to="/" />
 
-    return (
-        <div className="edit">
-            {modalCancel && (
-                <ModalWindow
-                    title="Отменить изменения"
-                    description="Вы действительно хотите отменить изменения?"
-                >
-                    <Button onClick={() => {
-                        modalCancel[0](modalCancel[1]);
-                        setModalCancel(false);
-                    }}>
-                        <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
-                        Отменить
-                    </Button>
-                    <Button onClick={() => setModalCancel(false)} theme="secondary">
-                        <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
-                        Вернуться к изменениям
-                    </Button>
-                </ModalWindow>
-            )}
-            {modalSubmit && (
-                <ModalWindow
-                    title="Принять изменения"
-                    description="Вы действительно хотите принять изменения?"
-                >
-                    <Button onClick={() => {
-                        modalSubmit[0](modalSubmit[1]);
-                        setModalSubmit(false);
-                    }}>
-                        <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
-                        Принять изменения
-                    </Button>
-                    <Button onClick={() => setModalSubmit(false)} theme="secondary">
-                        <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
-                        Отменить
-                    </Button>
-                </ModalWindow>
-            )}
-
-            <div className="header">
-                <Text type="title">Создание</Text>
-                <div className="header-inputs">
-                    <span className="input-label">Номер партии ГП: </span>
-                 <TextField
-                        placeholder="0000"
-                        name="batch_number"
-                        type="text"
-                        value={batchNumber}
-                        onChange={e => setBatchNumber(e.target.value)}
-                   />
+    if (window.screen.width < 600) {
+        return (
+            <div style={{padding: "10px 15px"}}>
+                {modalCancel && (
+                    <ModalWindow
+                        title="Отменить изменения"
+                        description="Вы действительно хотите отменить изменения?"
+                    >
+                        <Button onClick={() => {
+                            modalCancel[0](modalCancel[1]);
+                            setModalCancel(false);
+                        }}>
+                            <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
+                            Отменить
+                        </Button>
+                        <Button onClick={() => setModalCancel(false)} theme="secondary">
+                            <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                            Вернуться к изменениям
+                        </Button>
+                    </ModalWindow>
+                )}
+                {modalSubmit && (
+                    <ModalWindow
+                        title="Принять изменения"
+                        description="Вы действительно хотите принять изменения?"
+                    >
+                        <Button onClick={() => {
+                            modalSubmit[0](modalSubmit[1]);
+                            setModalSubmit(false);
+                        }}>
+                            <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
+                            Принять изменения
+                        </Button>
+                        <Button onClick={() => setModalSubmit(false)} theme="secondary">
+                            <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                            Отменить
+                        </Button>
+                    </ModalWindow>
+                )}
+    
+                <div className="header">
+                    <span className="title1" style={{borderBottom: "3px solid #086bb2"}}>Создание</span>
+                    {notificationErrorText &&
+                        <div className="notification">
+                            <span>{notificationErrorText}</span>
+                        </div> 
+                    }
+                </div>
+    
+                <div className="body">
+                    <div className="input-container">
+                        <span className="title2">Номер партии ГП:</span>
+                   <TextField className="text-input" placeholder="0000" onChange={e => setBatchNumber(e.target.value)}></TextField>
+                   
+                    </div>
+    
+                    <div className="input-container">
+                        <span className="title2">QR куба:</span>
+                        <TextField className="text-input" placeholder="0000" onChange={e => setCubeQr(e.target.value)}></TextField>
+                    </div>
+    
+                    <div className="input-container">
+                        <span className="title2">Штрихкод каждой пачки в кубе:</span>
+                        <TextField className="text-input" placeholder="0000" onChange={e => setBarcode(e.target.value)}></TextField>
+                    </div>
+    
+                    <br />
+                    <br />
+    
+                    <div className="input-container">
+                        {params.map((obj, index) => (
+                            <InputRadio name="param_batch"
+                                htmlFor={obj.id}
+                                key={index}
+                                onClick={() => setSettings(obj)}>
+                                <span className="input-radio">
+                                    Куб: {obj.multipacks} паллет, паллета: {obj.packs} пачек,
+                                        <br />
+                                        пинцет: {obj.multipacks_after_pintset} паллета
+                                </span>
+                            </InputRadio>
+                        ))}
+                        
+                    </div>
                     
-                    <span className="input-label">QR куба: </span>
-                    <TextField
-                        placeholder="0000"
-                        name="cube_qr"
-                        type="text"
-                        value={cubeQr}
-                        onChange={e => setCubeQr(e.target.value)}
-                    />
-
-                    <span className="input-label">Штрихкод каждой пачки в кубе: </span>
-                    <TextField
-                        placeholder="0000"
-                        name="barcode"
-                        type="text"
-                        value={barcode}
-                        onChange={e => setBarcode(e.target.value)}
-                    />
-
+                    <div>
+                        <div className="header" style={{justifyContent: "space-between", alignItems: "center"}}>
+                            <span className="title2">Паллеты</span>
+                            <Button style={{margin: "0 auto"}} className="button" onClick={() => addEmptyMultipack()}>Добавить</Button>
+                        </div>
+    
+                        <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>
+                            <TableData
+                                rows={multipacksTableData}
+                                className="table-content"
+                                onDelete={obj => {
+                                    deleteMultipack(multipacksTableData.indexOf(obj))
+                                }}
+                                hideTracksWhenNotNeeded
+                                {...tableProps.multipacksTable}
+                            />
+                        </CtxCurrentMultipack.Provider>
+                    </div>
+    
+                    <div>
+                        <div className="header" style={{justifyContent: "space-between", alignItems: "center"}}>
+                            <span className="title2">Пачки</span>
+                            <TextField style={{fontSize: "1.5rem"}}
+                                placeholder="0000"
+                                name="pack_qr"
+                                type="text"
+                                value={packQr}
+                                onChange={e => setPackQr(e.target.value)}
+                                onKeyPress={e => (e.charCode === 13) && addPackToMultipack(packQr, currentMultipack)}
+                            />
+                        </div>
+    
+                        <TableData
+                            rows={multipacksTableData[currentMultipack] ?
+                                multipacksTableData[currentMultipack].map((obj, index) => ({ number: index + 1, qr: obj.qr })) :
+                                []}
+                            className="table-content"
+                            onDelete={obj => deletePack(obj.number - 1, currentMultipack)}
+                            hideTracksWhenNotNeeded
+                            {...tableProps.packsTable}
+                        />
+                    </div>
+    
+                    <div className="button-container">
+                            <Button onClick={() => setModalSubmit([submitChanges])} className="button-submit">
+                                <img src={imgOk} /><span>Принять изменения</span>
+                            </Button>
+                            <Button onClick={() => setModalCancel([closeChanges])} theme="secondary">
+                                <img src={imgCross} style={{ filter: 'invert(1)' }} /><span>Отменить изменения</span>
+                            </Button>
+                        </div>
+                    
                 </div>
             </div>
+        );
+    } else {
+        useEffect(() => {
+            axios.get(address + "/api/v1_0/settings")
+                .then(res => {
+                    if (res.data.location_settings) {
+                        document.title = "Новый куб: " + res.data.location_settings.place_name.value
+                    }
+                })
+        }, [])
 
-            <div className="table-container">
-                <div className="form">
-                    {params.map((obj, index) => (
-                        <InputRadio name="param_batch"
-                            htmlFor={obj.id}
-                            key={index}
-                            onClick={() => setSettings(obj)}>
-                            <span className="radio-label">
-                                Куб: {obj.multipacks} паллет, паллета: {obj.packs} пачек,
-                                    <br />
-                                    пинцет: {obj.multipacks_after_pintset} паллета
-                            </span>
-                        </InputRadio>
-                    ))}
-                    <div className="button-container">
-                        <Button onClick={() => setModalSubmit([submitChanges])} className="button-submit">
-                            <img src={imgOk} /><span>Принять изменения</span>
+        return (
+            <div className="edit">
+                {modalCancel && (
+                    <ModalWindow
+                        title="Отменить изменения"
+                        description="Вы действительно хотите отменить изменения?"
+                    >
+                        <Button onClick={() => {
+                            modalCancel[0](modalCancel[1]);
+                            setModalCancel(false);
+                        }}>
+                            <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
+                            Отменить
                         </Button>
-                        <Button onClick={() => setModalCancel([closeChanges])} theme="secondary">
-                            <img src={imgCross} style={{ filter: 'invert(1)' }} /><span>Отменить изменения</span>
+                        <Button onClick={() => setModalCancel(false)} theme="secondary">
+                            <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                            Вернуться к изменениям
                         </Button>
-                    </div>
-                </div>
-
-                <div>
-                    <div className="table-title-container">
-                        <Text className="table-title" type="title2">Паллеты</Text>
-                        <Button onClick={() => addEmptyMultipack()}><span>Добавить</span></Button>
-                    </div>
-                    <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>
-                        <TableData
-                            rows={multipacksTableData}
-                            className="table-content"
-                            onDelete={obj => {
-                                deleteMultipack(multipacksTableData.indexOf(obj))
-                            }}
-                            hideTracksWhenNotNeeded
-                            {...tableProps.multipacksTable}
-                        />
-                    </CtxCurrentMultipack.Provider>
-                </div>
-
-                <div>
-                    <div className="table-title-container">
-                        <Text className="table-title" type="title2">Пачки</Text>
+                    </ModalWindow>
+                )}
+                {modalSubmit && (
+                    <ModalWindow
+                        title="Принять изменения"
+                        description="Вы действительно хотите принять изменения?"
+                    >
+                        <Button onClick={() => {
+                            modalSubmit[0](modalSubmit[1]);
+                            setModalSubmit(false);
+                        }}>
+                            <img className="modal-button-icon" src={imgOk} style={{ width: 25 }} />
+                            Принять изменения
+                        </Button>
+                        <Button onClick={() => setModalSubmit(false)} theme="secondary">
+                            <img className="modal-button-icon" src={imgCross} style={{ filter: 'invert(1)', width: 22 }} />
+                            Отменить
+                        </Button>
+                    </ModalWindow>
+                )}
+    
+                <div className="header">
+                    <Text type="title">Создание</Text>
+                    <div className="header-inputs">
+                        <span className="input-label">Номер партии ГП: </span>
+                     <TextField
+                            placeholder="0000"
+                            name="batch_number"
+                            type="text"
+                            value={batchNumber}
+                            onChange={e => setBatchNumber(e.target.value)}
+                       />
+                        
+                        <span className="input-label">QR куба: </span>
                         <TextField
                             placeholder="0000"
-                            name="pack_qr"
+                            name="cube_qr"
                             type="text"
-                            value={packQr}
-                            forceFocus
-                            onChange={e => setPackQr(e.target.value)}
-                            onKeyPress={e => (e.charCode === 13) && addPackToMultipack(packQr, currentMultipack)}
+                            value={cubeQr}
+                            onChange={e => setCubeQr(e.target.value)}
+                        />
+    
+                        <span className="input-label">Штрихкод каждой пачки в кубе: </span>
+                        <TextField
+                            placeholder="0000"
+                            name="barcode"
+                            type="text"
+                            value={barcode}
+                            onChange={e => setBarcode(e.target.value)}
+                        />
+    
+                    </div>
+                </div>
+    
+                <div className="table-container">
+                    <div className="form">
+                        {params.map((obj, index) => (
+                            <InputRadio name="param_batch"
+                                htmlFor={obj.id}
+                                key={index}
+                                onClick={() => setSettings(obj)}>
+                                <span className="radio-label">
+                                    Куб: {obj.multipacks} паллет, паллета: {obj.packs} пачек,
+                                        <br />
+                                        пинцет: {obj.multipacks_after_pintset} паллета
+                                </span>
+                            </InputRadio>
+                        ))}
+                        <div className="button-container">
+                            <Button onClick={() => setModalSubmit([submitChanges])} className="button-submit">
+                                <img src={imgOk} /><span>Принять изменения</span>
+                            </Button>
+                            <Button onClick={() => setModalCancel([closeChanges])} theme="secondary">
+                                <img src={imgCross} style={{ filter: 'invert(1)' }} /><span>Отменить изменения</span>
+                            </Button>
+                        </div>
+                    </div>
+    
+                    <div>
+                        <div className="table-title-container">
+                            <Text className="table-title" type="title2">Паллеты</Text>
+                            <Button onClick={() => addEmptyMultipack()}><span>Добавить</span></Button>
+                        </div>
+                        <CtxCurrentMultipack.Provider value={{ currentMultipack, setCurrentMultipack }}>
+                            <TableData
+                                rows={multipacksTableData}
+                                className="table-content"
+                                onDelete={obj => {
+                                    deleteMultipack(multipacksTableData.indexOf(obj))
+                                }}
+                                hideTracksWhenNotNeeded
+                                {...tableProps.multipacksTable}
+                            />
+                        </CtxCurrentMultipack.Provider>
+                    </div>
+    
+                    <div>
+                        <div className="table-title-container">
+                            <Text className="table-title" type="title2">Пачки</Text>
+                            <TextField
+                                placeholder="0000"
+                                name="pack_qr"
+                                type="text"
+                                value={packQr}
+                                forceFocus
+                                onChange={e => setPackQr(e.target.value)}
+                                onKeyPress={e => (e.charCode === 13) && addPackToMultipack(packQr, currentMultipack)}
+                            />
+                        </div>
+                        <TableData
+                            rows={multipacksTableData[currentMultipack] ?
+                                multipacksTableData[currentMultipack].map((obj, index) => ({ number: index + 1, qr: obj.qr })) :
+                                []}
+                            className="table-content"
+                            onDelete={obj => deletePack(obj.number - 1, currentMultipack)}
+                            hideTracksWhenNotNeeded
+                            {...tableProps.packsTable}
                         />
                     </div>
-                    <TableData
-                        rows={multipacksTableData[currentMultipack] ?
-                            multipacksTableData[currentMultipack].map((obj, index) => ({ number: index + 1, qr: obj.qr })) :
-                            []}
-                        className="table-content"
-                        onDelete={obj => deletePack(obj.number - 1, currentMultipack)}
-                        hideTracksWhenNotNeeded
-                        {...tableProps.packsTable}
-                    />
                 </div>
+    
+                <NotificationPanel
+                    errors={
+                        notificationErrorText && (
+                            [
+                                <Notification
+                                    title="Ошибка"
+                                    key={notificationErrorText + "_key"}
+                                    description={notificationErrorText}
+                                    onClose={() => setNotificationErrorText("")}
+                                    error
+                                />
+                            ]
+                        )
+                    }
+                />
             </div>
-
-            <NotificationPanel
-                errors={
-                    notificationErrorText && (
-                        [
-                            <Notification
-                                title="Ошибка"
-                                key={notificationErrorText + "_key"}
-                                description={notificationErrorText}
-                                onClose={() => setNotificationErrorText("")}
-                                error
-                            />
-                        ]
-                    )
-                }
-            />
-        </div>
-    );
+        );
+    }
 }
 
 export default Create;
