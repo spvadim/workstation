@@ -1,7 +1,7 @@
 import axios from "axios";
 import { memo, useEffect, useState } from "react";
 import address from "src/address";
-import { Button } from "src/components";
+import { Button } from "src/components/index";
 import SettingsBlock from "./SettingsBlock";
 import { Settings } from "./SettingsInterface";
 

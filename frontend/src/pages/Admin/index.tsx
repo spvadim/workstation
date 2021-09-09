@@ -5,7 +5,7 @@ import address from "../../address.js";
 import "./index.scss";
 import ModalWindow from "../../components/ModalWindow/index.js";
 import Table from "../../components/Table/index.js";
-import { Button, TextField } from "src/components";
+import { Button, TextField } from "src/components/index";
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
