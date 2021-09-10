@@ -1,9 +1,6 @@
-import axios from "axios";
-import { useEffect, useReducer, useState } from "react";
-import address from "src/address";
+import { useEffect, useReducer } from "react";
 import { Button } from "src/components/index";
 import SettingsBlock from "./SettingsBlock";
-import { Settings } from "./SettingsInterface";
 
 import DataProvider from "src/components/DataProvider";
 import NotificationProvider from "src/components/NotificationProvider";
