@@ -10,8 +10,7 @@ class Settings {
     static saveOption = (group: string, option: string, value: any) => {
         let temp = Object.assign({}, Settings.data);
         temp[group][option].value = value;
-        Settings.saveSettings(temp);
-        console.log(value)
+        Settings.data = temp;
     }
 }
 
