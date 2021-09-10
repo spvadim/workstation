@@ -39,6 +39,7 @@ const SettingsOption = (option: Setting, optionName: string, groupName: string, 
     let editField = SettingsOptionInputString;
     if (option.value_type === "bool") editField = SettingsOptionInputBool;
     if (option.value_type === "list") editField = SettingsOptionInputList;
+    if (option.value_type === "integer") editField = SettingsOptionInputInteger;
 
     return (
         <div className="row" key={optionName}>
@@ -67,8 +68,18 @@ const SettingsOptionInputString = (optionName:string, groupName:string, settings
         <input className="input"
             value={value}
             onChange={e => setValue(e.target.value)}
-            onBlur={() => DataProvider.Settings.saveOption(groupName, optionName
-                , DataProvider.Settings.data[groupName][optionName].value_type === "integer" ? +value : value)}/>
+            onBlur={() => DataProvider.Settings.saveOption(groupName, optionName, value)}/>
+    )
+}
+
+const SettingsOptionInputInteger = (optionName:string, groupName:string, settings: Settings) => {
+    const [value, setValue] = useState<number>(settings[groupName][optionName].value);
+
+    return (
+        <input className="input"
+            value={value}
+            onChange={e => setValue(+e.target.value)}
+            onBlur={() => DataProvider.Settings.saveOption(groupName, optionName, +value)}/>
     )
 }
 
