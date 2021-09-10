@@ -11,7 +11,7 @@ import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
 import "./style.scss"
-import "./style_mobile.scss"
+//import "./style_mobile.scss"
 
 const CtxCurrentMultipack = React.createContext({
     currentMultipack: null,

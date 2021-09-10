@@ -3,12 +3,12 @@ import "./SettingsBlock.scss";
 import ToolTip from "src/components/ToolTip";
 import React, { useState } from "react";
 
-const SettingsBlock = (settings: Settings, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+const SettingsBlock = (settings: Settings
+    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
     let groups = Object.keys(settings).map((groupName) => {
         let group = settings[groupName];
         if (typeof group === "object")
-            return SettingsGroup(group, groupName, editSettings, setEditSettings);
+            return SettingsGroup(group, groupName, settings, setSettings);
     })
 
     return (
@@ -18,16 +18,16 @@ const SettingsBlock = (settings: Settings, editSettings: Settings
     )
 }
 
-const SettingsGroup = (group: any, groupName: string, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+const SettingsGroup = (group: any, groupName: string, settings: Settings
+    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
     let options = Object.keys(group).map((optionName) => {
         let option: Setting = group[optionName];
         if (typeof option === "object")
-            return SettingsOption(option, optionName, groupName, editSettings, setEditSettings);
+            return SettingsOption(option, optionName, groupName, settings, setSettings);
     })
 
     return (
-        <div>
+        <div key={groupName}>
             <span className="title">{group.title}:</span>
             <div className="setting-inner">
                 {options}
@@ -37,64 +37,64 @@ const SettingsGroup = (group: any, groupName: string, editSettings: Settings
 }
 
 const SettingsOption = (option: Setting, optionName: string,
-    groupName: string, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+    groupName: string, settings: Settings
+    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
     let editField = SettingsOptionInputString;
     if (option.value_type === "bool") editField = SettingsOptionInputBool;
     if (option.value_type === "list") editField = SettingsOptionInputList;
 
     return (
-        <div className="row">
+        <div className="row" key={optionName}>
             <span className="cell1" title={option.desc}>{option.title}:
                 <ToolTip text={option.desc} style={{marginLeft: 5}} />
             </span>
-            {editField(optionName, groupName, editSettings, setEditSettings)}
+            {editField(optionName, groupName, settings, setSettings)}
         </div>
     )
 }
 
-const SettingsOptionInputBool = (optionName:string, groupName:string, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
+const SettingsOptionInputBool = (optionName:string, groupName:string, settings: Settings
+    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
     return (
         <select className="input"
                 onBlur={(e) => {
-                    let temp = Object.assign({}, editSettings);
+                    let temp = Object.assign({}, settings);
                     temp[groupName][optionName].value = e.target.value === "true"
-                    setEditSettings(temp);
+                    setSettings(temp);
                 }}>
-            <option selected={editSettings[groupName][optionName].value}>true</option>
-            <option selected={!editSettings[groupName][optionName].value}>false</option>
+            <option selected={settings[groupName][optionName].value}>true</option>
+            <option selected={!settings[groupName][optionName].value}>false</option>
         </select>
     )
 }
 
-const SettingsOptionInputString = (optionName:string, groupName:string, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
-    const [value, setValue] = useState<string>(editSettings[groupName][optionName].value);
+const SettingsOptionInputString = (optionName:string, groupName:string, settings: Settings
+    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
+    const [value, setValue] = useState<string>(settings[groupName][optionName].value);
 
     return (
         <input className="input"
         value={value}
         onChange={e => setValue(e.target.value)}
         onBlur={() => {
-            let temp = Object.assign({}, editSettings);
+            let temp = Object.assign({}, settings);
             temp[groupName][optionName].value = temp[groupName][optionName].value_type === "integer" ? +value : value;
-            setEditSettings(temp);
+            setSettings(temp);
         }}/>
     )
 }
 
-const SettingsOptionInputList = (optionName:string, groupName:string, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element =>
-        listEditor(optionName, groupName, editSettings, setEditSettings)
+const SettingsOptionInputList = (optionName:string, groupName:string, settings: Settings
+    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element =>
+        listEditor(optionName, groupName, settings, setSettings)
 
-const listEditor = (optionName:string, groupName:string, editSettings: Settings
-    , setEditSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
-    const elements: number[] = editSettings[groupName][optionName].value;
+const listEditor = (optionName:string, groupName:string, settings: Settings
+    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+    const elements: number[] = settings[groupName][optionName].value;
     const setElements = (newValue: number[]) => {
-        let tmp = Object.assign({}, editSettings);
+        let tmp = Object.assign({}, settings);
         tmp[groupName][optionName].value = newValue;
-        setEditSettings(tmp);
+        setSettings(tmp);
     }
     const [extended, setExtended] = useState(false)
     const toggle = () => setExtended(!extended);
@@ -124,7 +124,7 @@ const listEditor = (optionName:string, groupName:string, editSettings: Settings
         }
 
         const cancel = () => {
-            setSource(editSettings[groupName][optionName].value);
+            setSource(settings[groupName][optionName].value);
             toggle();
         }
 
