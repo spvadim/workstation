@@ -5,12 +5,12 @@ import { Redirect } from "react-router-dom";
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
-import { Notification } from "../../components/Notification/index.js";
-import { Text, InputRadio, Button, TextField, NotificationPanel } from 'src/components';
+import { Text, InputRadio, Button, TextField } from 'src/components';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
 import "./style.scss"
+import NotificationProvider from 'src/components/NotificationProvider';
 //import "./style_mobile.scss"
 
 const CtxCurrentMultipack = React.createContext({
@@ -65,7 +65,6 @@ function Create() {
     const [modalCancel, setModalCancel] = useState(false);
     const [modalSubmit, setModalSubmit] = useState(false);
     const [barcode, setBarcode] = useState('');
-    const [notificationErrorText, setNotificationErrorText] = useState('');
     const [multipacksTableData, setMultipacksTableData] = useState([]);
     const [currentMultipack, setCurrentMultipack] = useState('');
 
@@ -98,13 +97,16 @@ function Create() {
     }
 
     const checkExist = () => {
-        if (!settings.id) {setNotificationErrorText("Параметры партии не заданы!"); return false}
-        else if (!batchNumber) {setNotificationErrorText("Номер партии не задан!"); return false}
-        else if (!cubeQr) {setNotificationErrorText("QR куба не задан!"); return false}
-        else if (!barcode) {setNotificationErrorText("Штрихкод не задан!"); return false}
-        else if (multipacksTableData.length === 0) {setNotificationErrorText("Очередь паллет пуста!"); return false}
+        let errorText = "";
+        if (!settings.id) errorText = "Параметры партии не заданы!"
+        else if (!batchNumber) errorText = "Номер партии не задан!"
+        else if (!cubeQr) errorText = "QR куба не задан!"
+        else if (!barcode) errorText = "Штрихкод не задан!"
+        else if (multipacksTableData.length === 0) errorText = "Очередь паллет пуста!"
 
-        return true;
+        if (errorText !== "")
+            NotificationProvider.createNotification("Ошибка", errorText, "danger", 10000)
+        return errorText === "";
     }
 
     const submitChanges = () => {
@@ -120,7 +122,7 @@ function Create() {
 
         axios.put(address + "/api/v1_0/cube_with_new_content", body)
             .then(() => setPage("/"))
-            .catch(e => setNotificationErrorText(e.response.data.detail))
+            .catch(e => NotificationProvider.createNotification("Ошибка", e.response.data.detail, "danger", 10000))
     }
 
     const closeChanges = () => {
@@ -138,7 +140,7 @@ function Create() {
 
     const addEmptyMultipack = () => {
         if (multipacksTableData.length >= settings.multipacks) {
-            setNotificationErrorText("Превышен предел мульпаков");
+            NotificationProvider.createNotification("Ошибка", "Превышен предел мульпаков", "danger", 10000);
             return false;
         }
 
@@ -150,7 +152,7 @@ function Create() {
 
     const addPackToMultipack = (qr, indexMultipack_) => {
         if (!settings.id) {
-            setNotificationErrorText("Сначала выберите параметры партии!");
+            NotificationProvider.createNotification("Ошибка", "Сначала выберите параметры партии!", "danger", 10000);
             setPackQr("");
             return false;
         }
@@ -233,11 +235,6 @@ function Create() {
     
                 <div className="header">
                     <span className="title1" style={{borderBottom: "3px solid #086bb2"}}>Создание</span>
-                    {notificationErrorText &&
-                        <div className="notification">
-                            <span>{notificationErrorText}</span>
-                        </div> 
-                    }
                 </div>
     
                 <div className="body">
@@ -479,22 +476,6 @@ function Create() {
                         />
                     </div>
                 </div>
-    
-                <NotificationPanel
-                    errors={
-                        notificationErrorText && (
-                            [
-                                <Notification
-                                    title="Ошибка"
-                                    key={notificationErrorText + "_key"}
-                                    description={notificationErrorText}
-                                    onClose={() => setNotificationErrorText("")}
-                                    error
-                                />
-                            ]
-                        )
-                    }
-                />
             </div>
         );
     }
