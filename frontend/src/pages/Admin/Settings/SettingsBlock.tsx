@@ -1,14 +1,14 @@
 import { Setting, Settings } from "./SettingsInterface";
-import "./SettingsBlock.scss";
+import "./Settings.scss";
 import ToolTip from "src/components/ToolTip";
 import React, { useState } from "react";
+import DataProvider from "src/components/DataProvider";
 
-const SettingsBlock = (settings: Settings
-    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+const SettingsList = (settings: Settings): JSX.Element => {
     let groups = Object.keys(settings).map((groupName) => {
         let group = settings[groupName];
         if (typeof group === "object")
-            return SettingsGroup(group, groupName, settings, setSettings);
+            return SettingsGroup(group, groupName, settings);
     })
 
     return (
@@ -18,12 +18,11 @@ const SettingsBlock = (settings: Settings
     )
 }
 
-const SettingsGroup = (group: any, groupName: string, settings: Settings
-    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+const SettingsGroup = (group: any, groupName: string, settings: Settings): JSX.Element => {
     let options = Object.keys(group).map((optionName) => {
         let option: Setting = group[optionName];
         if (typeof option === "object")
-            return SettingsOption(option, optionName, groupName, settings, setSettings);
+            return SettingsOption(option, optionName, groupName, settings);
     })
 
     return (
@@ -36,9 +35,7 @@ const SettingsGroup = (group: any, groupName: string, settings: Settings
     )
 }
 
-const SettingsOption = (option: Setting, optionName: string,
-    groupName: string, settings: Settings
-    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+const SettingsOption = (option: Setting, optionName: string, groupName: string, settings: Settings): JSX.Element => {
     let editField = SettingsOptionInputString;
     if (option.value_type === "bool") editField = SettingsOptionInputBool;
     if (option.value_type === "list") editField = SettingsOptionInputList;
@@ -48,54 +45,39 @@ const SettingsOption = (option: Setting, optionName: string,
             <span className="cell1" title={option.desc}>{option.title}:
                 <ToolTip text={option.desc} style={{marginLeft: 5}} />
             </span>
-            {editField(optionName, groupName, settings, setSettings)}
+            {editField(optionName, groupName, settings)}
         </div>
     )
 }
 
-const SettingsOptionInputBool = (optionName:string, groupName:string, settings: Settings
-    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
+const SettingsOptionInputBool = (optionName:string, groupName:string, settings: Settings) => {
     return (
         <select className="input"
-                onBlur={(e) => {
-                    let temp = Object.assign({}, settings);
-                    temp[groupName][optionName].value = e.target.value === "true"
-                    setSettings(temp);
-                }}>
+                onBlur={e => DataProvider.Settings.saveOption(groupName, optionName, e.target.value === "true")}>
             <option selected={settings[groupName][optionName].value}>true</option>
             <option selected={!settings[groupName][optionName].value}>false</option>
         </select>
     )
 }
 
-const SettingsOptionInputString = (optionName:string, groupName:string, settings: Settings
-    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>) => {
+const SettingsOptionInputString = (optionName:string, groupName:string, settings: Settings) => {
     const [value, setValue] = useState<string>(settings[groupName][optionName].value);
 
     return (
         <input className="input"
-        value={value}
-        onChange={e => setValue(e.target.value)}
-        onBlur={() => {
-            let temp = Object.assign({}, settings);
-            temp[groupName][optionName].value = temp[groupName][optionName].value_type === "integer" ? +value : value;
-            setSettings(temp);
-        }}/>
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            onBlur={() => DataProvider.Settings.saveOption(groupName, optionName
+                , DataProvider.Settings.data[groupName][optionName].value_type === "integer" ? +value : value)}/>
     )
 }
 
-const SettingsOptionInputList = (optionName:string, groupName:string, settings: Settings
-    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element =>
-        listEditor(optionName, groupName, settings, setSettings)
+const SettingsOptionInputList = (optionName:string, groupName:string, settings: Settings): JSX.Element =>
+        listEditor(optionName, groupName, settings)
 
-const listEditor = (optionName:string, groupName:string, settings: Settings
-    , setSettings: React.Dispatch<React.SetStateAction<Settings|undefined>>): JSX.Element => {
+const listEditor = (optionName:string, groupName:string, settings: Settings): JSX.Element => {
     const elements: number[] = settings[groupName][optionName].value;
-    const setElements = (newValue: number[]) => {
-        let tmp = Object.assign({}, settings);
-        tmp[groupName][optionName].value = newValue;
-        setSettings(tmp);
-    }
+    const setElements = (newValue: number[]) => DataProvider.Settings.saveOption(groupName, optionName, newValue)
     const [extended, setExtended] = useState(false)
     const toggle = () => setExtended(!extended);
 
@@ -169,4 +151,4 @@ const listEditor = (optionName:string, groupName:string, settings: Settings
     )
 }
 
-export default SettingsBlock;
+export default SettingsList;

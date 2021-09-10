@@ -1,33 +1,33 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import address from "src/address";
 import { Button } from "src/components/index";
 import SettingsBlock from "./SettingsBlock";
 import { Settings } from "./SettingsInterface";
 
+import DataProvider from "src/components/DataProvider";
 import NotificationProvider from "src/components/NotificationProvider";
 
 const SettingsComponent = () => {
-    const [settings, setSettings] = useState<Settings>();
+    const [, forceUpdate] = useReducer(x => x + 1, 0);
+
+    const loadSettings = () => {DataProvider.Settings.loadSettngs()
+        .then(res => {
+            DataProvider.Settings.data = res.data;
+            if (res.data.location_settings)
+                document.title = "Настройки: " + res.data.location_settings.place_name.value
+            forceUpdate();
+        })}
     
-    const loadSettngs = () => {
-        axios.get(address + "/api/v1_0/settings")
-            .then(res => {
-                setSettings(res.data);
-                if (res.data.location_settings)
-                    document.title = "Настройки: " + res.data.location_settings.place_name.value
-        });
-    }
-
-    useEffect(loadSettngs, [])
-
-    const saveSettings = () => axios.patch(address + "/api/v1_0/settings", settings)
+    const saveSettings = () => DataProvider.Settings.saveSettings()
         .then(() => NotificationProvider.createNotification("Успешно", "Настройки сохранены", "success"))
         .catch(e => NotificationProvider.createNotification("Ошибка", e.message, "danger", 10000))
 
+    useEffect(loadSettings, [])
+
     const SettingsList = (): JSX.Element => {
-        if (settings === undefined) return <div/>;
-        return SettingsBlock(settings, setSettings);
+        if (DataProvider.Settings.data === undefined) return <div/>;
+        return SettingsBlock(DataProvider.Settings.data);
     }
 
     return (
