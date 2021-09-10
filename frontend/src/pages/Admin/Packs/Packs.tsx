@@ -3,8 +3,11 @@ import address from "../../../address.js";
 
 import "../index.scss";
 import Table from "../../../components/Table/index.js";
-import { Button } from "src/components/index";
+import { Button, TextField } from "src/components/index";
 import { useEffect, useState } from 'react';
+import ModalWindow from 'src/components/ModalWindow/index.js';
+import imgCross from 'src/assets/images/cross.svg';
+import imgOk from 'src/assets/images/ok.svg';
 
 const bathesParamsTableProps = [
     {name: "number", title: "№", width: 48},
