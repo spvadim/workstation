@@ -26,6 +26,12 @@
     align-items: center;
 }
 
+.param-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .table-container {
     & > div {
         margin-left: 12px;

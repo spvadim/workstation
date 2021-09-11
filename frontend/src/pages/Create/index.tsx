@@ -12,7 +12,6 @@ import imgOk from 'src/assets/images/ok.svg';
 import "./style.scss"
 import NotificationProvider from 'src/components/NotificationProvider';
 import DataProvider from 'src/components/DataProvider';
-import { Batch } from 'src/interfaces/Batches';
 //import "./style_mobile.scss"
 
 const CtxCurrentMultipack = React.createContext({
@@ -80,6 +79,15 @@ const Create = () => {
     }
 
     useEffect(loadBatches, [])
+    
+    useEffect(() => {
+        axios.get(address + "/api/v1_0/settings")
+            .then(res => {
+                if (res.data.location_settings) {
+                    document.title = "Новый куб: " + res.data.location_settings.place_name.value
+                }
+            })
+    }, [])
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/batches_params")
@@ -276,7 +284,7 @@ const Create = () => {
                     <br />
                     <br />
     
-                    <div className="input-container">
+                    <div className="param-container">
                         {params.map((obj, index) => (
                             <InputRadio name="param_batch"
                                 htmlFor={obj.id}
@@ -347,15 +355,6 @@ const Create = () => {
             </div>
         );
     } else {
-        useEffect(() => {
-            axios.get(address + "/api/v1_0/settings")
-                .then(res => {
-                    if (res.data.location_settings) {
-                        document.title = "Новый куб: " + res.data.location_settings.place_name.value
-                    }
-                })
-        }, [])
-
         return (
             <div className="edit">
                 {modalCancel && (
