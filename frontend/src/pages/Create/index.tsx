@@ -72,7 +72,6 @@ const Create = () => {
     const refBatch = createRef<HTMLSelectElement>();
     const refCubeQR = createRef<HTMLInputElement>();
     const refPackBar = createRef<HTMLInputElement>();
-    const refParams = createRef<HTMLInputElement>();
     const refPacksQR = createRef<HTMLInputElement>();
 
     const setFocus = (ref: React.RefObject<HTMLInputElement | HTMLSelectElement>) => ref.current?.focus();
@@ -295,14 +294,14 @@ const Create = () => {
     
                     <div className="input-container">
                         <span className="title2">QR куба:</span>
-                        <input ref={refCubeQR} className="text-input" placeholder="0000"
+                        <input ref={refCubeQR} placeholder="0000"
                         onChange={e => setCubeQr(e.target.value)}
                         onBlur={applyFocus}></input>
                     </div>
     
                     <div className="input-container">
                         <span className="title2">Штрихкод каждой пачки в кубе:</span>
-                        <input ref={refPackBar} className="text-input" placeholder="0000"
+                        <input ref={refPackBar} placeholder="0000"
                         onChange={e => setBarcode(e.target.value)}
                         onBlur={applyFocus}></input>
                     </div>
