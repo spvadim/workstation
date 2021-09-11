@@ -227,8 +227,7 @@ const Create = () => {
         //setTimeout is FireFox workaround, not needed in Chrome
         //Edit: needed in Chrome to get correct active element
         if (window.screen.width < 600) return;
-        if (["INPUT", "SELECT"].includes(document.activeElement?.tagName ?? ""))
-            return;
+        if (["INPUT", "SELECT"].includes(document.activeElement?.tagName ?? "")) return;
 
         let ref: React.RefObject<HTMLInputElement | HTMLSelectElement> = refBatch;
         if (batchIndex !== undefined) ref = refCubeQR;
