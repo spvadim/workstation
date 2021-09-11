@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import axios from "axios";
 import { Redirect } from "react-router-dom";
 
@@ -11,6 +11,8 @@ import imgOk from 'src/assets/images/ok.svg';
 
 import "./style.scss"
 import NotificationProvider from 'src/components/NotificationProvider';
+import DataProvider from 'src/components/DataProvider';
+import { Batch } from 'src/interfaces/Batches';
 //import "./style_mobile.scss"
 
 const CtxCurrentMultipack = React.createContext({
@@ -55,9 +57,9 @@ const tableProps = {
 
 };
 
-function Create() {
+const Create = () => {
     const [page, setPage] = useState('');
-    const [batchNumber, setBatchNumber] = useState('');
+    const [batchIndex, setBatchIndex] = useState<number>();
     const [params, setParams] = useState([]);
     const [settings, setSettings] = useState({});
     const [cubeQr, setCubeQr] = useState('');
@@ -67,6 +69,17 @@ function Create() {
     const [barcode, setBarcode] = useState('');
     const [multipacksTableData, setMultipacksTableData] = useState([]);
     const [currentMultipack, setCurrentMultipack] = useState('');
+    const [, forceUpdate] = useReducer(x => x + 1, 0);
+
+    const loadBatches = () => {
+        DataProvider.Batches.load()
+        .then(res => {
+            DataProvider.Batches.data = res.data.reverse().slice(0, 10);
+            forceUpdate();
+        })
+    }
+
+    useEffect(loadBatches, [])
 
     useEffect(() => {
         axios.get(address + "/api/v1_0/batches_params")
@@ -99,7 +112,7 @@ function Create() {
     const checkExist = () => {
         let errorText = "";
         if (!settings.id) errorText = "Параметры партии не заданы!"
-        else if (!batchNumber) errorText = "Номер партии не задан!"
+        else if (!batchIndex) errorText = "Партия не выбрана!"
         else if (!cubeQr) errorText = "QR куба не задан!"
         else if (!barcode) errorText = "Штрихкод не задан!"
         else if (multipacksTableData.length === 0) errorText = "Очередь паллет пуста!"
@@ -111,10 +124,11 @@ function Create() {
 
     const submitChanges = () => {
         if (!checkExist()) return false;
+        if (batchIndex === undefined || DataProvider.Batches.data === undefined) return false;
 
         let body = {
             params_id: settings.id,
-            batch_number: batchNumber,
+            batch_number: DataProvider.Batches.data[batchIndex].number,
             qr: cubeQr,
             barcode_for_packs: barcode,
             content: multipacksTableData,
@@ -239,9 +253,14 @@ function Create() {
     
                 <div className="body">
                     <div className="input-container">
-                        <span className="title2">Номер партии ГП:</span>
-                   <TextField className="text-input" placeholder="0000" onChange={e => setBatchNumber(e.target.value)}></TextField>
-                   
+                        <span className="title2">Партия ГП:</span>
+                        {DataProvider.Batches.data !== undefined && (
+                            <select onChange={e => setBatchIndex(+e.target.value)}>
+                                {DataProvider.Batches.data.map((x, i) => <option value={i}>
+                                        Номер: {x.number.batch_number} Дата: {x.number.batch_date}
+                                    </option>)}
+                            </select>
+                        )}
                     </div>
     
                     <div className="input-container">
@@ -324,7 +343,6 @@ function Create() {
                                 <img src={imgCross} style={{ filter: 'invert(1)' }} /><span>Отменить изменения</span>
                             </Button>
                         </div>
-                    
                 </div>
             </div>
         );
@@ -380,14 +398,14 @@ function Create() {
                 <div className="header">
                     <Text type="title">Создание</Text>
                     <div className="header-inputs">
-                        <span className="input-label">Номер партии ГП: </span>
-                     <TextField
-                            placeholder="0000"
-                            name="batch_number"
-                            type="text"
-                            value={batchNumber}
-                            onChange={e => setBatchNumber(e.target.value)}
-                       />
+                    <span className="title2">Партия ГП:</span>
+                        {DataProvider.Batches.data !== undefined && (
+                            <select onChange={e => setBatchIndex(+e.target.value)}>
+                                {DataProvider.Batches.data.map((x, i) => <option value={i}>
+                                        Номер: {x.number.batch_number} Дата: {x.number.batch_date}
+                                    </option>)}
+                            </select>
+                        )}
                         
                         <span className="input-label">QR куба: </span>
                         <TextField

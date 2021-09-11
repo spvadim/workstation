@@ -1,4 +1,4 @@
-import { Setting, Settings } from "./SettingsInterface";
+import { Setting, Settings } from "../../../interfaces/SettingsInterface";
 import "./Settings.scss";
 import ToolTip from "src/components/ToolTip";
 import React, { useState } from "react";
