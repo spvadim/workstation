@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useState } from 'react';
+import React, { createRef, useEffect, useReducer, useState } from 'react';
 import axios from "axios";
 import { Redirect } from "react-router-dom";
 
@@ -68,6 +68,14 @@ const Create = () => {
     const [barcode, setBarcode] = useState('');
     const [multipacksTableData, setMultipacksTableData] = useState([]);
     const [currentMultipack, setCurrentMultipack] = useState('');
+
+    const refBatch = createRef<HTMLSelectElement>();
+    const refCubeQR = createRef<HTMLInputElement>();
+    const refPackBar = createRef<HTMLInputElement>();
+    const refParams = createRef<HTMLInputElement>();
+    const refPacksQR = createRef<HTMLInputElement>();
+
+    const setFocus = (ref: React.RefObject<HTMLInputElement | HTMLSelectElement>) => ref.current?.focus();
     const [, forceUpdate] = useReducer(x => x + 1, 0);
 
     const loadBatches = () => {
@@ -104,13 +112,13 @@ const Create = () => {
             })
     }, [])
 
-    const deletePack = (indexPack, indexMultipack) => {
+    const deletePack = (indexPack: number, indexMultipack: number) => {
         let temp = multipacksTableData.slice();
         temp[indexMultipack].splice(indexPack, 1);
         setMultipacksTableData(temp);
     }
 
-    const deleteMultipack = (index) => {
+    const deleteMultipack = (index: number) => {
         if (index === -1) return false;
         let temp = multipacksTableData.slice();
         temp.splice(index, 1);
@@ -215,6 +223,21 @@ const Create = () => {
 
     if (page === "/") return <Redirect to="/" />
 
+    const applyFocus = () => setTimeout(() => {
+        if (window.screen.width < 600) return;
+        if (document.activeElement !== null && ["INPUT", "SELECT"].includes(document.activeElement.tagName))
+            return;
+
+        let ref: React.RefObject<HTMLInputElement | HTMLSelectElement> = refBatch;
+        if (batchIndex !== undefined) ref = refCubeQR;
+        if (cubeQr !== "") ref = refPackBar;
+        if (barcode !== "") ref = refPacksQR;
+        
+        //setTimeout is FireFox workaround, not needed in Chrome
+        //Edit: needed in Chrome to get correct active element
+        setFocus(ref)
+    }, 10)
+
     if (window.screen.width < 600) {
         return (
             <div style={{padding: "10px 15px"}}>
@@ -263,8 +286,9 @@ const Create = () => {
                     <div className="input-container">
                         <span className="title2">Партия ГП:</span>
                         {DataProvider.Batches.data !== undefined && (
-                            <select onChange={e => setBatchIndex(+e.target.value)}>
-                                {DataProvider.Batches.data.map((x, i) => <option value={i}>
+                            <select ref={refBatch} onChange={e => setBatchIndex(+e.target.value)}>
+                                <option hidden disabled selected>Выберите партию</option>
+                                {DataProvider.Batches.data.map((x, i) => <option value={i} key={i}>
                                         Номер: {x.number.batch_number} Дата: {x.number.batch_date}
                                     </option>)}
                             </select>
@@ -273,12 +297,16 @@ const Create = () => {
     
                     <div className="input-container">
                         <span className="title2">QR куба:</span>
-                        <TextField className="text-input" placeholder="0000" onChange={e => setCubeQr(e.target.value)}></TextField>
+                        <input ref={refCubeQR} className="text-input" placeholder="0000"
+                        onChange={e => setCubeQr(e.target.value)}
+                        onBlur={applyFocus}></input>
                     </div>
     
                     <div className="input-container">
                         <span className="title2">Штрихкод каждой пачки в кубе:</span>
-                        <TextField className="text-input" placeholder="0000" onChange={e => setBarcode(e.target.value)}></TextField>
+                        <input ref={refPackBar} className="text-input" placeholder="0000"
+                        onChange={e => setBarcode(e.target.value)}
+                        onBlur={applyFocus}></input>
                     </div>
     
                     <br />
@@ -322,12 +350,14 @@ const Create = () => {
                     <div>
                         <div className="header" style={{justifyContent: "space-between", alignItems: "center"}}>
                             <span className="title2">Пачки</span>
-                            <TextField style={{fontSize: "1.5rem"}}
+                            <input style={{fontSize: "1.5rem"}}
                                 placeholder="0000"
                                 name="pack_qr"
                                 type="text"
+                                ref={refPacksQR}
                                 value={packQr}
                                 onChange={e => setPackQr(e.target.value)}
+                                onBlur={applyFocus}
                                 onKeyPress={e => (e.charCode === 13) && addPackToMultipack(packQr, currentMultipack)}
                             />
                         </div>
@@ -342,7 +372,7 @@ const Create = () => {
                             {...tableProps.packsTable}
                         />
                     </div>
-    
+
                     <div className="button-container">
                             <Button onClick={() => setModalSubmit([submitChanges])} className="button-submit">
                                 <img src={imgOk} /><span>Принять изменения</span>
@@ -399,27 +429,33 @@ const Create = () => {
                     <div className="header-inputs">
                     <span className="title2">Партия ГП:</span>
                         {DataProvider.Batches.data !== undefined && (
-                            <select onChange={e => setBatchIndex(+e.target.value)}>
-                                {DataProvider.Batches.data.map((x, i) => <option value={i}>
+                            <select autoFocus onChange={e => setBatchIndex(+e.target.value)}
+                            ref={refBatch} onBlur={applyFocus}>
+                                <option hidden disabled selected>Выберите партию</option>
+                                {DataProvider.Batches.data.map((x, i) => <option value={i} key={i}>
                                         Номер: {x.number.batch_number} Дата: {x.number.batch_date}
                                     </option>)}
                             </select>
                         )}
                         
                         <span className="input-label">QR куба: </span>
-                        <TextField
+                        <input
                             placeholder="0000"
                             name="cube_qr"
                             type="text"
+                            onBlur={applyFocus}
+                            ref={refCubeQR}
                             value={cubeQr}
                             onChange={e => setCubeQr(e.target.value)}
                         />
     
                         <span className="input-label">Штрихкод каждой пачки в кубе: </span>
-                        <TextField
+                        <input
                             placeholder="0000"
                             name="barcode"
                             type="text"
+                            onBlur={applyFocus}
+                            ref={refPackBar}
                             value={barcode}
                             onChange={e => setBarcode(e.target.value)}
                         />
@@ -472,12 +508,13 @@ const Create = () => {
                     <div>
                         <div className="table-title-container">
                             <Text className="table-title" type="title2">Пачки</Text>
-                            <TextField
+                            <input
                                 placeholder="0000"
                                 name="pack_qr"
                                 type="text"
                                 value={packQr}
-                                forceFocus
+                                ref={refPacksQR}
+                                onBlur={applyFocus}
                                 onChange={e => setPackQr(e.target.value)}
                                 onKeyPress={e => (e.charCode === 13) && addPackToMultipack(packQr, currentMultipack)}
                             />
