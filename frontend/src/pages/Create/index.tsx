@@ -224,17 +224,16 @@ const Create = () => {
     if (page === "/") return <Redirect to="/" />
 
     const applyFocus = () => setTimeout(() => {
+        //setTimeout is FireFox workaround, not needed in Chrome
+        //Edit: needed in Chrome to get correct active element
         if (window.screen.width < 600) return;
-        if (document.activeElement !== null && ["INPUT", "SELECT"].includes(document.activeElement.tagName))
+        if (["INPUT", "SELECT"].includes(document.activeElement?.tagName ?? ""))
             return;
 
         let ref: React.RefObject<HTMLInputElement | HTMLSelectElement> = refBatch;
         if (batchIndex !== undefined) ref = refCubeQR;
         if (cubeQr !== "") ref = refPackBar;
         if (barcode !== "") ref = refPacksQR;
-        
-        //setTimeout is FireFox workaround, not needed in Chrome
-        //Edit: needed in Chrome to get correct active element
         setFocus(ref)
     }, 10)
 
