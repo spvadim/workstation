@@ -5,7 +5,7 @@ import { Redirect } from "react-router-dom";
 import TableData from "../../components/Table/TableData.js";
 import address from "../../address.js";
 import ModalWindow from "../../components/ModalWindow/index.js";
-import { Text, InputRadio, Button, TextField } from 'src/components';
+import { Text, InputRadio, Button } from 'src/components';
 import imgCross from 'src/assets/images/cross.svg';
 import imgOk from 'src/assets/images/ok.svg';
 
