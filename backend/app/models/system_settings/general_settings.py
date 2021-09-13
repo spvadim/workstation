@@ -110,6 +110,13 @@ class GeneratePacksInPintsetFinish(EmbeddedModel):
     value_type: str = "bool"
 
 
+class WaitSecondPackToDrop(EmbeddedModel):
+    title: str = "Ждать вторую короткую пачку для сброса"
+    desc: str = "Выберите, ждать ли вторую короткую пачку для сброса"
+    value: bool = False
+    value_type: str = "bool"
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = "Общие настройки"
     advanced: bool = False
@@ -134,3 +141,4 @@ class GeneralSettings(EmbeddedModel):
     generate_packs_in_pintset_finish: GeneratePacksInPintsetFinish = (
         GeneratePacksInPintsetFinish()
     )
+    wait_second_pack_to_drop: WaitSecondPackToDrop = WaitSecondPackToDrop()
