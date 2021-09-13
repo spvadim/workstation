@@ -22,6 +22,7 @@ from ..db.db_utils import (
     get_100_last_packing_records,
     get_100_last_pintset_records,
     get_all_wrapping_multipacks,
+    get_current_status,
     get_current_workmode,
     get_first_exited_pintset_multipack,
     get_first_multipack_without_qr,
@@ -180,9 +181,22 @@ async def new_pack_before_ejector(
 async def new_pack_after_pintset(
     pack: PackCameraInput, background_tasks: BackgroundTasks
 ):
-    mode = await get_current_workmode()
+    system_status = await get_current_status()
+    mode = system_status.mode
     if mode.work_mode == "manual":
         raise HTTPException(400, detail="В данный момент используется ручной режим")
+
+    batch = await get_last_batch()
+    current_settings = await get_system_settings()
+    if (
+        current_settings.general_settings.wait_second_pack_to_drop.value
+        and system_status.system_state.prev_pack_dropped
+        and batch.params.multipacks_after_pintset == 2
+    ):
+        system_status.system_state.prev_pack_dropped = False
+        await engine.save(system_status)
+        raise HTTPException(400, detail="Прошлая пачка была сброшена")
+
     current_datetime = await get_naive_datetime()
 
     error_msg = None
@@ -202,9 +216,9 @@ async def new_pack_after_pintset(
     # elif not await check_qr_unique(Pack, pack.qr):
     #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
 
-    current_settings = await get_system_settings()
-
     if error_msg and current_settings.general_settings.pintset_stop.value:
+        system_status.system_state.prev_pack_dropped = True
+        await engine.save(system_status)
         if current_settings.general_settings.use_snap7.value:
             background_tasks.add_task(
                 drop_pack_after_pintset, error_msg, current_settings.pintset_settings
@@ -219,7 +233,6 @@ async def new_pack_after_pintset(
 
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
 
-    batch = await get_last_batch()
     pack.batch_number = batch.number
     pack.created_at = current_datetime
     ftp_url = None
