@@ -39,8 +39,7 @@ class SystemState(EmbeddedModel):
     pintset_withdrawal_error_msg: Optional[str]
     sync_error_msg: Optional[str]
     wrong_cube_id: Optional[ObjectId]
-    prev_pack_dropped: Optional[bool] = False
-    current_pack_order: int = 0
+    prev_pack_dropped: bool = False
 
 
 class SystemStatus(Model):

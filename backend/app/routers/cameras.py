@@ -14,6 +14,7 @@ from ..db.db_utils import (
     count_multipacks_queue,
     count_packs_on_assembly,
     count_packs_queue,
+    count_packs_under_pintset,
     count_wrapping_multipacks,
     form_cube_from_n_multipacks,
     form_url,
@@ -189,16 +190,14 @@ async def new_pack_after_pintset(
     batch = await get_last_batch()
     multipacks_after_pintset = batch.params.multipacks_after_pintset
     current_settings = await get_system_settings()
-    current_pack_order = system_status.system_state.current_pack_order
-    next_pack_order = (current_pack_order + 1) % multipacks_after_pintset
-    system_status.system_state.current_pack_order = next_pack_order
+    packs_under_pintset = await count_packs_under_pintset()
 
     if system_status.system_state.prev_pack_dropped:
         system_status.system_state.prev_pack_dropped = False
         if (
             current_settings.general_settings.wait_second_pack_to_drop
             and multipacks_after_pintset == 2
-            and current_pack_order == 1
+            and packs_under_pintset == 0
         ):
             await engine.save(system_status)
             raise HTTPException(
@@ -226,7 +225,8 @@ async def new_pack_after_pintset(
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе"
 
     if error_msg and current_settings.general_settings.pintset_stop.value:
-        system_status.system_state.prev_pack_dropped = True
+        if packs_under_pintset == 0:
+            system_status.system_state.prev_pack_dropped = True
         await engine.save(system_status)
         if current_settings.general_settings.use_snap7.value:
             background_tasks.add_task(
