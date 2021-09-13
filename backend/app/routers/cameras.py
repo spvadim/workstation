@@ -187,15 +187,24 @@ async def new_pack_after_pintset(
         raise HTTPException(400, detail="В данный момент используется ручной режим")
 
     batch = await get_last_batch()
+    multipacks_after_pintset = batch.params.multipacks_after_pintset
     current_settings = await get_system_settings()
-    if (
-        current_settings.general_settings.wait_second_pack_to_drop.value
-        and system_status.system_state.prev_pack_dropped
-        and batch.params.multipacks_after_pintset == 2
-    ):
+    current_pack_order = system_status.system_state.current_pack_order
+    next_pack_order = (current_pack_order + 1) % multipacks_after_pintset
+    system_status.system_state.current_pack_order = next_pack_order
+
+    if system_status.system_state.prev_pack_dropped:
         system_status.system_state.prev_pack_dropped = False
-        await engine.save(system_status)
-        raise HTTPException(400, detail="Прошлая пачка была сброшена")
+        if (
+            current_settings.general_settings.wait_second_pack_to_drop
+            and multipacks_after_pintset == 2
+            and current_pack_order == 1
+        ):
+            await engine.save(system_status)
+            raise HTTPException(
+                400,
+                detail="Стоит настройка сброса пары пачек одновременно. Эта пачка - вторая после первой плохой, она сброшена",
+            )
 
     current_datetime = await get_naive_datetime()
 
@@ -241,10 +250,11 @@ async def new_pack_after_pintset(
         ftp_url = await form_url(pack.qr)
     await engine.save(PackInReport(**pack.dict(), ftp_url=ftp_url))
     await engine.save(pack)
+    await engine.save(system_status)
 
     multiplier = current_settings.desync_settings.max_packs_multiplier.value
 
-    max_packs = multiplier * batch.params.multipacks_after_pintset
+    max_packs = multiplier * multipacks_after_pintset
     if await count_packs_queue() > max_packs:
         await add_sync_error_to_bg_tasks(
             background_tasks, f"В очереди больше {max_packs} пачек"

@@ -40,6 +40,7 @@ class SystemState(EmbeddedModel):
     sync_error_msg: Optional[str]
     wrong_cube_id: Optional[ObjectId]
     prev_pack_dropped: Optional[bool] = False
+    current_pack_order: int = 0
 
 
 class SystemStatus(Model):
