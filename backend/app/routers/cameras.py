@@ -222,8 +222,8 @@ async def new_pack_after_pintset(
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr}, но ШК не считался"
         pack.barcode = "0000000000000"
 
-    # elif not await check_qr_unique(Pack, pack.qr):
-    #     error_msg = f'{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе'
+    elif not await check_qr_unique(Pack, pack.qr):
+        error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе"
 
     if error_msg and current_settings.general_settings.pintset_stop.value:
         system_status.system_state.prev_pack_dropped = True
