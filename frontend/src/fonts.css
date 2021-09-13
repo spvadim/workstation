@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy ExtraBold'), local('Gilroy-ExtraBold'),
-        url('assets/fonts/Gilroy/Gilroy-ExtraBold.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-ExtraBold.woff') format('woff');
     font-weight: 800;
     font-style: normal;
 }
@@ -9,7 +9,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Heavy'), local('Gilroy-Heavy'),
-        url('assets/fonts/Gilroy/Gilroy-Heavy.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-Heavy.woff') format('woff');
     font-weight: 900;
     font-style: normal;
 }
@@ -17,7 +17,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Light Italic'), local('Gilroy-LightItalic'),
-        url('assets/fonts/Gilroy/Gilroy-LightItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-LightItalic.woff') format('woff');
     font-weight: 300;
     font-style: italic;
 }
@@ -25,7 +25,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Thin Italic'), local('Gilroy-ThinItalic'),
-        url('assets/fonts/Gilroy/Gilroy-ThinItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-ThinItalic.woff') format('woff');
     font-weight: 100;
     font-style: italic;
 }
@@ -33,7 +33,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Black Italic'), local('Gilroy-BlackItalic'),
-        url('assets/fonts/Gilroy/Gilroy-BlackItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-BlackItalic.woff') format('woff');
     font-weight: 900;
     font-style: italic;
 }
@@ -41,7 +41,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Bold Italic'), local('Gilroy-BoldItalic'),
-        url('assets/fonts/Gilroy/Gilroy-BoldItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-BoldItalic.woff') format('woff');
     font-weight: bold;
     font-style: italic;
 }
@@ -49,7 +49,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy SemiBold'), local('Gilroy-SemiBold'),
-        url('assets/fonts/Gilroy/Gilroy-SemiBold.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-SemiBold.woff') format('woff');
     font-weight: 600;
     font-style: normal;
 }
@@ -57,7 +57,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy UltraLight Italic'), local('Gilroy-UltraLightItalic'),
-        url('assets/fonts/Gilroy/Gilroy-UltraLightItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-UltraLightItalic.woff') format('woff');
     font-weight: 200;
     font-style: italic;
 }
@@ -65,7 +65,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy SemiBold Italic'), local('Gilroy-SemiBoldItalic'),
-        url('assets/fonts/Gilroy/Gilroy-SemiBoldItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-SemiBoldItalic.woff') format('woff');
     font-weight: 600;
     font-style: italic;
 }
@@ -73,7 +73,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Light'), local('Gilroy-Light'),
-        url('assets/fonts/Gilroy/Gilroy-Light.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-Light.woff') format('woff');
     font-weight: 300;
     font-style: normal;
 }
@@ -81,7 +81,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Medium Italic'), local('Gilroy-MediumItalic'),
-        url('assets/fonts/Gilroy/Gilroy-MediumItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-MediumItalic.woff') format('woff');
     font-weight: 500;
     font-style: italic;
 }
@@ -89,7 +89,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy ExtraBold Italic'), local('Gilroy-ExtraBoldItalic'),
-        url('assets/fonts/Gilroy/Gilroy-ExtraBoldItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-ExtraBoldItalic.woff') format('woff');
     font-weight: 800;
     font-style: italic;
 }
@@ -97,7 +97,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Regular'), local('Gilroy-Regular'),
-        url('assets/fonts/Gilroy/Gilroy-Regular.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-Regular.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
@@ -105,7 +105,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Heavy Italic'), local('Gilroy-HeavyItalic'),
-        url('assets/fonts/Gilroy/Gilroy-HeavyItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-HeavyItalic.woff') format('woff');
     font-weight: 900;
     font-style: italic;
 }
@@ -113,7 +113,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Medium'), local('Gilroy-Medium'),
-        url('assets/fonts/Gilroy/Gilroy-Medium.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-Medium.woff') format('woff');
     font-weight: 500;
     font-style: normal;
 }
@@ -121,7 +121,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Regular Italic'), local('Gilroy-RegularItalic'),
-        url('assets/fonts/Gilroy/Gilroy-RegularItalic.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-RegularItalic.woff') format('woff');
     font-weight: normal;
     font-style: italic;
 }
@@ -129,7 +129,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy UltraLight'), local('Gilroy-UltraLight'),
-        url('assets/fonts/Gilroy/Gilroy-UltraLight.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-UltraLight.woff') format('woff');
     font-weight: 200;
     font-style: normal;
 }
@@ -137,7 +137,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Bold'), local('Gilroy-Bold'),
-        url('assets/fonts/Gilroy/Gilroy-Bold.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-Bold.woff') format('woff');
     font-weight: bold;
     font-style: normal;
 }
@@ -145,7 +145,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Thin'), local('Gilroy-Thin'),
-        url('assets/fonts/Gilroy/Gilroy-Thin.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-Thin.woff') format('woff');
     font-weight: 100;
     font-style: normal;
 }
@@ -153,7 +153,7 @@
 @font-face {
     font-family: 'Gilroy';
     src: local('Gilroy Black'), local('Gilroy-Black'),
-        url('assets/fonts/Gilroy/Gilroy-Black.woff') format('woff');
+        url('src/assets/fonts/Gilroy/Gilroy-Black.woff') format('woff');
     font-weight: 900;
     font-style: normal;
 }

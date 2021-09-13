@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Redirect } from "react-router-dom";
 // import { useCookies } from "react-cookie";
 import address from "../../address.js";
-import { Paper, Button, InputRadio, TextField, Text, Loader, TouchPanel } from "src/components/index";
+import { Paper, Button, InputRadio, TextField, Text, Loader, TouchPanel } from "src/components";
 
 const useStyles = createUseStyles({
     BatchParams: {

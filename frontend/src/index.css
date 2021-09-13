@@ -18,11 +18,3 @@ code {
   position: relative;
   height: 100vh;
 }
-
-input {
-  font-family: 'Gilroy';
-  background-color: transparent;
-  outline: none;
-  border-width: 0;
-  border-bottom: 1px solid #aaa;
-}

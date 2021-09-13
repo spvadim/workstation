@@ -5,8 +5,9 @@ import BatchParams from './pages/BatchParams/index.js';
 import Main from './pages/Main/index.js';
 import Main_new from './pages/Main_new/index.js';
 import Edit from './pages/Edit/index.js';
-import Create from './pages/Create/index';
-import Admin from './pages/Admin/index';
+import Create from './pages/Create/index.js';
+import Create_mobile from './pages/Create/mobile.js';
+import Admin from './pages/Admin/index.tsx';
 import Events from './pages/Events/index.js';
 import QrScanner from './pages/QrScanner/index.js';
 import imgBackground from 'src/assets/images/background.svg';
@@ -27,6 +28,8 @@ const useStyles = createUseStyles({
 		position: "relative",
 	},
 	App_inner: {
+		// position: "absolute",
+		// overflowY: "scroll",
 		height: "100%",
 		width: "100%",
 		zIndex: 1,
@@ -43,8 +46,8 @@ function App() {
 				<Route exact path="/main_new" component={Main_new} />
 				<Route exact path="/" component={Main} />
 				<Route exact path="/batch_params" component={BatchParams} />
-				<Route exact path="/edit" component={(props:any) => Edit(props.location.state)} />
-				<Route exact path="/create" component={Create} />
+				<Route exact path="/edit" component={(props) => Edit(props.location.state)} />
+				<Route exact path="/create" component={window.screen.width < 600 ? Create_mobile : Create} />
 				<Route exact path="/admin" component={Admin} />
 				<Route exact path="/events" component={Events} />
 				<Route exact path="/scanner" component={QrScanner} />
