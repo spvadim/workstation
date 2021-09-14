@@ -177,6 +177,27 @@ async def new_pack_before_ejector(
     return pack
 
 
+@deep_logger_router.delete("/pack_dropped_after_pintset", response_model=Pack)
+@version(1, 0)
+async def pack_dropped_after_pintset(background_tasks: BackgroundTasks):
+    mode = await get_current_workmode()
+    if mode.work_mode == "manual":
+        raise HTTPException(400, detail="В данный момент используется ручной режим")
+
+    packs_under_pintset = await get_packs_under_pintset()
+    if not packs_under_pintset:
+        error_msg = "Вызван метод 'Пачка сброшена за пинцет', но в очереди нет пачек под пинцетом"
+        await add_sync_error_to_bg_tasks(
+            background_tasks,
+            error_msg,
+        )
+        return JSONResponse(status_code=400, content={"detail": error_msg})
+
+    pack_to_delete = packs_under_pintset[0]
+    await engine.delete(pack_to_delete)
+    return pack_to_delete
+
+
 @deep_logger_router.put("/new_pack_after_pintset", response_model=Pack)
 @version(1, 0)
 async def new_pack_after_pintset(
