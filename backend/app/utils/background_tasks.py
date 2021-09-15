@@ -121,7 +121,9 @@ async def drop_pack(message: str):
     await asyncio.gather(*tasks_after_ejector)
 
 
-def drop_pack_after_pintset(error_msg: str, pintset_settings: PintsetSettings):
+def drop_pack_after_pintset(
+    error_msg: str, pintset_settings: PintsetSettings, use_additional_event: bool
+):
     wdiot_logger.info("Заморозил пинцет")
     off_pintset(pintset_settings)
 
@@ -135,9 +137,9 @@ def drop_pack_after_pintset(error_msg: str, pintset_settings: PintsetSettings):
             }
         },
     )
-
-    wdiot_logger.info("Удалил пачки под пинцетом")
-    db.pack.delete_many({"status": "под пинцетом"})
+    if not use_additional_event:
+        wdiot_logger.info("Удалил пачки под пинцетом")
+        db.pack.delete_many({"status": "под пинцетом"})
     delay = pintset_settings.pintset_curtain_opening_duration.value
     sleep(delay)
 
@@ -158,7 +160,7 @@ def drop_pack_after_pintset(error_msg: str, pintset_settings: PintsetSettings):
 
 
 async def drop_pack_after_pintset_erd(
-    error_msg: str, pintset_settings: PintsetSettings
+    error_msg: str, pintset_settings: PintsetSettings, use_additional_event: bool
 ):
     wdiot_logger.info("Заморозил пинцет")
     await snmp_third_erd_first_oid_on()
@@ -166,8 +168,9 @@ async def drop_pack_after_pintset_erd(
     wdiot_logger.info("Взвел ошибку на пинцете")
     await pintset_error(error_msg)
 
-    wdiot_logger.info("Удалил пачки под пинцетом")
-    await delete_packs_under_pintset()
+    if not use_additional_event:
+        wdiot_logger.info("Удалил пачки под пинцетом")
+        await delete_packs_under_pintset()
 
     delay = pintset_settings.pintset_curtain_opening_duration.value
     await asyncio.sleep(delay)
