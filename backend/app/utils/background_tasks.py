@@ -1,5 +1,6 @@
 import asyncio
 import inspect
+from datetime import datetime
 from time import sleep
 
 from loguru import logger
@@ -20,6 +21,7 @@ from ..db.db_utils import (
 from ..db.engine import pymongo_db as db
 from ..db.events import add_events
 from ..db.system_settings import get_system_settings
+from ..models.event import Event
 from ..models.system_settings.pintset_settings import PintsetSettings
 from .email import send_email
 from .erd import (
@@ -85,7 +87,6 @@ async def send_warning_and_back_to_normal(delay: int, message: str):
     tasks_before_sleep = []
     tasks_before_sleep.append(send_warning())
     tasks_before_sleep.append(set_column_yellow(message))
-    tasks_before_sleep.append(add_events("error", message))
 
     await asyncio.gather(*tasks_before_sleep)
     await asyncio.sleep(delay)
@@ -122,7 +123,10 @@ async def drop_pack(message: str):
 
 
 def drop_pack_after_pintset(
-    error_msg: str, pintset_settings: PintsetSettings, use_additional_event: bool
+    error_msg: str,
+    pintset_settings: PintsetSettings,
+    current_datetime: datetime,
+    use_additional_event: bool,
 ):
     wdiot_logger.info("Заморозил пинцет")
     off_pintset(pintset_settings)
@@ -137,6 +141,8 @@ def drop_pack_after_pintset(
             }
         },
     )
+    event = Event(time=current_datetime, message=error_msg, event_type="error")
+    db.event.insert_one(event.dict())
     if not use_additional_event:
         wdiot_logger.info("Удалил пачки под пинцетом")
         db.pack.delete_many({"status": "под пинцетом"})
@@ -187,7 +193,6 @@ async def turn_default_error(message: str):
     tasks = []
     tasks.append(set_column_red(message))
     tasks.append(send_error())
-    tasks.append(add_events("error", message))
     results = await asyncio.gather(*tasks)
     return results[0]
 
@@ -196,7 +201,6 @@ async def turn_default_warning(message: str):
     tasks = []
     tasks.append(set_column_yellow(message))
     tasks.append(send_warning())
-    tasks.append(add_events("error", message))
     results = await asyncio.gather(*tasks)
     return results[0]
 
@@ -240,7 +244,6 @@ async def turn_sync_error(method_name: str, message: str):
             tasks.append(snmp_raise_damper())
 
     tasks.append(send_email(f"Рассинхрон в {method_name}", email_message))
-    tasks.append(add_events("desync", message))
 
     results = await asyncio.gather(*tasks)
     wdiot_logger.error(message)
