@@ -245,22 +245,6 @@ async def new_pack_after_pintset(
     elif not await check_qr_unique(Pack, pack.qr):
         error_msg = f"{current_datetime} на камере за пинцетом прошла пачка с QR={pack.qr} и он не уникален в системе"
 
-    if error_msg and current_settings.general_settings.pintset_stop.value:
-        if packs_under_pintset == 0:
-            system_status.system_state.prev_pack_dropped = True
-        await engine.save(system_status)
-        if current_settings.general_settings.use_snap7.value:
-            background_tasks.add_task(
-                drop_pack_after_pintset, error_msg, current_settings.pintset_settings
-            )
-        else:
-            background_tasks.add_task(
-                drop_pack_after_pintset_erd,
-                error_msg,
-                current_settings.pintset_settings,
-            )
-        return JSONResponse(status_code=400, content={"detail": error_msg})
-
     pack = Pack(qr=pack.qr, barcode=pack.barcode)
 
     pack.batch_number = batch.number
@@ -271,8 +255,31 @@ async def new_pack_after_pintset(
         ftp_url = await form_url(pack.qr)
     await engine.save(PackInReport(**pack.dict(), ftp_url=ftp_url))
     await engine.save(pack)
-    await engine.save(system_status)
 
+    if error_msg and current_settings.general_settings.pintset_stop.value:
+        if packs_under_pintset == 0:
+            system_status.system_state.prev_pack_dropped = True
+        await engine.save(system_status)
+        use_additional_event = (
+            current_settings.general_settings.use_additional_event.value
+        )
+        if current_settings.general_settings.use_snap7.value:
+            background_tasks.add_task(
+                drop_pack_after_pintset,
+                error_msg,
+                current_settings.pintset_settings,
+                use_additional_event,
+            )
+        else:
+            background_tasks.add_task(
+                drop_pack_after_pintset_erd,
+                error_msg,
+                current_settings.pintset_settings,
+                use_additional_event,
+            )
+        return JSONResponse(status_code=400, content={"detail": error_msg})
+
+    await engine.save(system_status)
     multiplier = current_settings.desync_settings.max_packs_multiplier.value
 
     max_packs = multiplier * multipacks_after_pintset
