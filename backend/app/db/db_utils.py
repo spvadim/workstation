@@ -147,6 +147,7 @@ async def set_column_yellow(error_msg: str) -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.state = State.WARNING
     current_status.system_state.error_msg = error_msg
+    await add_events("error", error_msg)
     await engine.save(current_status)
     return current_status.system_state
 
@@ -155,6 +156,7 @@ async def set_column_red(error_msg: str) -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.state = State.ERROR
     current_status.system_state.error_msg = error_msg
+    await add_events("error", error_msg)
     await engine.save(current_status)
     return current_status.system_state
 
@@ -172,6 +174,7 @@ async def sync_error(error_msg: str) -> SystemState:
     current_status.system_state.sync_state = SyncState.ERROR
     current_status.system_state.sync_error_msg = error_msg
     await engine.save(current_status)
+    await add_events("desync", error_msg)
     return current_status.system_state
 
 
@@ -194,6 +197,7 @@ async def pintset_error(error_msg: str) -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.pintset_state = State.ERROR
     current_status.system_state.pintset_error_msg = error_msg
+    await add_events("error", error_msg)
     await engine.save(current_status)
     return current_status.system_state
 
@@ -202,7 +206,6 @@ async def flush_pintset() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.pintset_state = State.NORMAL
     message = current_status.system_state.pintset_error_msg
-    await add_events("error", message, processed=True)
     current_status.system_state.pintset_error_msg = None
     await engine.save(current_status)
     return current_status.system_state
@@ -212,6 +215,7 @@ async def pintset_withdrawal_error(error_msg: str) -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.pintset_withdrawal_state = State.ERROR
     current_status.system_state.pintset_withdrawal_error_msg = error_msg
+    await add_events("error", error_msg)
     await engine.save(current_status)
     return current_status.system_state
 
@@ -220,7 +224,6 @@ async def flush_withdrawal_pintset() -> SystemState:
     current_status = await get_current_status()
     current_status.system_state.pintset_withdrawal_state = State.NORMAL
     message = current_status.system_state.pintset_withdrawal_error_msg
-    await add_events("error", message, processed=True)
     current_status.system_state.pintset_withdrawal_error_msg = None
     await engine.save(current_status)
     return current_status.system_state

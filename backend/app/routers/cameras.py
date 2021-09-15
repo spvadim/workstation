@@ -216,7 +216,7 @@ async def new_pack_after_pintset(
     if system_status.system_state.prev_pack_dropped:
         system_status.system_state.prev_pack_dropped = False
         if (
-            current_settings.general_settings.wait_second_pack_to_drop
+            current_settings.general_settings.wait_second_pack_to_drop.value
             and multipacks_after_pintset == 2
             and packs_under_pintset == 0
         ):
@@ -268,6 +268,7 @@ async def new_pack_after_pintset(
                 drop_pack_after_pintset,
                 error_msg,
                 current_settings.pintset_settings,
+                current_datetime,
                 use_additional_event,
             )
         else:
