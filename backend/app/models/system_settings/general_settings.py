@@ -117,6 +117,13 @@ class WaitSecondPackToDrop(EmbeddedModel):
     value_type: str = "bool"
 
 
+class UseAdditionalEvent(EmbeddedModel):
+    title: str = "Новая логика скидывания по доп событию прохождения пачки за пинцетом"
+    desc: str = "Выберите, использовать ли новую логику скидывания по доп событию прохождения пачки за пинцетом"
+    value: bool = False
+    value_type: str = "bool"
+
+
 class GeneralSettings(EmbeddedModel):
     title: str = "Общие настройки"
     advanced: bool = False
@@ -142,3 +149,4 @@ class GeneralSettings(EmbeddedModel):
         GeneratePacksInPintsetFinish()
     )
     wait_second_pack_to_drop: WaitSecondPackToDrop = WaitSecondPackToDrop()
+    use_additional_event: UseAdditionalEvent = UseAdditionalEvent()
