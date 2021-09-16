@@ -18,4 +18,4 @@ class WriteBytesInput(BaseModel):
 class PintsetTask(BaseModel):
     task_id: str
     task_status: str
-    task_result: Optional[bytes]
+    task_result: Optional[str]
