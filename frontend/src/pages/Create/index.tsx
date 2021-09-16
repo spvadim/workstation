@@ -127,7 +127,7 @@ const Create = () => {
     const checkExist = () => {
         let errorText = "";
         if (!settings.id) errorText = "Параметры партии не заданы!"
-        else if (!batchIndex) errorText = "Партия не выбрана!"
+        else if (batchIndex === undefined) errorText = "Партия не выбрана!"
         else if (!cubeQr) errorText = "QR куба не задан!"
         else if (!barcode) errorText = "Штрихкод не задан!"
         else if (multipacksTableData.length === 0) errorText = "Очередь паллет пуста!"
@@ -143,7 +143,7 @@ const Create = () => {
 
         let body = {
             params_id: settings.id,
-            batch_number: DataProvider.Batches.data[batchIndex].number,
+            batch_number: DataProvider.Batches.data[batchIndex].number.batch_number,
             qr: cubeQr,
             barcode_for_packs: barcode,
             content: multipacksTableData,
@@ -151,7 +151,7 @@ const Create = () => {
 
         axios.put(address + "/api/v1_0/cube_with_new_content", body)
             .then(() => setPage("/"))
-            .catch(e => NotificationProvider.createNotification("Ошибка", e.response.data.detail, "danger", 10000))
+            .catch(e => NotificationProvider.createNotification("Ошибка", e.message, "danger", 10000))
     }
 
     const closeChanges = () => {
