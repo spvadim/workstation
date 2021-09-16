@@ -37,6 +37,29 @@ services:
           - 443:443
       restart: always
 
+    worker:
+      build: ./backend
+      command: celery -A app.worker worker -l info --concurrency=1
+      env_file:
+        - .env
+      depends_on:
+        - docker-fastapi
+        - redis
+
+    redis:
+      image: redis:6-alpine
+
+    dashboard:
+      build: ./backend
+      command: celery -A app.worker --broker=redis://redis:6379/0 flower --port=5555
+      ports:
+        - 5556:5555
+      env_file:
+        - .env
+      depends_on:
+        - docker-fastapi
+        - redis
+        - worker
 volumes:
   db:
 
