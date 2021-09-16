@@ -1,3 +1,5 @@
+@import "src/theme.scss";
+
 $imgHint: "../../../assets/images/hint.svg";
 
 .centered {
@@ -26,7 +28,7 @@ $imgHint: "../../../assets/images/hint.svg";
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border: 1px solid #A4A4A4;
+    border: 1px solid $color-border-grey;
     border-radius: 7px;
 }
 
@@ -34,7 +36,7 @@ $imgHint: "../../../assets/images/hint.svg";
     padding: 6px 5px;
     border-radius: 7px;
     width: 50%;
-    border: 1px solid #A4A4A4;
+    border: 1px solid $color-border-grey;
     outline: none;
     background-color: white;
 }
@@ -81,7 +83,7 @@ $imgHint: "../../../assets/images/hint.svg";
 
 .list-container-inner {
     border-radius: 7px;
-    border: 1px solid #A4A4A4;
+    border: 1px solid $color-border-grey;
     padding: 10px;
     margin-bottom: 10px;
     height: 86px;
@@ -91,7 +93,7 @@ $imgHint: "../../../assets/images/hint.svg";
 button {
     padding: 6px 5px;
     border-radius: 7px;
-    border: 1px solid #A4A4A4;
+    border: 1px solid $color-border-grey;
     cursor: pointer;
 }
 

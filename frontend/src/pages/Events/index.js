@@ -5,7 +5,7 @@ import address from "../../address.js";
 import Table from '../../components/Table/index.js';
 import Select from "../../components/Select/index.js";
 import { Redirect } from "react-router-dom";
-import { Button } from "src/components";
+import { Button } from "src/components/index";
 
 const useStyles = createUseStyles({
     tableContainer: {
