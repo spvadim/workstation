@@ -2,19 +2,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_versioning import VersionedFastAPI
 
-from .db.engine import models_startup
 from .db.db_utils import create_status_if_not_exists
+from .db.engine import models_startup
 from .db.system_settings import create_system_settings_if_not_exists
 from .logger import init_logging
 from .routers import (
     cameras,
     cubes,
+    events,
     multipacks,
     packs,
+    pintset_tasks,
     production_batches,
     system_settings,
     system_status,
-    events,
 )
 
 app = FastAPI(docs_url="/docs", redoc_url=None, openapi_url="/openapi.json", debug=True)
@@ -34,6 +35,7 @@ app.include_router(system_settings.deep_logger_router, tags=["system_settings"])
 app.include_router(system_settings.light_logger_router, tags=["system_settings"])
 app.include_router(events.deep_logger_router, tags=["events"])
 app.include_router(events.light_logger_router, tags=["events"])
+app.include_router(pintset_tasks.light_logger_router, tags=["pintset_tasks"])
 
 app = VersionedFastAPI(app, prefix_format="/api/v{major}_{minor}")
 
