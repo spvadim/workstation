@@ -35,7 +35,7 @@ def read_bytes(params: dict, settings: dict):
     plc.disconnect()
     plc.destroy()
 
-    return reading.decode()
+    return reading.decode("latin-1")
 
 
 @app.task(
@@ -56,7 +56,7 @@ def write_bytes(params: dict, settings: dict):
 
     db_name = params["db_name"]
     starting_byte = params["starting_byte"]
-    reading = bytearray(params["reading"], encode="utf-8")
+    reading = bytearray(params["reading"], encode="latin-1")
 
     plc.db_write(db_name, starting_byte, reading)
 
