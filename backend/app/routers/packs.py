@@ -65,6 +65,13 @@ async def create_pack(pack: Pack):
     return pack
 
 
+@light_logger_router.get("/packs/unique/")
+@version(1, 0)
+async def check_pack_qr_unique(qr: str = Query(None)):
+    unique = await check_qr_unique(Pack, qr)
+    return {"unique": unique}
+
+
 @deep_logger_router.delete("/packs/{id}", response_model=Pack)
 @version(1, 0)
 async def delete_pack_by_id(id: ObjectId):
