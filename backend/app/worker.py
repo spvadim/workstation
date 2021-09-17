@@ -10,14 +10,7 @@ app.conf.result_backend = os.environ.get(
 )
 
 
-@app.task(
-    name="read_bytes",
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 5},
-    retry_backoff=True,
-    retry_backoff_max=3,
-    retry_jitter=False,
-)
+@app.task(name="read_bytes")
 def read_bytes(params: dict, settings: dict):
 
     plc = snap7.client.Client()
@@ -38,14 +31,7 @@ def read_bytes(params: dict, settings: dict):
     return reading.decode("latin-1")
 
 
-@app.task(
-    name="write_bytes",
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 5},
-    retry_backoff=True,
-    retry_backoff_max=3,
-    retry_jitter=False,
-)
+@app.task(name="write_bytes")
 def write_bytes(params: dict, settings: dict):
 
     plc = snap7.client.Client()
