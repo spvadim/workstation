@@ -9,7 +9,7 @@ import ModalWindow from '../../components/ModalWindow';
 import imgOk from 'src/assets/images/ok.svg';
 import imgCross from 'src/assets/images/cross.svg';
 import Input from '../../components/InputText/Input';
-import { Button, NotificationPanel, Switch } from "src/components";
+import { Button, NotificationPanel, Switch } from "src/components/index";
 import {Notification} from '../../components/Notification';
 import InputTextQr from '../../components/InputText/InputTextQr';
 import {Notification_new} from '../../components/Notification_new';
