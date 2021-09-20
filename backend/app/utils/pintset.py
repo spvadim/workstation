@@ -48,7 +48,7 @@ def off_pintset(settings: PintsetSettings) -> bool:
         wdiot_logger.info("Отключился от plc")
         plc.destroy()
 
-    except snap7.snap7exceptions.Snap7Exception as e:
+    except snap7.exceptions.Snap7Exception as e:
         wdiot_logger.info(f"Ошибка во время выключения пинцета: {e}")
         return False
     wdiot_logger.info("Пинцет выключен")
@@ -96,7 +96,7 @@ def on_pintset(settings: PintsetSettings) -> bool:
         wdiot_logger.info("Отключился от plc")
         plc.destroy()
 
-    except snap7.snap7exceptions.Snap7Exception as e:
+    except snap7.exceptions.Snap7Exception as e:
         wdiot_logger.info(f"Ошибка во время включения пинцета: {e}")
         return False
     wdiot_logger.info("Пинцет включен")
