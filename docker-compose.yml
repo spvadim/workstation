@@ -40,6 +40,9 @@ services:
     worker:
       build: ./backend
       command: celery -A app.worker worker -l info --concurrency=1
+      environment:
+        - PLC_CONNECT=true
+        # - SNAP7_SERVER=fake
       env_file:
         - .env
       depends_on:

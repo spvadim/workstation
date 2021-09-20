@@ -758,11 +758,15 @@ six = ">=1.4.0"
 
 [[package]]
 name = "python-snap7"
-version = "0.11"
+version = "1.1"
 description = "Python wrapper for the snap7 library"
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
+
+[package.extras]
+doc = ["sphinx", "sphinx-rtd-theme"]
+test = ["pytest", "pytest-asyncio", "mypy", "pycodestyle", "types-setuptools"]
 
 [[package]]
 name = "pytz"
@@ -901,7 +905,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c9a438af4a4174b2b087778079936304be6c180bcb107ca981e2d8af1efc6a12"
+content-hash = "4c96a6d701e820616cf002dc5a04ad373fdfdf69c0e2a55a377a646549a743a2"
 
 [metadata.files]
 aioredis = [
@@ -1399,7 +1403,10 @@ python-multipart = [
     {file = "python-multipart-0.0.5.tar.gz", hash = "sha256:f7bb5f611fc600d15fa47b3974c8aa16e93724513b49b5f95c81e6624c83fa43"},
 ]
 python-snap7 = [
-    {file = "python-snap7-0.11.tar.gz", hash = "sha256:daf839f25f24bf2d4f13b5fe6e7b8208a0292489cc3e421bb7cc1deaed051110"},
+    {file = "python-snap7-1.1.tar.gz", hash = "sha256:0fbb25d3c6cc1328ac5916aaf0d02f96c7939804bb387079d3b84ab44494a1f9"},
+    {file = "python_snap7-1.1-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:807b78d32b395ef30ff9a654c4d40468633c054f81defbcf1463eb5e3d894098"},
+    {file = "python_snap7-1.1-py3-none-manylinux1_x86_64.whl", hash = "sha256:29c2ff855ff0da35f9b3c3ec454add8c8a73f68102bcc9aa395cdba2ede18df0"},
+    {file = "python_snap7-1.1-py3-none-win_amd64.whl", hash = "sha256:b4e74a8a8a241ae12b4fb087a8291707bee03f5ae7cd328b9b768a524ff2519f"},
 ]
 pytz = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
