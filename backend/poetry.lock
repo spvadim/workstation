@@ -311,11 +311,15 @@ testing = ["pytest", "pytest-asyncio", "pytest-mock", "pytest-cov"]
 
 [[package]]
 name = "fastapi-versioning"
-version = "0.5.0"
+version = "0.10.0"
 description = "api versioning for fastapi web applications"
 category = "main"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.6"
+
+[package.dependencies]
+fastapi = ">=0.56.0"
+starlette = "*"
 
 [[package]]
 name = "flake8"
@@ -905,7 +909,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4c96a6d701e820616cf002dc5a04ad373fdfdf69c0e2a55a377a646549a743a2"
+content-hash = "892148383dca0a25086265ec050a431fdcd5ae5422449be999ddfada2661b3a0"
 
 [metadata.files]
 aioredis = [
@@ -995,8 +999,8 @@ fastapi-mail = [
     {file = "fastapi_mail-0.3.5.0-py3-none-any.whl", hash = "sha256:802608aa1206e53fd104f7ec9e017df61727a6be96352c2510b24378a91828de"},
 ]
 fastapi-versioning = [
-    {file = "fastapi_versioning-0.5.0-py3-none-any.whl", hash = "sha256:9121612b31cff4cdf7c8e91eea011c3f1284b96b5bf287be796e37d186e42e43"},
-    {file = "fastapi_versioning-0.5.0.tar.gz", hash = "sha256:194b11d4920699d01996140a8ca04e76c0c0c35dadaa9ac59ce4546da61c59a6"},
+    {file = "fastapi_versioning-0.10.0-py3-none-any.whl", hash = "sha256:afe0ad7a56383b884c399341260bd3301b40e5a1cf9f6dc4211a349489087e1b"},
+    {file = "fastapi_versioning-0.10.0.tar.gz", hash = "sha256:5c18ea4e9ae1afd39c9e5bed1c240bf1cabdc75217579af78249ccb651c7b5b5"},
 ]
 flake8 = [
     {file = "flake8-3.8.4-py2.py3-none-any.whl", hash = "sha256:749dbbd6bfd0cf1318af27bf97a14e28e5ff548ef8e5b1566ccfb25a11e7c839"},
