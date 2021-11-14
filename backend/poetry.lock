@@ -12,7 +12,7 @@ hiredis = "*"
 
 [[package]]
 name = "aiosmtplib"
-version = "1.1.4"
+version = "1.1.6"
 description = "asyncio SMTP client"
 category = "main"
 optional = false
@@ -286,7 +286,7 @@ test = ["pytest (==5.4.3)", "pytest-cov (==2.10.0)", "pytest-asyncio (>=0.14.0,<
 
 [[package]]
 name = "fastapi-mail"
-version = "0.3.5.0"
+version = "0.4.1"
 description = "Simple lightwigh mail sending for FastApi"
 category = "main"
 optional = false
@@ -294,7 +294,7 @@ python-versions = "*"
 
 [package.dependencies]
 aioredis = ">=1.3.1"
-aiosmtplib = ">=1.1.4"
+aiosmtplib = ">=1.1.5"
 blinker = ">=1.4"
 email-validator = ">=1.1.1"
 fakeredis = ">=1.4.5"
@@ -905,7 +905,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4c96a6d701e820616cf002dc5a04ad373fdfdf69c0e2a55a377a646549a743a2"
+content-hash = "07e8d32151a65d0c9eb9664f62fa11a7a0c62ffa3f55b20a8652829868e10cfd"
 
 [metadata.files]
 aioredis = [
@@ -913,8 +913,8 @@ aioredis = [
     {file = "aioredis-1.3.1.tar.gz", hash = "sha256:15f8af30b044c771aee6787e5ec24694c048184c7b9e54c3b60c750a4b93273a"},
 ]
 aiosmtplib = [
-    {file = "aiosmtplib-1.1.4-py3-none-any.whl", hash = "sha256:93e53edac183f1a608bc34464efeef23902e59e949017b1682014f59ecdcd37d"},
-    {file = "aiosmtplib-1.1.4.tar.gz", hash = "sha256:8270d0a06475aa05b9276fc954fbd08a1f6c59d0452b4899413d8bca1db24541"},
+    {file = "aiosmtplib-1.1.6-py3-none-any.whl", hash = "sha256:84174765778b2c5e0e207fbce0a769202fcf0c3de81faa87cc03551a6333bfa9"},
+    {file = "aiosmtplib-1.1.6.tar.gz", hash = "sha256:d138fe6ffecbc9e6320269690b9ac0b75e540ef96e8f5c77d4a306760014dce2"},
 ]
 amqp = [
     {file = "amqp-5.0.6-py3-none-any.whl", hash = "sha256:493a2ac6788ce270a2f6a765b017299f60c1998f5a8617908ee9be082f7300fb"},
@@ -991,8 +991,8 @@ fastapi = [
     {file = "fastapi-0.65.2.tar.gz", hash = "sha256:8359e55d8412a5571c0736013d90af235d6949ec4ce978e9b63500c8f4b6f714"},
 ]
 fastapi-mail = [
-    {file = "fastapi-mail-0.3.5.0.tar.gz", hash = "sha256:9c01a2e34671bdb12fafe606eb6ee3e7eec00e6aab2c678c4acd64289d61dcfc"},
-    {file = "fastapi_mail-0.3.5.0-py3-none-any.whl", hash = "sha256:802608aa1206e53fd104f7ec9e017df61727a6be96352c2510b24378a91828de"},
+    {file = "fastapi-mail-0.4.1.tar.gz", hash = "sha256:9b774b64672fb47a6ceb67e45db5bd031694f8b19d15db8597d1c390122e3031"},
+    {file = "fastapi_mail-0.4.1-py3-none-any.whl", hash = "sha256:46ea8d622bf0a1fe7563249706f6600017a28a43a22809ba96e7129b1e0fc31d"},
 ]
 fastapi-versioning = [
     {file = "fastapi_versioning-0.5.0-py3-none-any.whl", hash = "sha256:9121612b31cff4cdf7c8e91eea011c3f1284b96b5bf287be796e37d186e42e43"},
