@@ -20,6 +20,10 @@ variables:
 #  - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 #  - chmod 644 ~/.ssh/known_hosts
 
+before_script:
+  - apt-get update -y && apt-get install py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
+  - pip install docker-compose
+
 
 stages:
   - build
