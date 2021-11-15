@@ -21,7 +21,9 @@ variables:
 #  - chmod 644 ~/.ssh/known_hosts
 
 before_script:
-  - apt-get update -y && apt-get install py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
+#  - apt-get update -y && apt-get install py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
+  - apk update 
+  - apk add py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
   - pip install docker-compose
 
 
