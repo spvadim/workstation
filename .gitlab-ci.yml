@@ -9,6 +9,9 @@ variables:
 #  IMAGE: $DOCKER_REPO/$IMAGE_BASE_NAME:$CI_BUILD_REF
 
 
+image: docker:stable
+
+
 #before_script:
 #  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
 #  - mkdir -p ~/.ssh
@@ -20,21 +23,25 @@ variables:
 #  - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 #  - chmod 644 ~/.ssh/known_hosts
 
-before_script:
-#  - apt-get update -y && apt-get install py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
-  - python -m pip install --upgrade pip
-  - apk update 
-  - apk add py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
-  - pip install docker-compose
-#
-#
-
 
 stages:
   - build
 #  - test
 #  - r12n
 #  - dp2stage
+
+services:
+  - docker:dind
+
+before_script:
+#  - apt-get update -y && apt-get install py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
+#  - python -m pip install --upgrade pip
+  - apk update 
+  - apk add py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
+  - pip install docker-compose
+#
+#
+
 
 BuildImg:
   stage: build
