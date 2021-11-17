@@ -55,12 +55,12 @@ BuildImg:
     - docker images
 #    - echo OkOk
 
-#Test:
-#  stage: test
-#  tags:
-#    - slogan6
-#  script:
-#    - docker run --rm -e nicname="joe" $IMAGE_BASE_NAME | grep "Hi"
+Test:
+  stage: test
+  tags:
+    - slogan6
+  script:
+    - docker images | grep workstation_dashboard
 
     
 
