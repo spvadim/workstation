@@ -70,7 +70,8 @@ Test:
     - docker images | grep workstation_dashboard
 
     
-
+#
+#
 #RecordImg:
 #  variables:
 #    RELEASE_IMAGE: $DOCKER_REPO/$IMAGE_BASE_NAME:latest
