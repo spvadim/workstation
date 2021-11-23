@@ -5,6 +5,7 @@ variables:
   IMAGE_BASE_NAME: slogan
   STAGE_SERVER: 192.168.9.148
   RUNHOME: /home/gitlab-runner
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
  
 #  IMAGE: $DOCKER_REPO/$IMAGE_BASE_NAME:$CI_BUILD_REF
 
@@ -33,6 +34,12 @@ stages:
 services:
   - docker:dind
 
+cache:
+  paths:
+    - .cache/pip
+
+
+
 before_script:
 #  - apt-get update -y && apt-get install py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
 #  - python -m pip install --upgrade pip
@@ -60,7 +67,7 @@ Test:
   tags:
     - slogan6
   script:
-    - docker images | grep workstation_bashboard
+    - docker images | grep workstation_dashboard
 
     
 
