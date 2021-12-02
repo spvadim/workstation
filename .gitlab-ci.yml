@@ -1,8 +1,11 @@
 variables:
   PROD_VERSION: 3-2-15
   dockerTag: '$CI_BUILD_REF'
-  DOCKER_REPO: registry:5000
-  IMAGE_BASE_NAME: slogan
+  DOCKER_REPO: r5000:5000
+  IMAGE_BNAME_NGINX: workstation_nginx
+  IMAGE_BNAME_DASHB: workstation_dashboard
+  IMAGE_BNAME_FASTAPI: workstation_docker-fastapi
+  IMAGE_BNAME_WORKER: workstation_worker
   STAGE_SERVER: 192.168.9.148
   RUNHOME: /home/gitlab-runner
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -54,13 +57,11 @@ before_script:
 BuildImg:
   stage: build
   tags:
-#    - sloganim
     - wst1
   script:
 #    - docker build -t $IMAGE_BASE_NAME .
     - COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build
     - docker images
-#    - echo OkOk
 
 Test:
   stage: test
@@ -70,28 +71,22 @@ Test:
     - docker images | grep workstation_dashboard
 
     
+RecordImg:
+  variables:
+    RELEASE_IMAGE_NGINX: $DOCKER_REPO/$IMAGE_BNAME_NGINX:latest
+  stage: r12n
+  tags:
+    - wst1
+  script:
+    - docker tag $IMAGE_BNAME_NGINX $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
+    - echo $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+    - docker push $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
 #
+    - docker tag $IMAGE_BNAME_NGINX $RELEASE_IMAGE_NGINX 
+    - docker push $RELEASE_IMAGE_NGINX      
 #
-#RecordImg:
-#  variables:
-#    RELEASE_IMAGE: $DOCKER_REPO/$IMAGE_BASE_NAME:latest
-#  stage: r12n
-#  tags:
-#    - slogan6
-#  script:
-##    - docker tag $IMAGE_BASE_NAME $IMAGE
-##    - echo $IMAGE
-#    - docker tag $IMAGE_BASE_NAME $DOCKER_REPO/$IMAGE_BASE_NAME:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
-#    - echo $DOCKER_REPO/$IMAGE_BASE_NAME:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-##
-#    - docker push $DOCKER_REPO/$IMAGE_BASE_NAME:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-##
-##    - docker push $IMAGE      
-#    - docker tag $IMAGE_BASE_NAME $RELEASE_IMAGE 
-#    - docker push $RELEASE_IMAGE      
-##
-##    - echo $PROD_VERSION    
-##    - echo $DOCKER_REPO/$IMAGE_BASE_NAME:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-7 )
+#    - echo $PROD_VERSION    
+#    - echo $DOCKER_REPO/$IMAGE_BASE_NAME:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-7 )
 #
 ##
 ##
