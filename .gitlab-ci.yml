@@ -31,7 +31,7 @@ image: docker:stable
 stages:
   - build
   - test
-#  - r12n
+  - r12n
 #  - dp2stage
 
 services:
