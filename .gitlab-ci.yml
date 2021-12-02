@@ -32,7 +32,7 @@ stages:
   - build
   - test
   - r12n
-#  - dp2stage
+  - dp2stage
 
 services:
   - docker:dind
