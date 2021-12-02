@@ -55,7 +55,7 @@ BuildImg:
   stage: build
   tags:
 #    - sloganim
-    - slogan6
+    - wst1
   script:
 #    - docker build -t $IMAGE_BASE_NAME .
     - COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build
@@ -65,7 +65,7 @@ BuildImg:
 Test:
   stage: test
   tags:
-    - slogan6
+    - wst1
   script:
     - docker images | grep workstation_dashboard
 
