@@ -6,8 +6,8 @@ variables:
   IMAGE_BNAME_DASHB: workstation_dashboard
   IMAGE_BNAME_FASTAPI: workstation_docker-fastapi
   IMAGE_BNAME_WORKER: workstation_worker
-  STAGE_SERVER: 192.168.9.148
-  RUNHOME: /home/gitlab-runner
+  STAGE_SERVER: 195.189.108.50
+#  RUNHOME: /home/gitlab-runner
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
  
 #  IMAGE: $DOCKER_REPO/$IMAGE_BASE_NAME:$CI_BUILD_REF
@@ -44,6 +44,15 @@ cache:
 
 
 before_script:
+  - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+  - mkdir -p ~/.ssh
+  - echo "$STAGE_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+  - chmod 700 ~/.ssh/id_rsa
+  - eval "$(ssh-agent -s)"
+  - ssh-add ~/.ssh/id_rsa
+  - ssh-keyscan -t rsa $STAGE_SERVER > ~/.ssh/known_hosts
+  - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+  - chmod 644 ~/.ssh/known_hosts
 #  - apt-get update -y && apt-get install py-pip python3-dev libffi-dev openssl-dev gcc libc-dev make
 #  - python -m pip install --upgrade pip
   - apk update 
@@ -75,8 +84,8 @@ RecordImg:
   variables:
     RELEASE_IMAGE_NGINX: $DOCKER_REPO/$IMAGE_BNAME_NGINX:latest
     RELEASE_IMAGE_DASHB: $DOCKER_REPO/$IMAGE_BNAME_DASHB:latest
-    RELEASE_IMAGE_FASTAPI: $DOCKER_REPO/$IMAGE_BNAME_NGINX:latest
-    RELEASE_IMAGE_WORKER: $DOCKER_REPO/$IMAGE_BNAME_NGINX:latest
+    RELEASE_IMAGE_FASTAPI: $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:latest
+    RELEASE_IMAGE_WORKER: $DOCKER_REPO/$IMAGE_BNAME_WORKER:latest
   stage: r12n
   tags:
     - wst1
@@ -112,20 +121,23 @@ RecordImg:
 #    - echo $PROD_VERSION    
 #    - echo $DOCKER_REPO/$IMAGE_BASE_NAME:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-7 )
 #
-##
-##
-#Deploy2stage:
-#  variables:
-#    RELEASE_IMAGE: $DOCKER_REPO/$IMAGE_BASE_NAME:latest
-#  stage: dp2stage
-#  tags:
-#    - slogan6
-#  script:
-##    - echo 123
-##    - echo $RELEASE_IMAGE
-##    - ssh deploy@192.168.9.148  "sudo -u deploy docker pull $RELEASE_IMAGE"
-##    - ssh -o StrictHostKeyChecking=no deploy@192.168.9.148  "docker pull registry:5000/slogan:latest"
-#    - ssh deploy@$STAGE_SERVER  "docker pull registry:5000/slogan:latest"
-##    - ansible-playbook -i $RUNHOME/ahosts $RUNHOME/get_latest.yml --extra-vars "image=$RELEASE_IMAGE"
 #
+#
+Deploy2stage:
+  variables:
+    RELEASE_IMAGE_NGINX: $DOCKER_REPO/$IMAGE_BNAME_NGINX:latest
+    RELEASE_IMAGE_DASHB: $DOCKER_REPO/$IMAGE_BNAME_DASHB:latest
+    RELEASE_IMAGE_FASTAPI: $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:latest
+    RELEASE_IMAGE_WORKER: $DOCKER_REPO/$IMAGE_BNAME_WORKER:latest
+  stage: dp2stage
+  tags:
+    - wst1
+  script:
+#    - echo 123
+#    - echo $RELEASE_IMAGE
+#    - ssh deploy@192.168.9.148  "sudo -u deploy docker pull $RELEASE_IMAGE"
+#    - ssh -o StrictHostKeyChecking=no deploy@192.168.9.148  "docker pull registry:5000/slogan:latest"
+    - ssh vadim@$STAGE_SERVER  "docker pull r5000:5000/workstation-nginx:latest"
+#    - ansible-playbook -i $RUNHOME/ahosts $RUNHOME/get_latest.yml --extra-vars "image=$RELEASE_IMAGE"
+
        
