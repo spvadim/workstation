@@ -137,7 +137,11 @@ Deploy2stage:
 #    - echo $RELEASE_IMAGE
 #    - ssh deploy@192.168.9.148  "sudo -u deploy docker pull $RELEASE_IMAGE"
 #    - ssh -o StrictHostKeyChecking=no deploy@192.168.9.148  "docker pull registry:5000/slogan:latest"
-    - ssh vadim@$STAGE_SERVER  "docker pull r5000:5000/workstation_nginx:latest"
+#    - ssh vadim@$STAGE_SERVER  "docker pull r5000:5000/workstation_nginx:latest"
+    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_NGINX"
+    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_DASHB"
+    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_FASTAPI"
+    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_WORKER"
 #    - ansible-playbook -i $RUNHOME/ahosts $RUNHOME/get_latest.yml --extra-vars "image=$RELEASE_IMAGE"
 #
 
