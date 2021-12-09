@@ -2,10 +2,18 @@ variables:
   PROD_VERSION: 3-2-15
   dockerTag: '$CI_BUILD_REF'
   DOCKER_REPO: r5000:5000
-  IMAGE_BNAME_NGINX: workstation_nginx
-  IMAGE_BNAME_DASHB: workstation_dashboard
-  IMAGE_BNAME_FASTAPI: workstation_docker-fastapi
-  IMAGE_BNAME_WORKER: workstation_worker
+  #IMAGE_BNAME_NGINX: workstation_nginx
+  #IMAGE_BNAME_DASHB: workstation_dashboard
+  #IMAGE_BNAME_FASTAPI: workstation_docker-fastapi
+  #IMAGE_BNAME_WORKER: workstation_worker
+  
+  IMAGE_BNAME_NGINX: gitlab.tn.ru:5000/xps/axon/wrkst/frontend
+  IMAGE_BNAME_DASHB: gitlab.tn.ru:5000/xps/axon/wrkst/worker-dashboard
+  IMAGE_BNAME_FASTAPI: gitlab.tn.ru:5000/xps/axon/wrkst/backend 
+  IMAGE_BNAME_WORKER: gitlab.tn.ru:5000/xps/axon/wrkst/worker
+  
+  
+  
   STAGE_SERVER: 195.189.108.50
 #  RUNHOME: /home/gitlab-runner
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
