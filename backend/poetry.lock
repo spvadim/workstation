@@ -42,6 +42,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "asgiref"
+version = "3.4.1"
+description = "ASGI specs, helper code, and adapters"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.extras]
+tests = ["pytest", "pytest-asyncio", "mypy (>=0.800)"]
+
+[[package]]
 name = "async-timeout"
 version = "3.0.1"
 description = "Timeout context manager for asyncio programs"
@@ -862,18 +873,19 @@ python-versions = ">= 3.5"
 
 [[package]]
 name = "uvicorn"
-version = "0.13.3"
+version = "0.17.0"
 description = "The lightning-fast ASGI server."
 category = "main"
 optional = false
 python-versions = "*"
 
 [package.dependencies]
-click = ">=7.0.0,<8.0.0"
+asgiref = ">=3.4.0"
+click = ">=7.0"
 h11 = ">=0.8"
 
 [package.extras]
-standard = ["websockets (>=8.0.0,<9.0.0)", "watchgod (>=0.6,<0.7)", "python-dotenv (>=0.13)", "PyYAML (>=5.1)", "httptools (>=0.1.0,<0.2.0)", "uvloop (>=0.14.0)", "colorama (>=0.4)"]
+standard = ["websockets (>=10.0)", "httptools (>=0.2.0,<0.4.0)", "watchgod (>=0.6)", "python-dotenv (>=0.13)", "PyYAML (>=5.1)", "uvloop (>=0.14.0,!=0.15.0,!=0.15.1)", "colorama (>=0.4)"]
 
 [[package]]
 name = "vine"
@@ -905,7 +917,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4c96a6d701e820616cf002dc5a04ad373fdfdf69c0e2a55a377a646549a743a2"
+content-hash = "cb0afe4c9f1b28ac65b25e4d8b0c29dba6a5a53391fc170705a64992b096f69f"
 
 [metadata.files]
 aioredis = [
@@ -923,6 +935,10 @@ amqp = [
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
+]
+asgiref = [
+    {file = "asgiref-3.4.1-py3-none-any.whl", hash = "sha256:ffc141aa908e6f175673e7b1b3b7af4fdb0ecb738fc5c8b88f69f055c2415214"},
+    {file = "asgiref-3.4.1.tar.gz", hash = "sha256:4ef1ab46b484e3c706329cedeff284a5d40824200638503f5768edb6de7d58e9"},
 ]
 async-timeout = [
     {file = "async-timeout-3.0.1.tar.gz", hash = "sha256:0c3c816a028d47f659d6ff5c745cb2acf1f966da1fe5c19c77a70282b25f4c5f"},
@@ -1404,6 +1420,7 @@ python-multipart = [
 ]
 python-snap7 = [
     {file = "python-snap7-1.1.tar.gz", hash = "sha256:0fbb25d3c6cc1328ac5916aaf0d02f96c7939804bb387079d3b84ab44494a1f9"},
+    {file = "python_snap7-1.1-py3-none-macosx_10_9_universal2.whl", hash = "sha256:523acbb5164ad83f2aa5140a363424d8dfb2aaaf3b47a0cffe24c5f0841cb641"},
     {file = "python_snap7-1.1-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:807b78d32b395ef30ff9a654c4d40468633c054f81defbcf1463eb5e3d894098"},
     {file = "python_snap7-1.1-py3-none-manylinux1_x86_64.whl", hash = "sha256:29c2ff855ff0da35f9b3c3ec454add8c8a73f68102bcc9aa395cdba2ede18df0"},
     {file = "python_snap7-1.1-py3-none-win_amd64.whl", hash = "sha256:b4e74a8a8a241ae12b4fb087a8291707bee03f5ae7cd328b9b768a524ff2519f"},
@@ -1543,8 +1560,8 @@ tornado = [
     {file = "tornado-6.1.tar.gz", hash = "sha256:33c6e81d7bd55b468d2e793517c909b139960b6c790a60b7991b9b6b76fb9791"},
 ]
 uvicorn = [
-    {file = "uvicorn-0.13.3-py3-none-any.whl", hash = "sha256:1079c50a06f6338095b4f203e7861dbff318dde5f22f3a324fc6e94c7654164c"},
-    {file = "uvicorn-0.13.3.tar.gz", hash = "sha256:ef1e0bb5f7941c6fe324e06443ddac0331e1632a776175f87891c7bd02694355"},
+    {file = "uvicorn-0.17.0-py3-none-any.whl", hash = "sha256:0b89c91bb8fe84c4bded9996af13c4b8c0de799d29bffeaa0c8ad298f2be0934"},
+    {file = "uvicorn-0.17.0.tar.gz", hash = "sha256:192c2422b056a3beb512c6c260bf77a7a884204a4ae41856719c1913ead63bbb"},
 ]
 vine = [
     {file = "vine-5.0.0-py2.py3-none-any.whl", hash = "sha256:4c9dceab6f76ed92105027c49c823800dd33cacce13bdedc5b914e3514b7fb30"},
