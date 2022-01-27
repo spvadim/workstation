@@ -2,15 +2,18 @@ variables:
   PROD_VERSION: 3-2-15
   dockerTag: '$CI_BUILD_REF'
   DOCKER_REPO: r5000:5000
-  #IMAGE_BNAME_NGINX: workstation_nginx
-  #IMAGE_BNAME_DASHB: workstation_dashboard
-  #IMAGE_BNAME_FASTAPI: workstation_docker-fastapi
-  #IMAGE_BNAME_WORKER: workstation_worker
+  IMAGE_BNAME_NGINX: workstation_nginx
+  IMAGE_BNAME_DASHB: workstation_dashboard
+  IMAGE_BNAME_FASTAPI: workstation_docker-fastapi
+  IMAGE_BNAME_WORKER: workstation_worker
   
-  IMAGE_BNAME_NGINX: gitlab.tn.ru:5000/xps/axon/wrkst/frontend
-  IMAGE_BNAME_DASHB: gitlab.tn.ru:5000/xps/axon/wrkst/worker-dashboard
-  IMAGE_BNAME_FASTAPI: gitlab.tn.ru:5000/xps/axon/wrkst/backend 
-  IMAGE_BNAME_WORKER: gitlab.tn.ru:5000/xps/axon/wrkst/worker
+  #IMAGE_BNAME_NGINX: gitlab.tn.ru:5000/xps/axon/wrkst/frontend
+  #IMAGE_BNAME_DASHB: gitlab.tn.ru:5000/xps/axon/wrkst/worker-dashboard
+  #IMAGE_BNAME_FASTAPI: gitlab.tn.ru:5000/xps/axon/wrkst/backend 
+  #IMAGE_BNAME_WORKER: gitlab.tn.ru:5000/xps/axon/wrkst/worker
+  
+  
+  
   
   
   
@@ -102,35 +105,35 @@ RecordImg:
     - docker tag $IMAGE_BNAME_NGINX $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
     - echo $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
     - docker push $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-#
-    - docker tag $IMAGE_BNAME_NGINX $RELEASE_IMAGE_NGINX 
-    - docker push $RELEASE_IMAGE_NGINX      
-# r12n workstation_dashboard
-    - docker tag $IMAGE_BNAME_DASHB $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
-    - echo $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-    - docker push $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-#
-    - docker tag $IMAGE_BNAME_DASHB $RELEASE_IMAGE_DASHB 
-    - docker push $RELEASE_IMAGE_DASHB      
-# r12n workstation_docker-fastapi
-    - docker tag $IMAGE_BNAME_FASTAPI $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
-    - echo $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-    - docker push $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-#
-    - docker tag $IMAGE_BNAME_FASTAPI $RELEASE_IMAGE_FASTAPI 
-    - docker push $RELEASE_IMAGE_FASTAPI      
-# r12n workstation_worker
-    - docker tag $IMAGE_BNAME_WORKER $DOCKER_REPO/$IMAGE_BNAME_WORKER:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
-    - echo $DOCKER_REPO/$IMAGE_BNAME_WORKER:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-    - docker push $DOCKER_REPO/$IMAGE_BNAME_WORKER:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-#
-    - docker tag $IMAGE_BNAME_WORKER $RELEASE_IMAGE_WORKER 
-    - docker push $RELEASE_IMAGE_WORKER      
-#    - echo $PROD_VERSION    
-#    - echo $DOCKER_REPO/$IMAGE_BASE_NAME:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-7 )
-#
-#
-#
+##
+#    - docker tag $IMAGE_BNAME_NGINX $RELEASE_IMAGE_NGINX 
+#    - docker push $RELEASE_IMAGE_NGINX      
+## r12n workstation_dashboard
+#    - docker tag $IMAGE_BNAME_DASHB $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
+#    - echo $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+#    - docker push $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+##
+#    - docker tag $IMAGE_BNAME_DASHB $RELEASE_IMAGE_DASHB 
+#    - docker push $RELEASE_IMAGE_DASHB      
+## r12n workstation_docker-fastapi
+#    - docker tag $IMAGE_BNAME_FASTAPI $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
+#    - echo $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+#    - docker push $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+##
+#    - docker tag $IMAGE_BNAME_FASTAPI $RELEASE_IMAGE_FASTAPI 
+#    - docker push $RELEASE_IMAGE_FASTAPI      
+## r12n workstation_worker
+#    - docker tag $IMAGE_BNAME_WORKER $DOCKER_REPO/$IMAGE_BNAME_WORKER:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
+#    - echo $DOCKER_REPO/$IMAGE_BNAME_WORKER:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+#    - docker push $DOCKER_REPO/$IMAGE_BNAME_WORKER:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+##
+#    - docker tag $IMAGE_BNAME_WORKER $RELEASE_IMAGE_WORKER 
+#    - docker push $RELEASE_IMAGE_WORKER      
+##    - echo $PROD_VERSION    
+##    - echo $DOCKER_REPO/$IMAGE_BASE_NAME:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-7 )
+##
+##
+##
 Deploy2stage:
   variables:
     RELEASE_IMAGE_NGINX: $DOCKER_REPO/$IMAGE_BNAME_NGINX:latest
@@ -141,16 +144,17 @@ Deploy2stage:
   tags:
     - wst1
   script:
-#    - echo 123
-#    - echo $RELEASE_IMAGE
-#    - ssh deploy@192.168.9.148  "sudo -u deploy docker pull $RELEASE_IMAGE"
-#    - ssh -o StrictHostKeyChecking=no deploy@192.168.9.148  "docker pull registry:5000/slogan:latest"
-#    - ssh vadim@$STAGE_SERVER  "docker pull r5000:5000/workstation_nginx:latest"
-    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_NGINX"
-    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_DASHB"
-    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_FASTAPI"
-    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_WORKER"
-#    - ansible-playbook -i $RUNHOME/ahosts $RUNHOME/get_latest.yml --extra-vars "image=$RELEASE_IMAGE"
-#
+      - echo pass
+##    - echo 123
+##    - echo $RELEASE_IMAGE
+##    - ssh deploy@192.168.9.148  "sudo -u deploy docker pull $RELEASE_IMAGE"
+##    - ssh -o StrictHostKeyChecking=no deploy@192.168.9.148  "docker pull registry:5000/slogan:latest"
+##    - ssh vadim@$STAGE_SERVER  "docker pull r5000:5000/workstation_nginx:latest"
+#    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_NGINX"
+#    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_DASHB"
+#    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_FASTAPI"
+#    - ssh vadim@$STAGE_SERVER  "docker pull $RELEASE_IMAGE_WORKER"
+##    - ansible-playbook -i $RUNHOME/ahosts $RUNHOME/get_latest.yml --extra-vars "image=$RELEASE_IMAGE"
+##
 
        
