@@ -105,16 +105,16 @@ RecordImg:
     - docker tag $IMAGE_BNAME_NGINX $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
     - echo $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
     - docker push $DOCKER_REPO/$IMAGE_BNAME_NGINX:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-##
-#    - docker tag $IMAGE_BNAME_NGINX $RELEASE_IMAGE_NGINX 
-#    - docker push $RELEASE_IMAGE_NGINX      
-## r12n workstation_dashboard
-#    - docker tag $IMAGE_BNAME_DASHB $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
-#    - echo $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-#    - docker push $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
-##
-#    - docker tag $IMAGE_BNAME_DASHB $RELEASE_IMAGE_DASHB 
-#    - docker push $RELEASE_IMAGE_DASHB      
+#
+    - docker tag $IMAGE_BNAME_NGINX $RELEASE_IMAGE_NGINX 
+    - docker push $RELEASE_IMAGE_NGINX      
+# r12n workstation_dashboard
+    - docker tag $IMAGE_BNAME_DASHB $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
+    - echo $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+    - docker push $DOCKER_REPO/$IMAGE_BNAME_DASHB:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
+#
+    - docker tag $IMAGE_BNAME_DASHB $RELEASE_IMAGE_DASHB 
+    - docker push $RELEASE_IMAGE_DASHB      
 ## r12n workstation_docker-fastapi
 #    - docker tag $IMAGE_BNAME_FASTAPI $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8)
 #    - echo $DOCKER_REPO/$IMAGE_BNAME_FASTAPI:${PROD_VERSION}_$(echo $CI_BUILD_REF | cut -c 1-8 )
